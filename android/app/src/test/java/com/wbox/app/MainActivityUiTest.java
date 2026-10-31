@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
 public class MainActivityUiTest {
     @Before public void reset() throws Exception {
         Profiles profiles=new Profiles(RuntimeEnvironment.getApplication());
-        profiles.data.remove("nodes");profiles.data.remove("selected");profiles.data.put("mode","nodes");profiles.save();
+        profiles.data=new org.json.JSONObject();profiles.data.put("mode","nodes");profiles.save();
         WboxVpnService.running=WboxVpnService.starting=WboxVpnService.stopping=false;
         WboxVpnService.clearTraffic();
     }
@@ -58,6 +58,14 @@ public class MainActivityUiTest {
             assertEquals("Node 0",new Profiles(activity).data.getString("selected"));
         }
     }
+    @Test public void configWorkspaceRendersRemoteLibrary()throws Exception{
+        Profiles profiles=new Profiles(RuntimeEnvironment.getApplication());profiles.importConfig("{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"DIRECT\"}]}","https://example.org/profile",null);profiles.setWorkspace("config");profiles.save();
+        try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
+            MainActivity activity=controller.get();navigate(activity,2);View root=(View)field(activity,"root");measure(root,360);
+            Bitmap bitmap=Bitmap.createBitmap(360,800,Bitmap.Config.ARGB_8888);root.draw(new Canvas(bitmap));File file=new File(System.getProperty("wbox.root"),"android/app/build/reports/ui/config-library-360.png");file.getParentFile().mkdirs();try(OutputStream out=new FileOutputStream(file)){bitmap.compress(Bitmap.CompressFormat.PNG,100,out);}bitmap.recycle();
+            assertEquals("config",new Profiles(activity).mode());assertEquals(1,new Profiles(activity).configs().length());
+        }
+    }
     @Test public void trafficHistoryUsesElapsedTimeAndRemainsBounded(){
         for(int i=0;i<100;i++)WboxVpnService.recordTraffic(i*1000L,i,-1);
         List<WboxVpnService.TrafficSample> history=WboxVpnService.trafficSnapshot();
@@ -66,5 +74,15 @@ public class MainActivityUiTest {
         assertEquals(61,history.size()); // A snapshot cannot be mutated by the service.
         assertEquals(11,WboxVpnService.trafficSnapshot().size());
         WboxVpnService.clearTraffic();assertTrue(WboxVpnService.trafficSnapshot().isEmpty());
+    }
+    @Test public void streamingStatsCountsConnectionsWithoutKeepingDetails()throws Exception{
+        try(java.net.ServerSocket server=new java.net.ServerSocket(19090,1,java.net.InetAddress.getLoopbackAddress())){
+            Thread response=new Thread(()->{try(java.net.Socket socket=server.accept()){
+                BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));String line;while((line=input.readLine())!=null&&!line.isEmpty()){}
+                StringBuilder body=new StringBuilder("{\"uploadTotal\":123456789,\"downloadTotal\":987654321,\"connections\":[");for(int i=0;i<2000;i++){if(i>0)body.append(',');body.append("{\"metadata\":{\"host\":\"example.org\"},\"chains\":[\"A\",\"B\"]}");}body.append("]}");byte[] bytes=body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                socket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Length: "+bytes.length+"\r\nConnection: close\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.US_ASCII));socket.getOutputStream().write(bytes);
+            }catch(Exception e){throw new RuntimeException(e);}});response.start();
+            CoreApi.Stats stats=new CoreApi("test").stats();assertEquals(123456789,stats.upload);assertEquals(987654321,stats.download);assertEquals(2000,stats.connections);response.join(3000);
+        }
     }
 }

@@ -11,7 +11,7 @@ dotnet publish windows/Wbox/Wbox.csproj -c Release -r win-x64 --self-contained t
 
 配置与订阅保存到 `%LOCALAPPDATA%\Wbox`；`--silent` 参数直接收起至托盘，`WBOX_DATA_DIR` 环境变量可指定独立数据目录用于开发验证；该模式不更改 Windows 开机启动项。完整配置的运行副本暂时写在原配置目录，停止后删除，以便保留相对路径资源；原文件不修改。Windows 主模式为系统 HTTP/SOCKS 代理，需要全流量 TUN 时可加载内核原生 TUN 配置并以管理员权限运行。
 
-分享链接支持 SS、VMess、VLESS（含 Reality）、Trojan、Hysteria2 与 TUIC。带 SS plugin、Hysteria2 obfs 或复杂 TUIC 参数的链接会提示使用原生配置，避免丢失必要参数。来自原生 YAML/JSON 订阅的节点使用对应内核。sing-box API 会把 HTTP 测速地址换成默认地址，因此界面明确要求其测速使用 HTTPS；mihomo 支持 HTTP 与 HTTPS。
+分享链接与平台限制见根 README。配置工作区支持多份远程/本地完整配置；节点工作区支持独立订阅分组、搜索、选择和批量测速。原生订阅自动选择匹配内核，分享链接保留插件、混淆、ALPN 等支持的参数。`WBOX_DATA_DIR` 同时隔离实例互斥锁与数据，便于在已有 Wbox 运行时进行不设置系统代理的验证。
 
 验证：
 
@@ -23,4 +23,4 @@ dotnet build windows/Wbox.UiSmoke/Wbox.UiSmoke.csproj -c Release
 dotnet windows/Wbox.UiSmoke/bin/Release/net8.0-windows/Wbox.UiSmoke.dll windows/ui-preview.png
 ```
 
-集成验证覆盖 33 项检查，包括两内核真实启动、6 协议生成配置、代理组切换、匿名控制接口拒绝、IPv6 代理传输、本地 HTTP 字节传输和流量/连接/内存统计。系统代理恢复采用持久备份与所有权比较；测试覆盖比较逻辑，集成测试不改用户正在使用的系统代理。测试入口捕获异常并退出 1，不触发 Windows 错误对话框。UI smoke 在不展示窗口的情况下构造并渲染全部六页，便于检查颜色与布局。
+集成验证覆盖 47 项检查，包括两内核真实启动、12 类分享协议与原生配置校验、代理组切换、匿名控制接口拒绝、IPv6 代理传输、本地 HTTP 字节传输和流量/连接/内存统计。系统代理恢复采用持久备份与所有权比较；测试覆盖比较逻辑，集成测试不改用户正在使用的系统代理。测试入口捕获异常并退出 1，不触发 Windows 错误对话框。UI smoke 在不展示窗口的情况下构造并渲染全部六页，便于检查颜色与布局。

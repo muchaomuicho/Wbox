@@ -4,8 +4,27 @@ using Wbox;
 
 try
 {
+Environment.SetEnvironmentVariable("WBOX_DATA_DIR", Path.GetFullPath("windows/test-runtime"));
+if (args.Length == 2 && args[0] == "--subscription") {
+    var imported = NodeParser.ParseSubscription(File.ReadAllText(args[1]));
+    Console.WriteLine("Imported " + imported.Count + " nodes: " + string.Join(", ", imported.GroupBy(n => n.Protocol).Select(g => g.Key + "=" + g.Count())));
+    foreach (var engine in new[] { "sing-box", "mihomo" }) {
+        if (!imported.Any(n => NodeOptions.Compatible(n,engine))) { Console.WriteLine(engine + " requires switching to the native subscription core"); continue; }
+        var options = new Preferences { Core = engine, Nodes = imported, SystemProxy = false };
+        var generated = ConfigBuilder.Build(options, "test");
+        var checkPath = Path.Combine(Store.DirectoryPath, "subscription-check.json"); File.WriteAllText(checkPath,generated);
+        await ImportChecks.Validate(engine,checkPath,(ok,label) => { if(!ok) throw new Exception("Native subscription config check failed"); });
+        File.Delete(checkPath);
+        Console.WriteLine(engine + " configuration generated successfully");
+    }
+    var content = File.ReadAllText(args[1]); var fullCore=ProfileImport.DetectCore(content);
+    var fullPath=Path.Combine(Store.DirectoryPath,"remote-check.json"); File.WriteAllText(fullPath,content);
+    await ImportChecks.Validate(fullCore,fullPath,(ok,label) => {if(!ok)throw new Exception("Remote config check failed");});File.Delete(fullPath);
+    Console.WriteLine("Full remote configuration passed native check"); return;
+}
 int checks = 0;
 void Check(bool condition, string label) { if (!condition) throw new Exception("FAILED: " + label); checks++; Console.WriteLine("PASS " + label); }
+await ImportChecks.Run(Check);
 var ss = NodeParser.Parse("ss://" + Convert.ToBase64String(Encoding.UTF8.GetBytes("aes-128-gcm:p:a@ss")) + "@[2001:db8::1]:8388#IPv6");
 Check(ss.Password == "p:a@ss" && ss.Server == "2001:db8::1" && ss.Port == 8388, "SS URL credentials and IPv6");
 var vm = NodeParser.Parse("vmess://" + Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"ps\":\"Test\",\"add\":\"example.org\",\"port\":\"443\",\"id\":\"99b91b8e-d4f1-459f-89d5-819553d4a9c3\",\"net\":\"ws\",\"tls\":\"tls\",\"path\":\"/path\",\"host\":\"cdn.example.org\"}")));

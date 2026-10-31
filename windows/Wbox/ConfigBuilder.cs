@@ -59,20 +59,22 @@ public static class ConfigBuilder
     }
     static JsonObject SingboxNodes(Preferences p)
     {
-        var proxies = new JsonArray(); var names = new JsonArray();
-        for (int i = 0; i < p.Nodes.Count; i++) { var tag = Tag(p.Nodes[i], i); names.Add(tag); proxies.Add(SingboxOutbound(p.Nodes[i], tag)); }
+        var proxies = new JsonArray(); var names = new JsonArray(); var endpoints = new JsonArray();
+        if (!NodeOptions.Compatible(p.Nodes[Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)], p.Core)) throw new InvalidOperationException("所选节点不支持此内核，请切换内核或节点。");
+        for (int i = 0; i < p.Nodes.Count; i++) { if (!NodeOptions.Compatible(p.Nodes[i], p.Core)) continue; var tag = Tag(p.Nodes[i], i); names.Add(tag); var outbound = SingboxOutbound(p.Nodes[i], tag); if (p.Nodes[i].Protocol == "wireguard") endpoints.Add(outbound); else proxies.Add(outbound); }
         proxies.Insert(0, new JsonObject { ["type"] = "selector", ["tag"] = "Wbox", ["outbounds"] = names, ["default"] = Tag(p.Nodes[Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)], Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)), ["interrupt_exist_connections"] = true });
         proxies.Add(new JsonObject { ["type"] = "direct", ["tag"] = "DIRECT" });
-        return new JsonObject { ["log"] = new JsonObject { ["level"] = "info", ["timestamp"] = true }, ["dns"] = new JsonObject { ["servers"] = new JsonArray(new JsonObject { ["type"] = "local", ["tag"] = "local" }), ["final"] = "local" }, ["outbounds"] = proxies, ["route"] = new JsonObject { ["final"] = "Wbox", ["auto_detect_interface"] = true, ["default_domain_resolver"] = "local" } };
+        return new JsonObject { ["log"] = new JsonObject { ["level"] = "warn", ["timestamp"] = true }, ["dns"] = new JsonObject { ["servers"] = new JsonArray(new JsonObject { ["type"] = "local", ["tag"] = "local" }), ["final"] = "local" }, ["endpoints"] = endpoints, ["outbounds"] = proxies, ["route"] = new JsonObject { ["final"] = "Wbox", ["auto_detect_interface"] = true, ["default_domain_resolver"] = "local" } };
     }
     static JsonObject MihomoNodes(Preferences p)
     {
         var proxies = new JsonArray(); var names = new JsonArray();
-        for (int i = 0; i < p.Nodes.Count; i++) { var name = Tag(p.Nodes[i], i); names.Add(name); proxies.Add(MihomoProxy(p.Nodes[i], name)); }
+        if (!NodeOptions.Compatible(p.Nodes[Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)], p.Core)) throw new InvalidOperationException("所选节点不支持此内核，请切换内核或节点。");
+        for (int i = 0; i < p.Nodes.Count; i++) { if (!NodeOptions.Compatible(p.Nodes[i], p.Core)) continue; var name = Tag(p.Nodes[i], i); names.Add(name); proxies.Add(MihomoProxy(p.Nodes[i], name)); }
         var selected = Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1);
         var selectedName = Tag(p.Nodes[selected], selected); var idx = names.Select(n => n!.ToString()).ToList().IndexOf(selectedName);
         if (idx > 0) { names.RemoveAt(idx); names.Insert(0, JsonValue.Create(selectedName)); }
-        return new JsonObject { ["mode"] = "rule", ["log-level"] = "info", ["ipv6"] = true, ["proxies"] = proxies, ["proxy-groups"] = new JsonArray(new JsonObject { ["name"] = "Wbox", ["type"] = "select", ["proxies"] = names }), ["rules"] = new JsonArray("MATCH,Wbox") };
+        return new JsonObject { ["mode"] = "rule", ["log-level"] = "warning", ["ipv6"] = true, ["proxies"] = proxies, ["proxy-groups"] = new JsonArray(new JsonObject { ["name"] = "Wbox", ["type"] = "select", ["proxies"] = names }), ["rules"] = new JsonArray("MATCH,Wbox") };
     }
     public static string Tag(NodeRecord n, int i) => $"{n.Name} · {i + 1}";
     public static JsonObject SingboxOutbound(NodeRecord n, string tag)
@@ -100,6 +102,7 @@ public static class ConfigBuilder
             else { transport["path"] = n.Path; if (n.Host.Length > 0) { if (n.Network == "ws") transport["headers"] = new JsonObject { ["Host"] = n.Host }; else transport["host"] = new JsonArray(n.Host); } }
             o["transport"] = transport;
         }
+        NodeOptions.Apply(n, o, true); o["tag"] = tag;
         return o;
     }
     public static JsonObject MihomoProxy(NodeRecord n, string tag)
@@ -112,7 +115,7 @@ public static class ConfigBuilder
         if (n.Protocol == "ss") o["cipher"] = n.Cipher;
         if (n.Protocol == "vmess") { o["cipher"] = n.Cipher; o["alterId"] = n.AlterId; }
         if (n.Protocol == "vless" && n.Flow.Length > 0) o["flow"] = n.Flow;
-        if (n.Tls) { o["tls"] = true; o["skip-cert-verify"] = n.Insecure; if (n.Sni.Length > 0) o[n.Protocol == "trojan" ? "sni" : "servername"] = n.Sni; }
+        if (n.Tls) { o["tls"] = true; o["skip-cert-verify"] = n.Insecure; if (n.Sni.Length > 0) o[n.Protocol == "vmess" || n.Protocol == "vless" ? "servername" : "sni"] = n.Sni; }
         if (!string.IsNullOrEmpty(n.Fingerprint)) o["client-fingerprint"] = n.Fingerprint;
         if (!string.IsNullOrEmpty(n.RealityKey)) o["reality-opts"] = new JsonObject { ["public-key"] = n.RealityKey, ["short-id"] = n.RealityShortId ?? "" };
         if (n.Network != "tcp" && n.Protocol is "vmess" or "vless" or "trojan")
@@ -122,6 +125,7 @@ public static class ConfigBuilder
             else if (n.Network == "grpc") o["grpc-opts"] = new JsonObject { ["grpc-service-name"] = n.Path.Trim('/') };
             else o["h2-opts"] = new JsonObject { ["path"] = n.Path, ["host"] = new JsonArray(n.Host.Length > 0 ? n.Host : n.Server) };
         }
+        NodeOptions.Apply(n, o, false);
         return o;
     }
 }

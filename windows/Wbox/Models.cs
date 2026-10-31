@@ -13,6 +13,20 @@ public sealed class Preferences
     public int SelectedNode { get; set; }
     public List<NodeRecord> Nodes { get; set; } = [];
     public List<string> Subscriptions { get; set; } = [];
+    public List<ConfigProfile> Configs { get; set; } = [];
+    public string NodeCore { get; set; } = "";
+    public string SubscriptionFilter { get; set; } = "";
+}
+
+public sealed class ConfigProfile
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Name { get; set; } = "配置";
+    public string Core { get; set; } = "sing-box";
+    public string Path { get; set; } = "";
+    public string Url { get; set; } = "";
+    public DateTime Updated { get; set; } = DateTime.Now;
+    public string Detail => $"{Core} · {(Url.Length == 0 ? "本地文件" : "远程配置")} · {Updated:MM-dd HH:mm}";
 }
 
 public sealed class NodeRecord
@@ -38,6 +52,10 @@ public sealed class NodeRecord
     public JsonObject? NativeSingbox { get; set; }
     public JsonObject? NativeMihomo { get; set; }
     public string SourceSubscription { get; set; } = "";
+    public string Username { get; set; } = "";
+    public Dictionary<string, string> Options { get; set; } = [];
+    public string TransportText => Network + (Tls ? " · TLS" : "");
+    public string SourceName => SourceSubscription.Length == 0 ? "手动导入" : new Uri(SourceSubscription).Host;
     [System.Text.Json.Serialization.JsonIgnore]
     public string DelayText { get; set; } = "未测试";
     public string Display => $"{Name}  ·  {Protocol.ToUpperInvariant()}  ·  {Server}:{Port}";

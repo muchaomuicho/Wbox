@@ -18,7 +18,7 @@ public final class WaveView extends View {
     @Override protected void onDraw(Canvas c){
         super.onDraw(c);float d=getResources().getDisplayMetrics().density,l=0,r=getWidth(),t=28*d,b=getHeight()-27*d;
         long max=1024;for(WboxVpnService.TrafficSample s:samples)max=Math.max(max,Math.max(s.up,s.down));max=(long)(max*1.1);
-        paint.setStrokeWidth(d);paint.setStyle(Paint.Style.STROKE);paint.setColor(0xffe9ecf1);
+        paint.setStrokeWidth(d);paint.setStyle(Paint.Style.STROKE);paint.setColor(0xff3b3b3b);
         for(int i=0;i<4;i++){float y=t+(b-t)*i/3;c.drawLine(l,y,r,y,paint);}
         paint.setStyle(Paint.Style.FILL);paint.setTextSize(10*d);paint.setColor(0xff8d96a2);
         c.drawText(MainActivity.bytes(max)+"/s",l,t-9*d,paint);c.drawText("60 秒前",l,b+19*d,paint);c.drawText("现在",r-paint.measureText("现在"),b+19*d,paint);
@@ -33,7 +33,7 @@ public final class WaveView extends View {
             else{float mid=(prevX+x)/2;line.cubicTo(mid,prevY,mid,y,x,y);fill.cubicTo(mid,prevY,mid,y,x,y);}prevX=x;prevY=y;
         }
         fill.lineTo(prevX,b);fill.close();
-        if(!up){paint.setShader(new LinearGradient(0,t,0,b,0x22333b48,0x02333b48,Shader.TileMode.CLAMP));paint.setStyle(Paint.Style.FILL);c.drawPath(fill,paint);paint.setShader(null);}
-        paint.setStyle(Paint.Style.STROKE);paint.setColor(up?0xff98a0ad:0xff272b31);paint.setStrokeWidth(1.8f*d);paint.setPathEffect(up?new DashPathEffect(new float[]{4*d,4*d},0):null);c.drawPath(line,paint);paint.setPathEffect(null);
+        if(!up){paint.setShader(new LinearGradient(0,t,0,b,0x22dddddd,0x02dddddd,Shader.TileMode.CLAMP));paint.setStyle(Paint.Style.FILL);c.drawPath(fill,paint);paint.setShader(null);}
+        paint.setStyle(Paint.Style.STROKE);paint.setColor(up?0xff98a0ad:0xffe0e0e0);paint.setStrokeWidth(1.8f*d);paint.setPathEffect(up?new DashPathEffect(new float[]{4*d,4*d},0):null);c.drawPath(line,paint);paint.setPathEffect(null);
     }
 }

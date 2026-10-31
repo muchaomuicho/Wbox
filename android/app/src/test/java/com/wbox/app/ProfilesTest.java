@@ -20,7 +20,47 @@ public class ProfilesTest {
     @Test public void subscriptionRefreshPreservesManual()throws Exception{p.importText(SS,null);String a=SS.replace("8388","8389");String b=SS.replace("8388","8390");p.importText(a,"https://example.com/sub");p.importText(b,"https://example.com/sub");assertEquals(2,p.nodes().size());String json=p.data.getJSONArray("nodes").toString();assertTrue(json.contains("8388"));assertTrue(json.contains("8390"));assertFalse(json.contains("8389"));}
     @Test public void base64Subscription()throws Exception{String b=Base64.getEncoder().encodeToString((SS+"\n"+SS.replace("8388","8389")).getBytes(StandardCharsets.UTF_8));p.importText(b,null);assertEquals(2,p.nodes().size());assertNotEquals(p.nodes().get(0).name,p.nodes().get(1).name);}
     @Test public void invalidPortRejected()throws Exception{try{Node.parse(SS.replace("8388","65536"));fail("invalid port");}catch(IllegalArgumentException expected){}}
-    @Test public void pluginExplicitlyRejected()throws Exception{try{Node.parse(SS.replace("#Test","?plugin=v2ray-plugin#Test"));fail("must not silently discard plugin");}catch(IllegalArgumentException expected){assertTrue(expected.getMessage().contains("插件"));}}
+    @Test public void defaultProxyPorts()throws Exception{assertEquals(80,Node.parse("http://example.org#HTTP").port);assertEquals(1080,Node.parse("socks://example.org#SOCKS").port);}
+    @Test public void tlsAndSniAreNotDowngraded()throws Exception{Node https=Node.parse("https://user:password@127.0.0.1:443?sni=example.org#TLS");assertEquals(true,https.mihomo().get("tls"));assertEquals("example.org",https.mihomo().get("sni"));Node vless=Node.parse("vless://11111111-1111-4111-8111-111111111111@127.0.0.1:443?security=tls&sni=example.org");assertEquals("example.org",vless.mihomo().get("servername"));}
+    @Test public void pluginExplicitlyRejected()throws Exception{try{Node.parse(SS.replace("#Test","?plugin=unknown-plugin#Test"));fail("must not silently discard plugin");}catch(IllegalArgumentException expected){assertTrue(expected.getMessage().contains("插件"));}}
+    @Test public void workspacesPreserveIndependentSelection()throws Exception{
+        p.importNodes(SS,null);p.data.put("engine","mihomo").put("selected","Test");
+        p.importConfig("{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"DIRECT\"}]}","https://example.org/no-extension",null);
+        assertEquals("nodes",p.mode());assertEquals("mihomo",p.engine());p.setWorkspace("config");assertEquals("sing-box",p.engine());
+        p.importNodes(SS.replace("8388","8389"),"https://example.org/sub");assertEquals("config",p.mode());assertEquals("Test",p.data.getString("selected"));
+        p.setWorkspace("nodes");assertEquals("mihomo",p.engine());assertEquals(2,p.nodes().size());
+    }
+    @Test public void sameLinkInManualGroupSurvivesSubscriptionRefresh()throws Exception{
+        p.importNodes(SS,null);p.importNodes(SS,"https://example.org/sub");p.importNodes(SS.replace("8388","8389"),"https://example.org/sub");
+        assertEquals(2,p.nodes().size());assertTrue(p.nodes().stream().anyMatch(n->n.port==8388&&n.source.isEmpty()));
+    }
+    @Test public void badUpdateKeepsPreviousConfigAndNodes()throws Exception{
+        p.importConfig("proxies: []\nrules:\n - MATCH,DIRECT\n","https://example.org/sub",null);String before=p.data.toString();
+        try{p.importConfig("<html>error</html>","https://example.org/sub",p.activeConfig().getString("id"));fail();}catch(IllegalArgumentException expected){}assertEquals(before,p.data.toString());
+        p.importNodes(SS,"https://example.org/nodes");before=p.data.toString();try{p.importNodes(SS+"\ninvalid","https://example.org/nodes");fail();}catch(Exception expected){}assertEquals(before,p.data.toString());
+    }
+    @Test public void nativeSubscriptionRemainsNodeWorkspace()throws Exception{
+        p.importNodes("proxies:\n - {name: Native, type: ss, server: 127.0.0.1, port: 8388, cipher: aes-128-gcm, password: secret}\n","https://example.org/native");
+        assertEquals("nodes",p.mode());p.data.put("engine","mihomo");assertTrue(p.compile("test").contains("secret"));assertNotNull(p.nodes().get(0).nativeMihomo);
+    }
+    @Test public void providedRemoteConfigImportsInBothWorkspaces()throws Exception{
+        String path=System.getenv("WBOX_SUBSCRIPTION_TEST");Assume.assumeTrue(path!=null);String content=new String(Files.readAllBytes(Paths.get(path)),StandardCharsets.UTF_8);
+        p.importConfig(content,"https://example.org/no-extension",null);p.setWorkspace("config");validateExpanded("sing-box");
+        p.setWorkspace("nodes");p.importNodes(content,"https://example.org/no-extension");assertEquals(2,p.nodes().size());assertEquals("sing-box",p.engine());validateExpanded("sing-box");
+    }
+    @Test public void expandedProtocolsPassActualCores()throws Exception{
+        Assume.assumeTrue("1".equals(System.getenv("WBOX_CORE_TESTS")));
+        byte[] bytes=new byte[32];for(int i=0;i<32;i++)bytes[i]=(byte)(i+1);String key=URLEncoder.encode(Base64.getEncoder().encodeToString(bytes),"UTF-8");
+        String[] links={"anytls://pw@127.0.0.1:443?alpn=h2#AnyTLS","socks://user:p%2Bass@127.0.0.1:1080#SOCKS","https://user:pw@127.0.0.1:443#HTTPS","hysteria://127.0.0.1:443?auth=pw&upmbps=50&downmbps=100#HY1","hy2://pw@127.0.0.1:443?obfs=salamander&obfs-password=secret&alpn=h3#HY2","tuic://11111111-1111-4111-8111-111111111111:pw@127.0.0.1:443?congestion_control=bbr&udp_relay_mode=quic#TUIC",SS.replace("#Test","?plugin=obfs-local%3Bobfs%3Dhttp%3Bobfs-host%3Dexample.org#Obfs"),"wireguard://"+key+"@127.0.0.1:2408?publickey="+key+"&address=172.16.0.2%2F32%2Cfd00%3A%3A2%2F128&reserved=1,2,3#WG"};
+        p.importNodes(String.join("\n",links),null);assertEquals("p+ass",p.nodes().get(1).password);
+        for(String engine:List.of("sing-box","mihomo")){p.data.put("engine",engine);validateExpanded(engine);}
+        p.data.remove("nodes");p.importNodes("naive+https://user:pw@127.0.0.1:443#Naive",null);p.data.put("engine","sing-box");assertFalse(p.nodes().get(0).compatible("sing-box"));
+    }
+    void validateExpanded(String engine)throws Exception{
+        File cf=new File(folder,"expanded.json");Files.write(cf.toPath(),p.compile("test").getBytes(StandardCharsets.UTF_8));File exe=new File(System.getProperty("wbox.root"),"resources/cores/windows/"+engine+".exe");
+        List<String> cmd=engine.equals("sing-box")?List.of(exe.getAbsolutePath(),"check","-c",cf.getAbsolutePath()):List.of(exe.getAbsolutePath(),"-t","-f",cf.getAbsolutePath(),"-d",folder.getAbsolutePath());
+        Process process=new ProcessBuilder(cmd).redirectErrorStream(true).start();try{assertTrue(process.waitFor(25,TimeUnit.SECONDS));assertEquals(new String(process.getInputStream().readAllBytes(),StandardCharsets.UTF_8),0,process.exitValue());}finally{if(process.isAlive())process.destroyForcibly();}
+    }
     @Test public void yamlRetainsTypesAndRules()throws Exception{String src="proxies: []\nmode: rule\nipv6: false\nallow-lan: true\nrules: [MATCH,DIRECT]\ndns: {enable: false}\n";p.importText(src,null);Map<String,Object> out=Profiles.yamlMap(p.compile("secret"));assertEquals(false,out.get("ipv6"));assertEquals(false,((Map<?,?>)out.get("dns")).get("enable"));assertEquals(List.of("MATCH","DIRECT"),out.get("rules"));assertEquals(false,out.get("allow-lan"));assertEquals("secret",out.get("secret"));assertEquals(10808,out.get("mixed-port"));}
     @Test public void jsonRetainsRoutesAndOtherInbound()throws Exception{String src="{\"inbounds\":[{\"type\":\"tun\",\"tag\":\"old\"},{\"type\":\"http\",\"tag\":\"keep\",\"listen_port\":8099}],\"outbounds\":[{\"type\":\"direct\",\"tag\":\"direct\"}],\"route\":{\"final\":\"direct\"}}";p.importText(src,null);JSONObject out=new JSONObject(p.compile("secret"));assertEquals("direct",out.getJSONObject("route").getString("final"));assertEquals(2,out.getJSONArray("inbounds").length());assertEquals("keep",out.getJSONArray("inbounds").getJSONObject(0).getString("tag"));assertEquals(src,p.data.getString("config_sing-box"));}
     @Test public void bothCompilersSupportProtocols()throws Exception{String[] links={SS,"vless://b831381d-6324-4d53-ad4f-8cda48b30811@127.0.0.1:443?security=tls&sni=example.com&type=ws&path=%2Fa#VLESS","trojan://pw@127.0.0.1:443#Trojan","hy2://pw@127.0.0.1:443#HY2","tuic://b831381d-6324-4d53-ad4f-8cda48b30811:pw@127.0.0.1:443#TUIC"};p.importText(String.join("\n",links),null);for(String e:List.of("sing-box","mihomo")){p.data.put("engine",e);String config=p.compile("s");assertTrue(config.contains("Wbox"));assertTrue(config.contains("127.0.0.1"));}}

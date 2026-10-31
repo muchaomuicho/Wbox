@@ -8,24 +8,37 @@ using Forms = System.Windows.Forms;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 using RadioButton = System.Windows.Controls.RadioButton;
+using TextBox = System.Windows.Controls.TextBox;
+using Button = System.Windows.Controls.Button;
+using Orientation = System.Windows.Controls.Orientation;
+using Brush = System.Windows.Media.Brush;
 namespace Wbox;
 
 public partial class MainWindow : Window, IDisposable
 {
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
     readonly Preferences preferences;
     readonly CoreManager core = new();
     readonly ObservableCollection<string> logs = [];
     readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) };
     readonly Forms.NotifyIcon tray;
-    bool initialized, busy, polling, updatingGroups, exiting;
+    bool initialized, busy, polling, updatingGroups, exiting, refreshingNodes;
+    readonly TextBox ImportText = new();
     int ticks;
+    bool cancelTests;
+    bool disposed;
+    readonly System.Collections.Concurrent.ConcurrentQueue<string> pendingLogs = new();
     public MainWindow(Preferences preferences)
     {
         this.preferences = preferences; InitializeComponent();
+        SourceInitialized += (_, _) => { int dark = 1; DwmSetWindowAttribute(new System.Windows.Interop.WindowInteropHelper(this).Handle, 20, ref dark, sizeof(int)); };
+        if (preferences.NodeCore.Length == 0) preferences.NodeCore = preferences.Core;
+        if (preferences.Configs.Count == 0 && File.Exists(preferences.ConfigPath)) preferences.Configs.Add(new ConfigProfile { Name = Path.GetFileNameWithoutExtension(preferences.ConfigPath), Path = preferences.ConfigPath, Core = preferences.Core });
         LogsList.ItemsSource = logs;
-        CoreBox.SelectedIndex = preferences.Core == "sing-box" ? 1 : 0;
+        CoreBox.SelectedIndex = preferences.NodeCore == "sing-box" ? 1 : 0;
         ConfigMode.IsChecked = preferences.Mode == "config"; NodeMode.IsChecked = preferences.Mode != "config";
-        ConfigPathBox.Text = preferences.ConfigPath; DelayUrlBox.Text = preferences.DelayUrl;
+        DelayUrlBox.Text = preferences.DelayUrl;
         AutoStartCheck.IsChecked = preferences.AutoStart; SilentCheck.IsChecked = preferences.Silent;
         AutoConnectCheck.IsChecked = preferences.AutoConnect; SystemProxyCheck.IsChecked = preferences.SystemProxy;
         RefreshNodes(); SavedSubscriptionsBox.ItemsSource = preferences.Subscriptions.ToArray();
@@ -36,26 +49,26 @@ public partial class MainWindow : Window, IDisposable
         menu.Items.Add("打开 Wbox", null, (_, _) => Dispatcher.Invoke(ShowFromTray));
         menu.Items.Add("连接 / 停止", null, (_, _) => Dispatcher.BeginInvoke(async () => await ToggleAsync()));
         menu.Items.Add(new Forms.ToolStripSeparator()); menu.Items.Add("退出", null, (_, _) => Dispatcher.Invoke(ExitApp)); tray.ContextMenuStrip = menu;
-        core.Log += line => Dispatcher.BeginInvoke(() => AddLog(line));
+        core.Log += line => { pendingLogs.Enqueue(line.Length > 4096 ? line[..4096] : line); while (pendingLogs.Count > 500) pendingLogs.TryDequeue(out _); };
         core.Exited += () => Dispatcher.BeginInvoke(() => { AddLog("内核已异常退出，系统代理已恢复。"); core.Stop(); SetState(false); });
         timer.Tick += async (_, _) => await PollAsync(); timer.Start();
-        Closing += OnClosing; initialized = true; UpdateSummary();
+        Closing += OnClosing; MainTabs.SelectedIndex = 0; initialized = true; RefreshProfiles(); RefreshFilter(); UpdateWorkspace(); UpdateSummary();
     }
-    public void ShowFromTray() { Show(); WindowState = WindowState.Normal; Activate(); }
+    public void ShowFromTray() { timer.Interval = TimeSpan.FromSeconds(1); Show(); WindowState = WindowState.Normal; Activate(); }
     void OnClosing(object? sender, CancelEventArgs e) { if (!exiting) { e.Cancel = true; SaveSettings(false); Hide(); } }
     public void ExitApp() { if (exiting) return; exiting = true; SaveSettings(false); Dispose(); System.Windows.Application.Current.Shutdown(); }
-    public void Dispose() { timer.Stop(); core.Dispose(); tray.Visible = false; tray.Dispose(); }
+    public void Dispose() { if (disposed) return; disposed = true; timer.Stop(); core.Dispose(); tray.Visible = false; tray.Dispose(); }
     void AddLog(string text)
     {
         // Remove ANSI color sequences from command-line output.
         text = System.Text.RegularExpressions.Regex.Replace(text, "\u001b\\[[0-9;]*m", "");
         if (text.Length > 4096) text = text[..4096] + "…";
-        logs.Add(text); while (logs.Count > 1000) logs.RemoveAt(0);
-        if (logs.Count > 0 && IsVisible) LogsList.ScrollIntoView(logs[^1]);
+        logs.Add(text); while (logs.Count > 500) logs.RemoveAt(0);
+        if (logs.Count > 0 && IsVisible && MainTabs.SelectedIndex == 4) LogsList.ScrollIntoView(logs[^1]);
     }
     void SetState(bool running)
     {
-        StartButton.Content = running ? "⏻  断开连接" : "⏻  连接代理";
+        StartButton.Content = running ? "■  断开" : "⏻  连接";
         StartButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(running ? "#202227" : "#15845B"));
         StateLabel.Text = running ? "连接已就绪" : "尚未连接";
         StateGlyph.Foreground = running ? new SolidColorBrush(Color.FromRgb(21, 132, 91)) : (SolidColorBrush)FindResource("Ink");
@@ -66,12 +79,12 @@ public partial class MainWindow : Window, IDisposable
     void SaveSettings(bool show)
     {
         if (!initialized) return;
-        preferences.Core = CoreBox.SelectedIndex == 1 ? "sing-box" : "mihomo";
+        preferences.NodeCore = CoreBox.SelectedIndex == 1 ? "sing-box" : "mihomo";
+        if (preferences.Mode == "nodes") preferences.Core = preferences.NodeCore;
         preferences.Mode = ConfigMode.IsChecked == true ? "config" : "nodes";
         preferences.DelayUrl = string.IsNullOrWhiteSpace(DelayUrlBox.Text) ? "https://www.apple.com/library/test/success.html" : DelayUrlBox.Text.Trim();
         preferences.AutoStart = AutoStartCheck.IsChecked == true; preferences.Silent = SilentCheck.IsChecked == true;
         preferences.AutoConnect = AutoConnectCheck.IsChecked == true; preferences.SystemProxy = SystemProxyCheck.IsChecked == true;
-        preferences.ConfigPath = ConfigPathBox.Text;
         Store.Save(preferences); UpdateSummary();
         try { if (Environment.GetEnvironmentVariable("WBOX_DATA_DIR") == null) SystemProxy.SetAutoStart(preferences.AutoStart, preferences.Silent); if (show) Notice.Text = "设置已保存"; }
         catch (Exception ex) { Notice.Text = "开机启动设置失败：" + ex.Message; AddLog(Notice.Text); }
@@ -80,25 +93,27 @@ public partial class MainWindow : Window, IDisposable
     public async Task ConnectAsync()
     {
         if (busy || core.Running) return; busy = true; StartButton.IsEnabled = false; SaveSettings(false); StateLabel.Text = "正在连接…";
-        try { await core.StartAsync(preferences); Chart.Clear(); timer.Interval = TimeSpan.FromSeconds(1); SetState(true); Notice.Text = "连接成功"; await RefreshGroupsAsync(); }
+        try { await core.StartAsync(preferences); Chart.Clear(); DownloadChart.Clear(); timer.Interval = TimeSpan.FromSeconds(1); SetState(true); Notice.Text = "连接成功"; await RefreshGroupsAsync(); }
         catch (Exception ex) { AddLog(ex.Message); Notice.Text = ex.Message.Replace('\n', ' '); SetState(false); }
         finally { busy = false; StartButton.IsEnabled = true; }
     }
     async Task PollAsync()
     {
+        for (int i = 0; i < 100 && pendingLogs.TryDequeue(out var line); i++) AddLog(line);
         if (polling || busy || !core.Running) { if (!core.Running) { timer.Interval = TimeSpan.FromSeconds(5); if (IsVisible) { using var current = Process.GetCurrentProcess(); MemoryLabel.Text = Bytes(current.WorkingSet64); } } return; }
         polling = true;
         try
         {
-            var stats = await core.StatsAsync();
+            var stats = await core.StatsAsync(IsVisible && MainTabs.SelectedIndex == 3);
+            if (!IsVisible || WindowState == WindowState.Minimized) { timer.Interval = TimeSpan.FromSeconds(10); return; }
             UploadTotal.Text = Bytes(stats.Uploaded); DownloadTotal.Text = Bytes(stats.Downloaded);
             UploadRate.Text = Bytes(stats.UploadRate) + "/s"; DownloadRate.Text = Bytes(stats.DownloadRate) + "/s";
-            ConnectionCount.Text = $"{stats.Inbound} / {stats.Outbound}"; MemoryLabel.Text = Bytes(stats.Memory);
-            Chart.Add(stats.UploadRate, stats.DownloadRate);
-            if (IsVisible) ConnectionsGrid.ItemsSource = stats.Connections;
-            if (++ticks % 10 == 0) await RefreshGroupsAsync();
-            // A hidden window samples every 3 s to reduce background UI/controller work.
-            timer.Interval = TimeSpan.FromSeconds(IsVisible ? 1 : 3);
+            ConnectionCount.Text = $"{stats.Inbound} / {stats.Outbound}"; MemoryLabel.Text = Bytes(stats.AppMemory); CoreMemoryLabel.Text = Bytes(stats.CoreMemory);
+            Chart.Add(stats.UploadRate, stats.DownloadRate); DownloadChart.Add(stats.UploadRate, stats.DownloadRate);
+            if (MainTabs.SelectedIndex == 3) ConnectionsGrid.ItemsSource = stats.Connections;
+            if (++ticks % 10 == 0 && MainTabs.SelectedIndex == 1 && preferences.Mode == "config") await RefreshGroupsAsync();
+            // The hidden-window branch above polls only once per 10 seconds.
+            timer.Interval = TimeSpan.FromSeconds(IsVisible ? 1 : 10);
         }
         catch (Exception ex) { if (core.Running && ticks % 10 == 0) AddLog("状态读取：" + ex.Message); }
         finally { polling = false; }
@@ -123,17 +138,28 @@ public partial class MainWindow : Window, IDisposable
         GroupNodesBox.ItemsSource = group.Nodes; GroupNodesBox.SelectedItem = group.Selected;
         GroupNodesBox.IsEnabled = group.Selectable;
     }
-    void RefreshNodes() { NodesList.ItemsSource = preferences.Nodes.ToArray(); NodesList.SelectedIndex = preferences.Nodes.Count == 0 ? -1 : Math.Clamp(preferences.SelectedNode, 0, preferences.Nodes.Count - 1); NodesHeading.Text = $"我的节点 · {preferences.Nodes.Count}"; }
+    void RefreshNodes()
+    {
+        refreshingNodes = true;
+        var selected = preferences.Nodes.ElementAtOrDefault(preferences.SelectedNode);
+        var search = NodeSearch.Text.Trim(); var source = NodeFilter.SelectedIndex;
+        var url = source > 1 ? preferences.Subscriptions.ElementAtOrDefault(source - 2) : null;
+        NodesList.ItemsSource = preferences.Nodes.Where(n => (source != 1 || n.SourceSubscription.Length == 0) && (url == null || n.SourceSubscription == url) && (search.Length == 0 || $"{n.Name} {n.Server} {n.Protocol}".Contains(search, StringComparison.OrdinalIgnoreCase))).ToArray();
+        NodesList.SelectedItem = selected; NodesHeading.Text = $"节点 · {NodesList.Items.Count}";
+        refreshingNodes = false;
+    }
     void MergeNodes(List<NodeRecord> nodes)
     {
         if (core.Running) throw new InvalidOperationException("请停止连接后再导入或更新节点。");
         // Replace identical credentials/server entries without collapsing multiple accounts on the same endpoint.
         foreach (var node in nodes)
         {
-            var old = preferences.Nodes.FindIndex(n => n.Protocol == node.Protocol && n.Server == node.Server && n.Port == node.Port && n.Uuid == node.Uuid && n.Password == node.Password);
+            var old = preferences.Nodes.FindIndex(n => n.SourceSubscription == node.SourceSubscription && n.Protocol == node.Protocol && n.Name == node.Name && n.Server == node.Server && n.Port == node.Port && n.Uuid == node.Uuid && n.Password == node.Password);
             if (old >= 0) preferences.Nodes[old] = node; else preferences.Nodes.Add(node);
         }
         RefreshNodes(); SaveSettings(false); Notice.Text = $"导入 {nodes.Count} 个节点，共 {preferences.Nodes.Count} 个";
+        if (preferences.Nodes.All(n => n.NativeSingbox != null)) CoreBox.SelectedIndex = 1;
+        else if (preferences.Nodes.All(n => n.NativeMihomo != null)) CoreBox.SelectedIndex = 0;
     }
     async Task TestNodeAsync(string? name, bool allowTemporary)
     {
@@ -154,11 +180,17 @@ public partial class MainWindow : Window, IDisposable
             if (index >= 0) { preferences.Nodes[index].DelayText = $"{delay} ms"; NodesList.Items.Refresh(); }
         }
         catch (Exception ex) { Notice.Text = "测试失败：" + ex.Message; AddLog(Notice.Text); }
-        finally { if (temporary) core.Stop(); busy = false; StartButton.IsEnabled = true; }
+        finally { if (temporary) core.Stop(); busy = false; StartButton.IsEnabled = true; DelayAllButton.Content = "测试全部"; }
     }
     async void StartClick(object sender, RoutedEventArgs e) => await ToggleAsync();
-    void CoreChanged(object sender, SelectionChangedEventArgs e) { if (initialized) SaveSettings(false); }
-    void ModeChanged(object sender, RoutedEventArgs e) { if (initialized) SaveSettings(false); }
+    void CoreChanged(object sender, SelectionChangedEventArgs e) { if (initialized) { if (core.Running) { Notice.Text = "下次连接使用新内核"; } SaveSettings(false); } }
+    void ModeChanged(object sender, RoutedEventArgs e) {
+        if (!initialized) return;
+        if (busy || core.Running) { initialized = false; ConfigMode.IsChecked = preferences.Mode == "config"; NodeMode.IsChecked = preferences.Mode != "config"; initialized = true; Notice.Text = "断开连接后可切换工作区"; return; }
+        preferences.Mode = ConfigMode.IsChecked == true ? "config" : "nodes";
+        preferences.Core = preferences.Mode == "nodes" ? preferences.NodeCore : preferences.Configs.FirstOrDefault(c => c.Path == preferences.ConfigPath)?.Core ?? "sing-box";
+        SaveSettings(false); UpdateWorkspace();
+    }
     void GroupChanged(object sender, SelectionChangedEventArgs e) { if (updatingGroups) return; updatingGroups = true; try { UpdateGroupNodes(); } finally { updatingGroups = false; } }
     async void GroupNodeChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -168,7 +200,7 @@ public partial class MainWindow : Window, IDisposable
     }
     async void NodeChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!initialized || NodesList.SelectedIndex < 0) return; preferences.SelectedNode = NodesList.SelectedIndex; SaveSettings(false);
+        if (!initialized || refreshingNodes || busy || NodesList.SelectedItem is not NodeRecord selected) return; preferences.SelectedNode = preferences.Nodes.IndexOf(selected); SaveSettings(false);
         if (core.Running && preferences.Mode == "nodes")
         {
             try { await core.SelectAsync("Wbox", ConfigBuilder.Tag(preferences.Nodes[preferences.SelectedNode], preferences.SelectedNode)); await RefreshGroupsAsync(); }
@@ -176,7 +208,7 @@ public partial class MainWindow : Window, IDisposable
         }
     }
     async void DelayClick(object sender, RoutedEventArgs e) => await TestNodeAsync(GroupNodesBox.SelectedItem as string, false);
-    async void DelayNodeClick(object sender, RoutedEventArgs e) => await TestNodeAsync(NodesList.SelectedItem is NodeRecord n ? ConfigBuilder.Tag(n, NodesList.SelectedIndex) : null, true);
+    async void DelayNodeClick(object sender, RoutedEventArgs e) => await TestNodeAsync(NodesList.SelectedItem is NodeRecord n ? ConfigBuilder.Tag(n, preferences.Nodes.IndexOf(n)) : null, true);
     void ImportLinksClick(object sender, RoutedEventArgs e) { try { MergeNodes(NodeParser.ParseSubscription(ImportText.Text)); ImportText.Clear(); } catch (Exception ex) { Notice.Text = ex.Message; } }
     void ImportNodesFileClick(object sender, RoutedEventArgs e)
     {
@@ -185,36 +217,99 @@ public partial class MainWindow : Window, IDisposable
     }
     void DeleteNodeClick(object sender, RoutedEventArgs e)
     {
-        if (core.Running) { Notice.Text = "请停止连接后删除节点"; return; }
+        if (busy || core.Running) { Notice.Text = "请停止连接后删除节点"; return; }
         if (NodesList.SelectedItem is NodeRecord node) { preferences.Nodes.Remove(node); preferences.SelectedNode = 0; RefreshNodes(); SaveSettings(false); }
     }
     void ChooseConfigClick(object sender, RoutedEventArgs e)
     {
+        if (!Editable()) return;
         var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "代理配置|*.json;*.yaml;*.yml|所有文件|*.*" };
-        if (dialog.ShowDialog() == true) { ConfigPathBox.Text = dialog.FileName; CoreBox.SelectedIndex = Path.GetExtension(dialog.FileName).Equals(".json", StringComparison.OrdinalIgnoreCase) ? 1 : 0; ConfigMode.IsChecked = true; SaveSettings(false); Notice.Text = "配置已选择，连接时会先通过内核检查"; }
+        if (dialog.ShowDialog() == true) try {
+            var text = File.ReadAllText(dialog.FileName); var engine = ProfileImport.DetectCore(text);
+            var profile = new ConfigProfile { Name = Path.GetFileNameWithoutExtension(dialog.FileName), Path = dialog.FileName, Core = engine };
+            preferences.Configs.Add(profile); UseConfig(profile); RefreshProfiles();
+        } catch (Exception ex) { Notice.Text = ex.Message; }
+    }
+    async Task ImportSubscriptionAsync(string url)
+    {
+        var text = await ProfileImport.FetchAsync(url, "v2rayN/7.24 Wbox/0.3.0");
+        var nodes = NodeParser.ParseSubscription(text);
+        var selected = preferences.Nodes.ElementAtOrDefault(preferences.SelectedNode);
+        preferences.Nodes.RemoveAll(n => n.SourceSubscription == url);
+        foreach (var node in nodes) node.SourceSubscription = url;
+        MergeNodes(nodes);
+        if (selected != null) { var index = preferences.Nodes.FindIndex(n => n.SourceSubscription == selected.SourceSubscription && n.Name == selected.Name && n.Server == selected.Server); if (index >= 0) preferences.SelectedNode = index; }
+        if (!preferences.Subscriptions.Contains(url)) preferences.Subscriptions.Add(url);
+        SavedSubscriptionsBox.ItemsSource = preferences.Subscriptions.ToArray(); RefreshFilter(); RefreshNodes(); SaveSettings(false);
     }
     async void SubscriptionClick(object sender, RoutedEventArgs e)
     {
-        if (busy || core.Running) { Notice.Text = "请停止连接后导入订阅"; return; } busy = true;
-        try
-        {
-            var url = SubscriptionBox.Text.Trim();
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) throw new ArgumentException("请输入 HTTP 或 HTTPS 订阅链接。");
-            Notice.Text = "正在下载订阅…";
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) }; client.DefaultRequestHeaders.UserAgent.ParseAdd("Wbox/0.1.0 sing-box mihomo");
-            using var response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead); response.EnsureSuccessStatusCode();
-            if (response.Content.Headers.ContentLength > 8 * 1024 * 1024) throw new IOException("订阅文件超过 8 MiB。");
-            using var input = await response.Content.ReadAsStreamAsync(); using var output = new MemoryStream(); var buffer = new byte[8192];
-            int read; while ((read = await input.ReadAsync(buffer)) > 0) { if (output.Length + read > 8 * 1024 * 1024) throw new IOException("订阅文件超过 8 MiB。"); output.Write(buffer, 0, read); }
-            var nodes = NodeParser.ParseSubscription(Encoding.UTF8.GetString(output.ToArray()));
-            // Only replace the old entries of this subscription; independently imported nodes remain.
-            preferences.Nodes.RemoveAll(n => n.SourceSubscription == url);
-            foreach (var node in nodes) node.SourceSubscription = url;
-            MergeNodes(nodes);
-            if (!preferences.Subscriptions.Contains(url)) preferences.Subscriptions.Add(url); SavedSubscriptionsBox.ItemsSource = preferences.Subscriptions.ToArray(); SaveSettings(false);
-        }
-        catch (Exception ex) { Notice.Text = "订阅导入失败：" + ex.Message; AddLog(Notice.Text); }
+        if (!Editable()) return; busy = true;
+        try { Notice.Text = "正在获取节点订阅…"; await ImportSubscriptionAsync(SubscriptionBox.Text.Trim()); }
+        catch (Exception ex) { Notice.Text = "订阅导入失败：" + ex.Message; }
         finally { busy = false; }
+    }
+    async void UpdateAllSubscriptionsClick(object sender, RoutedEventArgs e)
+    {
+        if (!Editable()) return; busy = true; int ok = 0; var errors = new List<string>();
+        try { foreach (var url in preferences.Subscriptions.ToArray()) { try { await ImportSubscriptionAsync(url); ok++; } catch (Exception ex) { errors.Add(ex.Message); } } Notice.Text = $"更新完成：{ok} 成功，{errors.Count} 失败" + (errors.Count > 0 ? " · " + errors[0] : ""); }
+        finally { busy = false; }
+    }
+    void RemoveSubscriptionClick(object sender, RoutedEventArgs e)
+    {
+        if (!Editable() || SavedSubscriptionsBox.SelectedItem is not string url) return;
+        preferences.Subscriptions.Remove(url); preferences.Nodes.RemoveAll(n => n.SourceSubscription == url);
+        SavedSubscriptionsBox.ItemsSource = preferences.Subscriptions.ToArray(); RefreshFilter(); RefreshNodes(); SaveSettings(false);
+    }
+    bool Editable() { if (busy || core.Running) { Notice.Text = "请先断开连接，或等待当前操作完成"; return false; } return true; }
+    void UseConfig(ConfigProfile profile) { preferences.ConfigPath = profile.Path; if (preferences.Mode == "config") preferences.Core = profile.Core; SaveSettings(false); }
+    void RefreshProfiles() { refreshingNodes = true; ConfigsList.ItemsSource = preferences.Configs.ToArray(); ConfigsList.SelectedItem = preferences.Configs.FirstOrDefault(c => c.Path == preferences.ConfigPath); refreshingNodes = false; }
+    void ConfigSelected(object sender, SelectionChangedEventArgs e) { if (!initialized || refreshingNodes || ConfigsList.SelectedItem is not ConfigProfile p) return; if (!Editable()) { RefreshProfiles(); return; } UseConfig(p); RemoteConfigUrl.Text = p.Url; }
+    async Task FetchConfigAsync(ConfigProfile? existing = null)
+    {
+        if (!Editable()) return; busy = true;
+        try { var url = existing?.Url ?? RemoteConfigUrl.Text.Trim(); Notice.Text = "正在获取远程配置…"; var text = await ProfileImport.FetchAsync(url); var profile = ProfileImport.SaveConfig(preferences, text, existing?.Name ?? new Uri(url).Host, url, existing); UseConfig(profile); RefreshProfiles(); Notice.Text = $"已保存 {profile.Core} 远程配置 · {profile.Name}"; }
+        catch (Exception ex) { Notice.Text = "配置获取失败，原配置已保留：" + ex.Message; }
+        finally { busy = false; }
+    }
+    async void RemoteConfigClick(object sender, RoutedEventArgs e) => await FetchConfigAsync();
+    async void UpdateConfigClick(object sender, RoutedEventArgs e) { if (ConfigsList.SelectedItem is ConfigProfile p && p.Url.Length > 0) await FetchConfigAsync(p); else Notice.Text = "请选择远程配置"; }
+    void RemoveConfigClick(object sender, RoutedEventArgs e) { if (!Editable() || ConfigsList.SelectedItem is not ConfigProfile p) return; preferences.Configs.Remove(p); if (preferences.ConfigPath == p.Path) { preferences.ConfigPath = preferences.Configs.FirstOrDefault()?.Path ?? ""; if (preferences.Configs.Count > 0) UseConfig(preferences.Configs[0]); } RefreshProfiles(); SaveSettings(false); }
+    void RefreshFilter() { refreshingNodes = true; var index = NodeFilter.SelectedIndex; NodeFilter.ItemsSource = new[] { "全部节点", "手动导入" }.Concat(preferences.Subscriptions.Select(u => new Uri(u).Host + " · " + (preferences.Subscriptions.IndexOf(u) + 1))).ToArray(); NodeFilter.SelectedIndex = Math.Clamp(index, 0, NodeFilter.Items.Count - 1); refreshingNodes = false; }
+    void NodeFilterChanged(object sender, SelectionChangedEventArgs e) { if (initialized && !refreshingNodes) RefreshNodes(); }
+    void NodeSearchChanged(object sender, TextChangedEventArgs e) { if (initialized) RefreshNodes(); }
+    void ShowImportClick(object sender, RoutedEventArgs e)
+    {
+        if (!Editable()) return;
+        var panel = new StackPanel { Margin = new Thickness(24) };
+        panel.Children.Add(new TextBlock { Text = "导入分享链接", FontSize = 20, Margin = new Thickness(0,0,0,16) });
+        panel.Children.Add(new TextBlock { Text = "SS / VMess / VLESS / Trojan / Hysteria / Hysteria2 / TUIC / AnyTLS / SOCKS / HTTP / WireGuard / NaiveProxy", TextWrapping = TextWrapping.Wrap, Foreground = (Brush)FindResource("Muted"), Margin = new Thickness(0,0,0,16) });
+        ImportText.Height = 140; ImportText.AcceptsReturn = true; ImportText.VerticalScrollBarVisibility = ScrollBarVisibility.Auto; panel.Children.Add(ImportText);
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0,20,0,0) }; panel.Children.Add(row);
+        var dialog = new Window { Title = "Wbox · 添加节点", Owner = this, Content = panel, Width = 610, SizeToContent = SizeToContent.Height, WindowStartupLocation = WindowStartupLocation.CenterOwner, ResizeMode = ResizeMode.NoResize };
+        var add = new Button { Content = "导入" }; add.Click += (_, _) => { try { MergeNodes(NodeParser.ParseSubscription(ImportText.Text)); ImportText.Clear(); dialog.Close(); } catch (Exception ex) { Notice.Text = ex.Message; } }; row.Children.Add(add);
+        var clipboard = new Button { Content = "粘贴" }; clipboard.Click += (_, _) => { if (System.Windows.Clipboard.ContainsText()) ImportText.Text = System.Windows.Clipboard.GetText(); }; row.Children.Add(clipboard);
+        var file = new Button { Content = "从文件导入" }; file.Click += (s,e) => { ImportNodesFileClick(s,e); dialog.Close(); }; row.Children.Add(file);
+        dialog.Closed += (_, _) => panel.Children.Remove(ImportText); dialog.ShowDialog();
+    }
+    async void DelayAllClick(object sender, RoutedEventArgs e)
+    {
+        if (busy) { cancelTests = true; return; } cancelTests = false; var selected = NodesList.Items.Cast<NodeRecord>().ToArray(); if (selected.Length == 0) return;
+        busy = true; StartButton.IsEnabled = false; DelayAllButton.Content = "停止测试"; var temporary = !core.Running;
+        try {
+            SaveSettings(false); if (temporary) { var p = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(preferences))!; p.SystemProxy = false; p.Mode = "nodes"; await core.StartAsync(p); }
+            foreach (var n in selected) { if (cancelTests) break; if (!NodeOptions.Compatible(n, preferences.Core)) { n.DelayText = "内核不兼容"; continue; } Notice.Text = "测试 " + n.Name; try { n.DelayText = await core.DelayAsync(ConfigBuilder.Tag(n, preferences.Nodes.IndexOf(n)), preferences.DelayUrl) + " ms"; } catch { n.DelayText = "超时 / 失败"; } NodesList.Items.Refresh(); }
+            Notice.Text = cancelTests ? "已停止测试" : $"已测试 {selected.Length} 个节点";
+        } catch (Exception ex) { Notice.Text = ex.Message; }
+        finally { if (temporary) core.Stop(); busy = false; StartButton.IsEnabled = true; DelayAllButton.Content = "测试全部"; }
+    }
+    void UpdateWorkspace()
+    {
+        bool config = preferences.Mode == "config";
+        NodeWorkspace.Visibility = SubscriptionWorkspace.Visibility = config ? Visibility.Collapsed : Visibility.Visible;
+        GroupWorkspace.Visibility = ConfigWorkspace.Visibility = config ? Visibility.Visible : Visibility.Collapsed;
+        NodesTab.Header = NodesNav.Content = config ? "代理组" : "节点"; ProfilesTab.Header = ProfilesNav.Content = config ? "配置" : "订阅";
+        PageTitle.Text = ((TabItem)MainTabs.SelectedItem).Header.ToString(); PageCaption.Text = config ? "配置工作区" : "节点工作区";
     }
     void SubscriptionSelected(object sender, SelectionChangedEventArgs e) { if (SavedSubscriptionsBox.SelectedItem is string url) SubscriptionBox.Text = url; }
     void SaveSettingsClick(object sender, RoutedEventArgs e) => SaveSettings(true);
@@ -223,21 +318,21 @@ public partial class MainWindow : Window, IDisposable
     void OpenDataClick(object sender, RoutedEventArgs e) => Process.Start(new ProcessStartInfo("explorer.exe", Store.DirectoryPath) { UseShellExecute = true });
     void ExitClick(object sender, RoutedEventArgs e) => ExitApp();
     void NavigateClick(object sender, RoutedEventArgs e) => MainTabs.SelectedIndex = NavigationPanel.Children.IndexOf((UIElement)sender);
-    void OpenProfilesClick(object sender, RoutedEventArgs e) => MainTabs.SelectedIndex = 2;
+    void OpenProfilesClick(object sender, RoutedEventArgs e) => MainTabs.SelectedIndex = preferences.Mode == "config" ? 2 : 1;
     void PageChanged(object sender, SelectionChangedEventArgs e)
     {
         if (e.Source != MainTabs || MainTabs.SelectedIndex < 0) return;
         var index = MainTabs.SelectedIndex;
-        string[] captions = ["连接状态与网络活动，一目了然。", "管理你的节点，找到适合的连接。", "以你习惯的方式，组织连接。", "查看每一条连接的来源与去向。", "了解内核正在做什么。", "让 Wbox 按你的习惯运行。"];
-        PageTitle.Text = ((TabItem)MainTabs.SelectedItem).Header.ToString(); PageCaption.Text = captions[index];
+        PageTitle.Text = ((TabItem)MainTabs.SelectedItem).Header.ToString(); PageCaption.Text = preferences.Mode == "config" ? "配置工作区" : "节点工作区";
+        if (index != 3) ConnectionsGrid.ItemsSource = null;
         ((RadioButton)NavigationPanel.Children[index]).IsChecked = true;
     }
     void UpdateSummary()
     {
         SidebarCore.Text = preferences.Core;
-        ModeBadge.Text = preferences.Mode == "config" ? "配置文件模式" : "单节点模式";
+        ModeBadge.Text = preferences.Mode == "config" ? "配置工作区" : "节点工作区";
         ConnectionHint.Text = preferences.Mode == "config"
-            ? (string.IsNullOrEmpty(preferences.ConfigPath) ? "选择一个 JSON 或 YAML 配置，即可开始。" : Path.GetFileName(preferences.ConfigPath))
+            ? (string.IsNullOrEmpty(preferences.ConfigPath) ? "选择一个 JSON 或 YAML 配置，即可开始。" : preferences.Configs.FirstOrDefault(c => c.Path == preferences.ConfigPath)?.Name ?? Path.GetFileName(preferences.ConfigPath))
             : preferences.Nodes.Count == 0 ? "导入节点或配置，开启你的第一次连接。" : preferences.Nodes[Math.Clamp(preferences.SelectedNode, 0, preferences.Nodes.Count - 1)].Name;
         OverviewFootnote.Text = preferences.Mode == "config" ? "使用原生配置中的 DNS、路由与 IPv6 设置" : (preferences.SystemProxy ? "系统代理" : "本地代理") + " · 127.0.0.1:10808 · IPv6 已启用";
     }

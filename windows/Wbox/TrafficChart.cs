@@ -8,6 +8,7 @@ namespace Wbox;
 
 public sealed class TrafficChart : FrameworkElement
 {
+    public string Series { get; set; } = "Download";
     readonly Queue<(DateTime Time, long Up, long Down)> samples = new();
     public void Add(long up, long down)
     {
@@ -22,14 +23,14 @@ public sealed class TrafficChart : FrameworkElement
         base.OnRender(dc);
         if (ActualWidth < 1 || ActualHeight < 1) return;
         var width = ActualWidth; var top = 24d; var bottom = ActualHeight - 3;
-        var grid = new Pen(new SolidColorBrush(Color.FromRgb(235, 237, 240)), 1);
+        var grid = new Pen(new SolidColorBrush(Color.FromRgb(55, 55, 55)), 1);
         for (int i = 0; i < 4; i++) dc.DrawLine(grid, new Point(0, top + (bottom - top) * i / 3), new Point(width, top + (bottom - top) * i / 3));
         var data = samples.ToArray();
         var max = Math.Max(1024, data.Length == 0 ? 0 : data.Max(s => Math.Max(s.Up, s.Down)) * 1.15);
         var label = max >= 1048576 ? $"{max / 1048576:0.#} MiB/s" : $"{max / 1024:0.#} KiB/s";
         dc.DrawText(new FormattedText(label, CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight, new Typeface("Segoe UI"), 10, new SolidColorBrush(Color.FromRgb(143, 150, 160)), VisualTreeHelper.GetDpi(this).PixelsPerDip), new Point(0, 0));
-        if (data.Length < 2) { dc.DrawLine(new Pen(new SolidColorBrush(Color.FromRgb(189, 194, 203)), 1.5), new Point(0, bottom), new Point(width, bottom)); return; }
-        Draw(false, Color.FromRgb(39, 43, 49)); Draw(true, Color.FromRgb(152, 160, 173));
+        if (data.Length < 2) { dc.DrawLine(new Pen(new SolidColorBrush(Color.FromRgb(90, 90, 90)), 1.5), new Point(0, bottom), new Point(width, bottom)); return; }
+        Draw(Series == "Upload", Color.FromRgb(222, 222, 222));
         void Draw(bool up, Color color)
         {
             Point PointAt(int i) => new(width * (1 - (data[^1].Time - data[i].Time).TotalSeconds / 60), bottom - (up ? data[i].Up : data[i].Down) / max * (bottom - top));
@@ -47,9 +48,9 @@ public sealed class TrafficChart : FrameworkElement
                 fill.LineTo(new Point(PointAt(data.Length - 1).X, bottom), true, false);
             }
             line.Freeze(); area.Freeze();
-            if (!up) dc.DrawGeometry(new LinearGradientBrush(Color.FromArgb(30, 50, 55, 65), Color.FromArgb(2, 50, 55, 65), 90), null, area);
+            if (!up) dc.DrawGeometry(new LinearGradientBrush(Color.FromArgb(24, 220, 220, 220), Color.FromArgb(2, 220, 220, 220), 90), null, area);
             var pen = new Pen(new SolidColorBrush(color), 2);
-            if (up) pen.DashStyle = new DashStyle([3d, 3d], 0);
+            
             dc.DrawGeometry(null, pen, line);
         }
     }

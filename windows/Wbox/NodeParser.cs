@@ -18,7 +18,7 @@ public static class NodeParser
             var j = JsonNode.Parse(Decode64(text[8..]))!.AsObject();
             string Read(string key, string fallback = "") => j[key]?.ToString() ?? fallback;
             var n = new NodeRecord { Protocol = "vmess", Name = Read("ps", "VMess"), Server = Read("add"), Port = int.Parse(Read("port")), Uuid = Read("id"), Cipher = Read("scy", "auto"), Network = Read("net", "tcp"), Path = Read("path", "/"), Host = Read("host"), Tls = Read("tls") == "tls", Sni = Read("sni"), Fingerprint = Read("fp") };
-            int.TryParse(Read("aid"), out var aid); n.AlterId = aid;
+            int.TryParse(Read("aid"), out var aid); n.AlterId = aid; if (Read("alpn").Length > 0) n.Options["alpn"] = Read("alpn");
             Validate(n); return n;
         }
         if (text.StartsWith("ss://", StringComparison.OrdinalIgnoreCase))
@@ -27,8 +27,7 @@ public static class NodeParser
             var hash = body.IndexOf('#'); var name = hash >= 0 ? Uri.UnescapeDataString(body[(hash + 1)..]) : "Shadowsocks";
             if (hash >= 0) body = body[..hash];
             var q = body.IndexOf('?');
-            if (q >= 0 && Query(body[(q + 1)..]).TryGetValue("plugin", out var plugin) && plugin.Length > 0)
-                throw new FormatException("SS plugin 分享链接请通过完整 JSON/YAML 配置导入。");
+            var ssOptions = q >= 0 ? Query(body[(q + 1)..]) : new Dictionary<string, string>();
             if (q >= 0) body = body[..q];
             body = body.TrimEnd('/');
             if (!body.Contains('@')) body = Decode64(body);
@@ -37,20 +36,28 @@ public static class NodeParser
             var split = credential.IndexOf(':'); if (split < 0) throw new FormatException("SS 链接缺少加密方式。");
             var endpoint = new Uri("http://" + body[(at + 1)..]);
             var node = new NodeRecord { Protocol = "ss", Name = name, Cipher = Uri.UnescapeDataString(credential[..split]), Password = Uri.UnescapeDataString(credential[(split + 1)..]), Server = endpoint.Host.Trim('[', ']'), Port = endpoint.Port };
-            Validate(node); return node;
+            node.Options = ssOptions; Validate(node); return node;
         }
         if (!Uri.TryCreate(text, UriKind.Absolute, out var uri)) throw new FormatException("无法识别节点链接。");
         var protocol = uri.Scheme.ToLowerInvariant();
         if (protocol == "hy2") protocol = "hysteria2";
-        if (protocol is not ("vless" or "trojan" or "hysteria2" or "tuic")) throw new FormatException($"暂不支持 {protocol} 分享链接，可导入内核原生配置。");
+        if (protocol is "socks" or "socks5") protocol = "socks";
+        if (protocol is "naive+https" or "naive+quic") protocol = "naive";
+        if (protocol == "https") protocol = "http";
+        if (protocol is "wg") protocol = "wireguard";
+        if (protocol is not ("vless" or "trojan" or "hysteria2" or "tuic" or "hysteria" or "anytls" or "socks" or "http" or "naive" or "wireguard")) throw new FormatException($"暂不支持 {protocol} 分享链接，可导入内核原生配置。");
         var options = Query(uri.Query);
         string Opt(string k, string fallback = "") => options.GetValueOrDefault(k, fallback);
         var userinfo = Uri.UnescapeDataString(uri.UserInfo);
-        var result = new NodeRecord { Protocol = protocol, Name = uri.Fragment.Length > 1 ? Uri.UnescapeDataString(uri.Fragment[1..]) : protocol, Server = uri.Host.Trim('[', ']'), Port = uri.IsDefaultPort || uri.Port < 1 ? 443 : uri.Port, Uuid = userinfo.Split(':', 2)[0], Password = protocol == "tuic" ? userinfo.Split(':', 2).ElementAtOrDefault(1) ?? "" : userinfo, Tls = protocol != "vless" || Opt("security") is "tls" or "reality", Sni = Opt("sni", Opt("peer")), Network = Opt("type", "tcp"), Path = Opt("path", "/"), Host = Opt("host"), Flow = Opt("flow"), Insecure = Opt("allowInsecure", Opt("insecure")) == "1", RealityKey = Opt("pbk"), RealityShortId = Opt("sid"), Fingerprint = Opt("fp") };
-        if (protocol == "hysteria2" && options.TryGetValue("obfs", out var obfs) && obfs.Length > 0)
-            throw new FormatException("带 obfs 的 Hysteria2 分享链接请通过原生配置导入，避免丢失混淆设置。");
-        if (protocol == "tuic" && (!string.IsNullOrEmpty(Opt("congestion_control")) || !string.IsNullOrEmpty(Opt("udp_relay_mode"))))
-            throw new FormatException("带自定义 TUIC 参数的分享链接请通过原生配置导入。");
+        var result = new NodeRecord { Protocol = protocol, Name = uri.Fragment.Length > 1 ? Uri.UnescapeDataString(uri.Fragment[1..]) : protocol, Server = uri.Host.Trim('[', ']'), Port = uri.Port > 0 ? uri.Port : protocol == "socks" ? 1080 : protocol == "wireguard" ? 2408 : 443, Uuid = userinfo.Split(':', 2)[0], Password = protocol == "tuic" ? userinfo.Split(':', 2).ElementAtOrDefault(1) ?? "" : userinfo, Tls = protocol != "vless" || Opt("security") is "tls" or "reality", Sni = Opt("sni", Opt("peer")), Network = Opt("type", "tcp"), Path = Opt("path", "/"), Host = Opt("host"), Flow = Opt("flow"), Insecure = Opt("allowInsecure", Opt("insecure")) == "1", RealityKey = Opt("pbk"), RealityShortId = Opt("sid"), Fingerprint = Opt("fp", Opt("security") == "reality" ? "chrome" : "") };
+        result.Options = options;
+        result.Tls = protocol is "trojan" or "hysteria" or "hysteria2" or "tuic" or "anytls" or "naive" || uri.Scheme == "https" || Opt("security") is "tls" or "reality";
+        result.Path = Opt("serviceName", result.Path);
+        if (protocol is "http" or "socks" or "naive") { if (userinfo.Length > 0 && !userinfo.Contains(':')) { try { userinfo = Decode64(userinfo); } catch (FormatException) { } } var credentials = userinfo.Split(':', 2); result.Username = credentials[0]; result.Password = credentials.ElementAtOrDefault(1) ?? ""; result.Uuid = ""; }
+        if (protocol == "hysteria") result.Password = Opt("auth", userinfo);
+        if (protocol == "naive") options["quic"] = uri.Scheme == "naive+quic" ? "true" : "false";
+        if (protocol == "wireguard") { result.Password = userinfo; result.Uuid = ""; }
+        if (Opt("security") == "reality" && string.IsNullOrEmpty(result.RealityKey)) throw new FormatException("Reality 缺少公钥。");
         Validate(result); return result;
     }
     public static void Validate(NodeRecord node)
@@ -58,6 +65,9 @@ public static class NodeParser
         if (string.IsNullOrWhiteSpace(node.Server) || node.Port is < 1 or > 65535) throw new FormatException("节点地址或端口无效。");
         if (node.Protocol is "vmess" or "vless" or "tuic" && !Guid.TryParse(node.Uuid, out _)) throw new FormatException("节点 UUID 无效。");
         if (node.Network is not ("tcp" or "ws" or "grpc" or "http" or "h2")) throw new FormatException($"暂不支持 {node.Network} 分享传输，请导入完整配置。");
+        foreach (var key in new[] { "ech", "echConfig", "fm", "extra", "packetEncoding" }) if (node.Options.GetValueOrDefault(key, "").Length > 0) throw new FormatException($"{key} 请通过完整配置保留，此分享参数尚未支持。");
+        if (node.Options.TryGetValue("plugin", out var plugin) && !new[] { "obfs-local", "simple-obfs", "v2ray-plugin" }.Contains(plugin.Split(';')[0])) throw new FormatException("不支持的 SS 插件：" + plugin.Split(';')[0]);
+        if (node.Protocol == "wireguard") { foreach (var key in new[] { "publickey", "address" }) if (node.Options.GetValueOrDefault(key, "").Length == 0) throw new FormatException("WireGuard 缺少 " + key); }
     }
     public static List<NodeRecord> ParseSubscription(string text)
     {

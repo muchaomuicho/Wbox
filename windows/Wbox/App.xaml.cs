@@ -15,6 +15,8 @@ public partial class App : System.Windows.Application
         // dedicated GPU rendering context and its driver allocations.
         System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
         var sid = System.Security.Principal.WindowsIdentity.GetCurrent().User!.Value;
+        var isolated = Environment.GetEnvironmentVariable("WBOX_DATA_DIR");
+        if (isolated != null) sid += "-" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(isolated))))[..12];
         mutex = new Mutex(true, "Local\\Wbox-" + sid, out var first);
         activation = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\Wbox-Activate-" + sid);
         if (!first) { activation.Set(); Shutdown(); return; }

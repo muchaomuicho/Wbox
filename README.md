@@ -2,18 +2,20 @@
 
 Wbox 是原生 Windows / Android 双内核代理客户端。界面以黑白为主，连接按钮使用绿色，图标为黑底白色 W。运行时只启动所选内核；固定集成 mihomo 1.19.33 与 sing-box 1.14.4。
 
-0.2.0 重新设计了两端界面，具体改动和预览见 [发布说明](docs/RELEASE-0.2.0.md)。
+0.3.0 改为统一深灰界面，配置与节点使用两个独立工作区。支持直接添加、更新无文件后缀的远程 JSON / YAML 地址。具体改动和预览见 [发布说明](docs/RELEASE-0.3.0.md)。
 
 ## 安装与使用
 
 交付文件在 `dist/`：
 
-- `Wbox-0.2.0-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 .NET 运行库，安装到当前用户目录。
-- `Wbox-0.2.0-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
-- `Wbox-0.2.0-source.zip`：Wbox 完整源码、原生隧道源码、固定版本内核源码与构建脚本。
+- `Wbox-0.3.0-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 .NET 运行库，安装到当前用户目录。
+- `Wbox-0.3.0-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
+- `Wbox-0.3.0-source.zip`：Wbox 完整源码、原生隧道源码、固定版本内核源码与构建脚本。
 - `SHA256SUMS.txt`：以上文件的校验值。
 
-第一次使用请导入订阅 URL、节点分享链接，或内核原生配置。单节点模式生成可选择节点的 Wbox 代理组；完整配置模式保留原文件和主要路由设置。JSON 对应 sing-box，YAML 对应 mihomo。Windows 支持开机自启、静默启动、自动连接和托盘菜单；这些开关在“设置”中保存。关闭 Windows 主窗口会收起到托盘，退出请使用托盘菜单或设置页“退出 Wbox”。
+先在顶部（Android）或侧栏（Windows）选择工作区。配置工作区直接添加远程 URL 或导入本地 JSON / YAML，保存完整代理组、DNS 和路由，支持多份配置、切换、更新和移除。节点工作区单独管理订阅与分享链接，按来源分组、搜索、选择节点；Windows 支持离线临时启动内核测试所选节点及批量测试，Android 在 VPN 连接后测试。两工作区分别保留配置选择和节点选择；切换前需要断开连接。
+
+Windows 支持开机自启、静默启动、自动连接和托盘菜单；开关在“设置”中保存。关闭主窗口收起到托盘，退出请使用托盘菜单或设置页“退出 Wbox”。
 
 Windows 默认使用系统代理，只接管遵循 Windows 系统代理设置的应用。需要全流量接管时，导入内核原生 TUN 配置并以管理员身份运行。停止连接会根据持久备份恢复系统代理；若其它软件已经修改这些设置，Wbox 不覆盖它们。
 
@@ -21,25 +23,31 @@ Android 第一次连接需要授权系统 VPN。设置页可选择全部应用�
 
 ## 已实现的功能
 
-双内核切换；JSON/YAML 配置；配置文件/单节点两种模式；HTTP(S) 订阅和 Base64 节点列表；SS、VMess、VLESS（含 Reality）、Trojan、Hysteria2、TUIC 分享链接；节点选择和代理组查看；自定义 URL 的内核 HTTP 延迟测试；有界日志；活动连接明细；入站/出站逻辑连接数；本次上传/下载字节；60 秒实时波形图；内存显示；Windows 自启/静默/托盘；Android 分应用代理。
+双内核切换；远程与本地 JSON/YAML 完整配置库；独立的节点订阅库；HTTP(S) 订阅、Base64 节点列表、原生 outbounds/proxies 提取；SS（含 SS2022）、VMess、VLESS/Reality、Trojan、Hysteria、Hysteria2、TUIC、AnyTLS、SOCKS、HTTP(S)、WireGuard 分享链接；Windows 另支持 NaiveProxy。原生订阅中的 SSH 等内核节点也能原样导入，但需要对应内核。
+
+已支持 ALPN、SS obfs-local/simple-obfs/v2ray-plugin、Hysteria2 salamander 混淆、TUIC congestion_control/udp_relay_mode，以及 WS/gRPC/HTTP2 传输。代理组与节点切换、内核 HTTP 延迟测试、有界日志、活动连接明细、入站/出站逻辑连接数、本次流量、60 秒波形、内存显示和 Android 分应用 VPN 均保留。
 
 默认延迟测试 URL 为 `https://www.apple.com/library/test/success.html`。sing-box 1.14.4 上游 API 会替换 HTTP 测试地址，因此 Wbox 要求该内核自定义测速使用 HTTPS；mihomo 支持 HTTP 与 HTTPS。Android 延迟测试在连接后使用内核控制接口。Android 节点列表长按可删除离线节点。
 
-复杂分享参数不会悄悄丢弃：SS 插件、Hysteria2 混淆、自定义 TUIC 参数等请使用完整内核配置。Android 分享导入暂不转换带 `alpn` 或其它未支持传输参数的链接；完整原生 JSON/YAML 配置可以保留这些设置。更新订阅会替换该订阅的旧节点，并保留手动导入及其它订阅的节点。
+未支持的分享格式或传输（例如 XHTTP、ECH 分享参数）会明确报错并保留原节点列表，可改用内核支持的完整配置。TLS SOCKS 需要 mihomo；WireGuard 分享链接的 dns 参数需使用 mihomo 或完整 sing-box 配置。NaiveProxy 仅 Windows 可用：当前官方 Android CLI 未编入该功能，不会把它标作可连接节点。订阅更新只替换该来源的节点，保留手动导入及其他订阅。原生节点不会跨内核做有损转换，界面在纯原生订阅导入时自动选择对应内核。
 
-连接数表示内核报告的活动逻辑代理流，一个流对应一条入站与一条出站，因此两项通常相同；它们不是操作系统的 socket 数或复用后的 TCP 连接数。Windows 内存显示应用与核心的 Working Set 总和；Android 显示应用 PSS 加子进程内核 RSS，作为近似总占用。
+连接数表示内核报告的活动逻辑代理流，一个流对应一条入站与一条出站，因此两项通常相同；它们不是操作系统的 socket 数或复用后的 TCP 连接数。Windows 分别显示界面与内核的 Working Set；Android 分别显示应用 PSS 和子进程内核 RSS。它们与其他客户端只显示 Go 堆或内核内存的读数不能直接比较。
 
 ## 轻量与省电设计
 
-Windows 使用 WPF，Android 使用原生 View，均未集成 Electron/WebView 或后台网页。Android 不持有唤醒锁：前台每秒更新统计，后台每 10 秒读取一次，通知每 30 秒刷新；前台代理组每 5 秒刷新；内存前台每 5 秒、后台每 30 秒读取。日志最多保存 Windows 1000 行、Android 350 行。HEV 隧道使用协程，限制会话数量与缓冲区；Android 内核设定 Go GC 内存目标 96 MiB。该目标是 GC 提示，不是进程 RSS 的硬上限。
+Windows 使用 WPF，Android 使用原生 View，无 Electron/WebView。Windows 托盘模式每 10 秒读取统计，隐藏时停止图表和控件刷新；连接详情按页面构建，离开连接页释放行数据。日志队列最多 500 条，批量投递；使用流式响应和 JsonDocument 降低解析分配。
+
+Android 不持有唤醒锁：前台每秒采样，后台调度间隔为 10 秒，通知约每 30 秒刷新。统计使用流式 JSON 读取，跳过每条连接详情；用户打开连接详情时才获取完整记录。节点解析缓存、列表行复用和最多 350 条日志限制持续分配。内存前台每 5 次采样、后台每 3 次采样读取；HEV 隧道限制会话与缓冲。两端内核设置 GOMEMLIMIT=96MiB、GOGC=75，属于 GC 提示，不是 RSS 硬上限。
+
+2026-10-31 本机托盘空闲采样：未连接界面 101.2 MiB；mihomo 连接时界面 115.8 / 内核 26.4 MiB；sing-box 连接时界面 112.6 / 内核 34.8 MiB。测试使用隔离的 DIRECT 配置、系统代理关闭，启动后等待 6 秒再采样 5 秒，界面 CPU 增量均为 0 ms（计时分辨率范围内）。这是单次空闲测量，不能代表真实节点、高并发或长时间峰值。复现脚本：`tools/measure-windows.ps1`。
 
 尚未做 Android 真机耗电与低内存设备测试，不能据此给出待机耗电、峰值 RSS 或 CPU 占用的实测承诺。Android JNI 隧道与 mihomo 的 ELF 支持 16 KiB 页对齐；官方 sing-box Android CLI 使用 4 KiB LOAD 对齐，此版本尚未验证在 16 KiB 页设备上的运行，需要此类设备时应重编译该内核。
 
 ## 验证范围
 
-Windows：33 项核心/集成检查，包括两内核真实运行、六协议配置生成、节点切换、控制接口鉴权、真实 HTTP 字节转发、IPv6 目标、连接与流量计数；六个 WPF 页面构造/渲染检查通过，并检查了真实窗口导航与下拉菜单。正式安装包不包含测试程序。
+Windows：47 项解析、配置和双内核集成检查；涵盖新增协议、SS2022 多段密钥、TLS/SNI、默认端口、原生配置、失败更新保留旧内容、IPv4/IPv6 转发、延迟与流量统计。两工作区页面均进行了 WPF 渲染检查。
 
-Android：11 项导入/配置检查、3 项界面与历史测试通过，包含六协议与 Reality 原生配置校验；用 Android 实际生成的两种配置启动官方 Windows 内核，验证 IPv4/IPv6 HTTP 与 SOCKS5 UDP 代理转发、selector 切换及上传/下载计数；Android Lint 通过；APK 签名和 arm64 ELF 架构已检查。原生 JNI 生命周期检查覆盖提前取消、运行时停止、并发启动拒绝和 1000 次取消竞态。以上不等同于 Android 真机 VPN 转发测试；当前机器未连接 Android 设备，也没有可用 ARM64 模拟器。
+Android：24 项测试（19 项配置/导入/转发，5 项界面/流式统计），包含 400 节点列表复用和 2000 连接流式计数。实际远程示例经完整配置与节点提取两条路径验证；生成的配置用固定官方 Windows 内核做检查与回环 HTTP/SOCKS5 UDP 转发。Lint 无错误。APK 签名与 ARM64 架构单独校验。以上不等同于 Android 真机 VPN、耗电和 16 KiB 页设备验证。
 
 ## 构建
 

@@ -6,6 +6,15 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 
 public final class CoreApi {
+    public static final class Stats { public long upload,download; public int connections; }
+    public Stats stats()throws Exception {
+        HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:19090/connections").openConnection();c.setConnectTimeout(1200);c.setReadTimeout(2000);c.setRequestProperty("Authorization","Bearer "+secret);
+        try {if(c.getResponseCode()!=200)throw new IOException("控制接口不可用");
+            try(android.util.JsonReader reader=new android.util.JsonReader(new InputStreamReader(c.getInputStream(),StandardCharsets.UTF_8))){
+                Stats result=new Stats();reader.beginObject();while(reader.hasNext()){String key=reader.nextName();switch(key){case "uploadTotal":result.upload=reader.nextLong();break;case "downloadTotal":result.download=reader.nextLong();break;case "connections":if(reader.peek()==android.util.JsonToken.NULL){reader.nextNull();break;}reader.beginArray();while(reader.hasNext()){reader.skipValue();result.connections++;}reader.endArray();break;default:reader.skipValue();}}reader.endObject();return result;
+            }
+        }finally{c.disconnect();}
+    }
     private final String secret;
     public CoreApi(String secret){this.secret=secret;}
     public JSONObject request(String method,String path,JSONObject body) throws Exception {

@@ -13,9 +13,9 @@ import java.util.concurrent.*;
 
 public final class WboxVpnService extends VpnService {
     public static final String STOP="com.wbox.app.STOP";
-    public static volatile boolean running, starting, stopping, visible;
+    public static volatile boolean running, starting, stopping, visible, wantsGroups;
     public static volatile String status="未连接", secret="";
-    public static volatile long upload,download,upRate,downRate,memory;
+    public static volatile long upload,download,upRate,downRate,memory,appMemory,coreMemory;
     public static volatile int inbound,outbound;
     public static volatile JSONObject connections=new JSONObject(), proxies=new JSONObject();
     public static final Deque<String> logs=new ArrayDeque<>();
@@ -36,7 +36,7 @@ public final class WboxVpnService extends VpnService {
     private long corePid,previousUp,previousDown,lastPoll;
     private int pollTicks;
     private static final int NOTIFY=42;
-    static void log(String text){synchronized(logs){if(logs.size()>=350)logs.removeFirst();logs.addLast(new java.text.SimpleDateFormat("HH:mm:ss",Locale.ROOT).format(new Date())+"  "+text);}}
+    static void log(String text){synchronized(logs){if(logs.size()>=350)logs.removeFirst();if(text.length()>4096)text=text.substring(0,4096);logs.addLast(new java.text.SimpleDateFormat("HH:mm:ss",Locale.ROOT).format(new Date())+"  "+text);}}
     public static List<String> logSnapshot(){synchronized(logs){return new ArrayList<>(logs);}}
     public static CoreApi api(){return new CoreApi(secret);}
     @Override public void onCreate(){super.onCreate();NotificationManager m=getSystemService(NotificationManager.class);NotificationChannel ch=new NotificationChannel("vpn","代理连接",NotificationManager.IMPORTANCE_LOW);ch.setShowBadge(false);m.createNotificationChannel(ch);}
@@ -69,14 +69,15 @@ public final class WboxVpnService extends VpnService {
         File hev=new File(dir,"tunnel.yaml");String y="tunnel:\n  name: wbox\n  mtu: 1500\n  ipv4: 172.19.0.1\n"+(ipv6?"  ipv6: 'fdfe:dcba:9876::1'\n":"")+"socks5:\n  address: 127.0.0.1\n  port: 10808\n  udp: udp\nmisc:\n  task-stack-size: 24576\n  tcp-buffer-size: 32768\n  udp-recv-buffer-size: 131072\n  max-session-count: 1024\n  connect-timeout: 8000\n  tcp-read-write-timeout: 300000\n  udp-read-write-timeout: 60000\n  log-level: warn\n";Files.write(hev.toPath(),y.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         final int fd=ownedTun.detachFd();ownedTun=null;tunnel=new Thread(()->{try{if(shuttingDown)return;int result=NativeTunnel.run(hev.getAbsolutePath(),fd);if(!shuttingDown){log("隧道结束："+result);shuttingDown=true;queueShutdown();}}catch(Throwable ex){log("隧道失败："+ex.getMessage());shuttingDown=true;queueShutdown();}finally{try{ParcelFileDescriptor.adoptFd(fd).close();}catch(IOException ignored){}}},"wbox-tun");tunnel.start();
         upload=download=upRate=downRate=previousUp=previousDown=0;clearTraffic();lastPoll=SystemClock.elapsedRealtime();running=true;starting=false;status="已连接";log(p.engine()+" 已连接 · IPv6 "+(ipv6?"开启":"关闭"));
-        polling=Executors.newSingleThreadScheduledExecutor();polling.scheduleWithFixedDelay(this::poll,1,1,TimeUnit.SECONDS);
+        polling=Executors.newSingleThreadScheduledExecutor();polling.schedule(this::poll,1,TimeUnit.SECONDS);
     }
-    private void poll(){if(!running)return;pollTicks++;if(!visible&&pollTicks%10!=0)return;try{if(core==null||!core.isAlive()){throw new IOException("内核意外退出");}JSONObject j=api().connections();long now=SystemClock.elapsedRealtime();double seconds=Math.max(.001,(now-lastPoll)/1000.0);long u=j.optLong("uploadTotal"),d=j.optLong("downloadTotal");upRate=(long)(Math.max(0,u-previousUp)/seconds);downRate=(long)(Math.max(0,d-previousDown)/seconds);previousUp=u;previousDown=d;upload=u;download=d;lastPoll=now;recordTraffic(now,upRate,downRate);connections=j;JSONArray cs=j.optJSONArray("connections");inbound=cs==null?0:cs.length();outbound=inbound;if(memory==0||pollTicks%(visible?5:30)==0)memory=(long)Debug.getPss()*1024+coreRss();if(visible&&pollTicks%5==0)proxies=api().proxies();if(pollTicks%30==0)getSystemService(NotificationManager.class).notify(NOTIFY,notification());}
+    private void poll(){if(!running)return;pollTicks++;try{if(core==null||!core.isAlive()){throw new IOException("内核意外退出");}CoreApi.Stats j=api().stats();long now=SystemClock.elapsedRealtime();double seconds=Math.max(.001,(now-lastPoll)/1000.0);long u=j.upload,d=j.download;upRate=(long)(Math.max(0,u-previousUp)/seconds);downRate=(long)(Math.max(0,d-previousDown)/seconds);previousUp=u;previousDown=d;upload=u;download=d;lastPoll=now;recordTraffic(now,upRate,downRate);inbound=j.connections;outbound=inbound;if(memory==0||pollTicks%(visible?5:3)==0){appMemory=(long)Debug.getPss()*1024;coreMemory=coreRss();memory=appMemory+coreMemory;}if(visible&&wantsGroups&&pollTicks%5==0)proxies=api().proxies();if(pollTicks%(visible?30:3)==0)getSystemService(NotificationManager.class).notify(NOTIFY,notification());}
         catch(Exception ex){if(core!=null&&!core.isAlive()){log(ex.getMessage());shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});}}
+        finally{if(running&&polling!=null&&!polling.isShutdown())try{polling.schedule(this::poll,visible?1:10,TimeUnit.SECONDS);}catch(RejectedExecutionException ignored){}}
     }
     private long coreRss(){try{for(String line:Files.readAllLines(Paths.get("/proc/"+corePid+"/status"))){if(line.startsWith("VmRSS:"))return Long.parseLong(line.replaceAll("[^0-9]",""))*1024;}}catch(Exception ignored){}return 0;}
     private void queueShutdown(){try{commands.execute(()->{stopCore();stopSelf();});}catch(RejectedExecutionException ignored){}}
-    private void stopCore(){stopping=true;shuttingDown=true;running=false;starting=false;status="正在关闭";if(polling!=null){polling.shutdownNow();polling=null;}try{NativeTunnel.stop();}catch(Throwable ignored){}if(tunnel!=null){while(tunnel.isAlive()){try{tunnel.join(2000);if(tunnel.isAlive())NativeTunnel.stop();}catch(InterruptedException ignored){}catch(Throwable ignored){}}tunnel=null;}if(ownedTun!=null){try{ownedTun.close();}catch(IOException ignored){}ownedTun=null;}if(core!=null){core.destroy();try{if(!core.waitFor(2,TimeUnit.SECONDS))core.destroyForcibly();}catch(InterruptedException ignored){core.destroyForcibly();}core=null;}inbound=outbound=0;upRate=downRate=memory=0;proxies=new JSONObject();status="未连接";stopping=false;log("连接已关闭");stopForeground(STOP_FOREGROUND_REMOVE);}
+    private void stopCore(){stopping=true;shuttingDown=true;running=false;starting=false;status="正在关闭";if(polling!=null){polling.shutdownNow();polling=null;}try{NativeTunnel.stop();}catch(Throwable ignored){}if(tunnel!=null){while(tunnel.isAlive()){try{tunnel.join(2000);if(tunnel.isAlive())NativeTunnel.stop();}catch(InterruptedException ignored){}catch(Throwable ignored){}}tunnel=null;}if(ownedTun!=null){try{ownedTun.close();}catch(IOException ignored){}ownedTun=null;}if(core!=null){core.destroy();try{if(!core.waitFor(2,TimeUnit.SECONDS))core.destroyForcibly();}catch(InterruptedException ignored){core.destroyForcibly();}core=null;}inbound=outbound=0;upRate=downRate=memory=appMemory=coreMemory=0;connections=new JSONObject();proxies=new JSONObject();status="未连接";stopping=false;log("连接已关闭");stopForeground(STOP_FOREGROUND_REMOVE);}
     @Override public void onRevoke(){shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});super.onRevoke();}
     @Override public void onDestroy(){shuttingDown=true;commands.execute(this::stopCore);commands.shutdown();super.onDestroy();}
 }

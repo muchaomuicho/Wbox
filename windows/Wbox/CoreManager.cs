@@ -4,7 +4,7 @@ namespace Wbox;
 
 public sealed record ConnectionItem(string Network, string Source, string Destination, string Rule, string Outbound, long Upload, long Download);
 public sealed record GroupItem(string Name, string Selected, List<string> Nodes, bool Selectable);
-public sealed record CoreStats(int Inbound, int Outbound, long Uploaded, long Downloaded, long UploadRate, long DownloadRate, long Memory, List<ConnectionItem> Connections);
+public sealed record CoreStats(int Inbound, int Outbound, long Uploaded, long Downloaded, long UploadRate, long DownloadRate, long Memory, List<ConnectionItem> Connections) { public long AppMemory { get; init; } public long CoreMemory { get; init; } }
 
 public sealed class CoreManager : IDisposable
 {
@@ -16,6 +16,8 @@ public sealed class CoreManager : IDisposable
     DateTime lastSample;
     string? runtimePath;
     string activeCore = "";
+    long cachedAppMemory, cachedCoreMemory;
+    DateTime memorySample;
     public bool Running => process is { HasExited: false };
     public event Action<string>? Log;
     public event Action? Exited;
@@ -50,6 +52,8 @@ public sealed class CoreManager : IDisposable
             var start = new ProcessStartInfo(executable) { WorkingDirectory = working, CreateNoWindow = true, UseShellExecute = false, RedirectStandardError = true, RedirectStandardOutput = true };
             if (p.Core == "sing-box") { start.ArgumentList.Add("run"); start.ArgumentList.Add("-c"); start.ArgumentList.Add(runtimePath); }
             else { start.ArgumentList.Add("-d"); start.ArgumentList.Add(working); start.ArgumentList.Add("-f"); start.ArgumentList.Add(runtimePath); }
+            start.Environment["GOMEMLIMIT"] = "96MiB";
+            start.Environment["GOGC"] = "75";
             process = new Process { StartInfo = start, EnableRaisingEvents = true };
             process.OutputDataReceived += (_, e) => { if (e.Data != null) Log?.Invoke(e.Data); };
             process.ErrorDataReceived += (_, e) => { if (e.Data != null) Log?.Invoke(e.Data); };
@@ -72,25 +76,30 @@ public sealed class CoreManager : IDisposable
         }
         catch { Stop(); throw; }
     }
-    public async Task<CoreStats> StatsAsync()
+    public async Task<CoreStats> StatsAsync(bool details = true)
     {
-        var root = JsonNode.Parse(await api!.GetStringAsync("/connections"))!.AsObject();
-        long upload = root["uploadTotal"]?.GetValue<long>() ?? 0, download = root["downloadTotal"]?.GetValue<long>() ?? 0;
+        using var stream = await api!.GetStreamAsync("/connections");
+        using var document = await JsonDocument.ParseAsync(stream); var root = document.RootElement;
+        long upload = root.TryGetProperty("uploadTotal", out var u) ? u.GetInt64() : 0, download = root.TryGetProperty("downloadTotal", out var d) ? d.GetInt64() : 0;
         if (initialUpload < 0) { initialUpload = upload; initialDownload = download; lastUpload = upload; lastDownload = download; }
         var seconds = Math.Max((DateTime.UtcNow - lastSample).TotalSeconds, 0.1);
         var upRate = (long)(Math.Max(0, upload - lastUpload) / seconds); var downRate = (long)(Math.Max(0, download - lastDownload) / seconds);
         lastUpload = upload; lastDownload = download; lastSample = DateTime.UtcNow;
-        var connections = new List<ConnectionItem>();
-        foreach (var c in (root["connections"] as JsonArray ?? []).OfType<JsonObject>())
-        {
-            var m = c["metadata"];
-            string Value(string key) => m?[key]?.ToString() ?? "";
-            var target = Value("host"); if (target.Length == 0) target = Value("destinationIP");
-            connections.Add(new(Value("network"), $"{Value("sourceIP")}:{Value("sourcePort")}", $"{target}:{Value("destinationPort")}", c["rule"]?.ToString() ?? "", string.Join(" → ", (c["chains"] as JsonArray ?? []).Select(n => n?.ToString())), c["upload"]?.GetValue<long>() ?? 0, c["download"]?.GetValue<long>() ?? 0));
+        var connections = new List<ConnectionItem>(); int count = 0;
+        if (root.TryGetProperty("connections", out var rows) && rows.ValueKind == JsonValueKind.Array) {
+            count = rows.GetArrayLength();
+            if (details) foreach (var c in rows.EnumerateArray()) {
+                if (!c.TryGetProperty("metadata", out var m)) continue;
+                string Value(string key) => m.TryGetProperty(key, out var value) ? value.ToString() : "";
+                var target = Value("host"); if (target.Length == 0) target = Value("destinationIP");
+                connections.Add(new(Value("network"), $"{Value("sourceIP")}:{Value("sourcePort")}", $"{target}:{Value("destinationPort")}", c.TryGetProperty("rule", out var rule) ? rule.ToString() : "", c.TryGetProperty("chains", out var chains) ? string.Join(" → ", chains.EnumerateArray().Select(n => n.ToString())) : "", c.TryGetProperty("upload", out var cu) ? cu.GetInt64() : 0, c.TryGetProperty("download", out var cd) ? cd.GetInt64() : 0));
+            }
         }
-        long memory = 0; try { process!.Refresh(); memory = process.WorkingSet64; } catch { }
-        using var self = Process.GetCurrentProcess(); memory += self.WorkingSet64;
-        return new(connections.Count, connections.Count, Math.Max(0, upload - initialUpload), Math.Max(0, download - initialDownload), upRate, downRate, memory, connections);
+        if ((DateTime.UtcNow - memorySample).TotalSeconds >= 5) {
+            try { process!.Refresh(); cachedCoreMemory = process.WorkingSet64; } catch { }
+            using var self = Process.GetCurrentProcess(); cachedAppMemory = self.WorkingSet64; memorySample = DateTime.UtcNow;
+        }
+        return new(count, count, Math.Max(0, upload - initialUpload), Math.Max(0, download - initialDownload), upRate, downRate, cachedAppMemory + cachedCoreMemory, connections) { AppMemory = cachedAppMemory, CoreMemory = cachedCoreMemory };
     }
     public async Task<List<GroupItem>> GroupsAsync()
     {
