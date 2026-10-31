@@ -10,6 +10,7 @@ public sealed class Preferences
     public bool AutoConnect { get; set; }
     public bool AutoStart { get; set; }
     public bool SystemProxy { get; set; } = true;
+    public bool NativeInbounds { get; set; }
     public int SelectedNode { get; set; }
     public List<NodeRecord> Nodes { get; set; } = [];
     public List<string> Subscriptions { get; set; } = [];

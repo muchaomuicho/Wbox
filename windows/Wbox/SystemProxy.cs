@@ -32,12 +32,12 @@ public static class SystemProxy
         else key.SetValue(name, value.Dword ? int.Parse(value.Value) : value.Value, value.Dword ? RegistryValueKind.DWord : RegistryValueKind.String);
     }
     public static bool CanRestore(ProxySnapshot snapshot, Dictionary<string, ProxyValue> current) => snapshot.Owned.All(kv => current.TryGetValue(kv.Key, out var actual) && actual.Equals(kv.Value));
-    public static void Install()
+    public static void Install(int port = ConfigBuilder.MixedPort)
     {
         Restore();
         Directory.CreateDirectory(Store.DirectoryPath);
         using var key = Registry.CurrentUser.CreateSubKey(KeyPath);
-        var snapshot = new ProxySnapshot { Before = Names.ToDictionary(n => n, n => Read(key, n)), Owned = new() { ["ProxyEnable"] = new() { Exists = true, Dword = true, Value = "1" }, ["ProxyServer"] = new() { Exists = true, Value = $"127.0.0.1:{ConfigBuilder.MixedPort}" }, ["ProxyOverride"] = new() { Exists = true, Value = "<local>;localhost;127.*;[::1]" }, ["AutoConfigURL"] = new() { Exists = false }, ["AutoDetect"] = new() { Exists = true, Dword = true, Value = "0" } } };
+        var snapshot = new ProxySnapshot { Before = Names.ToDictionary(n => n, n => Read(key, n)), Owned = new() { ["ProxyEnable"] = new() { Exists = true, Dword = true, Value = "1" }, ["ProxyServer"] = new() { Exists = true, Value = $"127.0.0.1:{port}" }, ["ProxyOverride"] = new() { Exists = true, Value = "<local>;localhost;127.*;[::1]" }, ["AutoConfigURL"] = new() { Exists = false }, ["AutoDetect"] = new() { Exists = true, Dword = true, Value = "0" } } };
         // Durable backup precedes registry changes, enabling safe recovery after an OS/application crash.
         File.WriteAllText(SnapshotPath, JsonSerializer.Serialize(snapshot, Store.JsonOptions));
         try { foreach (var entry in snapshot.Owned) Write(key, entry.Key, entry.Value); Notify(); }

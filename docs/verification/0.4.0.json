@@ -1,0 +1,38 @@
+{
+  "version": "0.4.0",
+  "windows_checks": 53,
+  "android_passed": 26,
+  "android_skipped": 1,
+  "android_skip_reason": "Optional external subscription fixture not provided",
+  "android_lint_errors": 0,
+  "android_lint_warnings": 14,
+  "windows_ui_fixture_nodes": 400,
+  "windows_ui_fixture_connections": 400,
+  "android_ui_fixture_connections": 400,
+  "android_ui_fixture_nodes": 400,
+  "flag_assets": 258,
+  "apk_certificate_sha256": "774e7eef8410a54c9d80fe18ebd3980d07701afb176d7e94ddfee5b796c7b026",
+  "idle_samples_mib": [
+    {
+      "mode": "idle",
+      "app": 101.8,
+      "core": 0
+    },
+    {
+      "mode": "mihomo",
+      "app": 116.7,
+      "core": 25.8
+    },
+    {
+      "mode": "sing-box",
+      "app": 112.7,
+      "core": 34.9
+    }
+  ],
+  "limitations": [
+    "Android real device VPN and battery measurements not performed",
+    "16 KiB page compatibility of official Android sing-box ELF unverified",
+    "No significant reduction in Windows idle memory compared with 0.3.0"
+  ],
+  "windows_managed_assembly_sha256": "777be980c841d448431098d04aad676d1a9a38c2b45e4229ca405ee97f5f9c7a"
+}

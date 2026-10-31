@@ -1,7 +1,7 @@
 [Setup]
 AppId={{49D04E75-742E-4E26-B77D-412E21C1D2AC}
 AppName=Wbox
-AppVersion=0.3.0
+AppVersion=0.4.0
 AppPublisher=Wbox
 DefaultDirName={localappdata}\Programs\Wbox
 DefaultGroupName=Wbox
@@ -10,7 +10,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=Wbox-0.3.0-windows-x64-setup
+OutputBaseFilename=Wbox-0.4.0-windows-x64-setup
 SetupIconFile=..\resources\wbox.ico
 UninstallDisplayIcon={app}\Wbox.exe
 Compression=lzma2/max

@@ -58,6 +58,7 @@ try
 finally { File.Delete(configPath); }
 if (args.Contains("--integration"))
 {
+    await StartupChecks.Run(Check);
     var testPath = Path.GetFullPath(Path.Combine("windows", "test-runtime"));
     Environment.SetEnvironmentVariable("WBOX_DATA_DIR", testPath);
     // Store was initialized above; use node mode and avoid altering the real system proxy.

@@ -2,8 +2,19 @@ using System.Diagnostics;
 using System.Net.Http.Headers;
 namespace Wbox;
 
-public sealed record ConnectionItem(string Network, string Source, string Destination, string Rule, string Outbound, long Upload, long Download);
-public sealed record GroupItem(string Name, string Selected, List<string> Nodes, bool Selectable);
+public sealed record ConnectionItem(string Network, string Source, string Destination, string Rule, string Outbound, long Upload, long Download) {
+    public string Id { get; init; } = "";
+    public string Inbound { get; init; } = "";
+    public long UploadRate { get; init; }
+    public long DownloadRate { get; init; }
+    public string UpText => "↑ " + DisplayFormat.Bytes(UploadRate) + "/s       ↑ " + DisplayFormat.Bytes(Upload);
+    public string DownText => "↓ " + DisplayFormat.Bytes(DownloadRate) + "/s       ↓ " + DisplayFormat.Bytes(Download);
+}
+public sealed record ProxyNode(string Name, string Type, int? Delay);
+public sealed record GroupItem(string Name, string Selected, List<string> Nodes, bool Selectable) {
+    public string Type { get; init; } = "Selector";
+    public List<ProxyNode> Details { get; init; } = [];
+}
 public sealed record CoreStats(int Inbound, int Outbound, long Uploaded, long Downloaded, long UploadRate, long DownloadRate, long Memory, List<ConnectionItem> Connections) { public long AppMemory { get; init; } public long CoreMemory { get; init; } }
 
 public sealed class CoreManager : IDisposable
@@ -12,6 +23,13 @@ public sealed class CoreManager : IDisposable
     ProcessJob? job;
     HttpClient? api;
     bool stopping;
+    bool starting;
+    readonly System.Collections.Concurrent.ConcurrentQueue<string> startupLog = new();
+    Dictionary<string, (long Up, long Down)> previousConnections = [];
+    DateTime connectionSample;
+    public DateTime StartedAt { get; private set; }
+    public int ProxyPort { get; private set; } = ConfigBuilder.MixedPort;
+    public int ApiPort { get; private set; } = ConfigBuilder.ControllerPort;
     long initialUpload = -1, initialDownload = -1, lastUpload, lastDownload;
     DateTime lastSample;
     string? runtimePath;
@@ -24,12 +42,15 @@ public sealed class CoreManager : IDisposable
     public async Task StartAsync(Preferences p)
     {
         if (Running) return;
-        stopping = false;
+        stopping = false; starting = true; startupLog.Clear();
         activeCore = p.Core;
         var executable = Path.Combine(AppContext.BaseDirectory, "cores", p.Core + ".exe");
         if (!File.Exists(executable)) throw new FileNotFoundException("安装包缺少代理内核：" + executable);
         var secret = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-        var config = ConfigBuilder.Build(p, secret);
+        ProxyPort = StartupPolicy.AvailablePort(ConfigBuilder.MixedPort);
+        ApiPort = StartupPolicy.AvailablePort(ConfigBuilder.ControllerPort, ProxyPort);
+        var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort);
+        StartupPolicy.Check(config, p.Core);
         // Resolve relative providers, certificates, rule sets and included files against the imported config directory.
         var working = p.Mode == "config" ? Path.GetDirectoryName(Path.GetFullPath(p.ConfigPath))! : Store.DirectoryPath;
         Directory.CreateDirectory(working);
@@ -55,26 +76,39 @@ public sealed class CoreManager : IDisposable
             start.Environment["GOMEMLIMIT"] = "96MiB";
             start.Environment["GOGC"] = "75";
             process = new Process { StartInfo = start, EnableRaisingEvents = true };
-            process.OutputDataReceived += (_, e) => { if (e.Data != null) Log?.Invoke(e.Data); };
-            process.ErrorDataReceived += (_, e) => { if (e.Data != null) Log?.Invoke(e.Data); };
-            process.Exited += (_, _) => { if (!stopping) { try { SystemProxy.Restore(); } catch (Exception ex) { Log?.Invoke(ex.Message); } Exited?.Invoke(); } };
+            process.OutputDataReceived += (_, e) => { if (e.Data != null) CaptureLog(e.Data); };
+            process.ErrorDataReceived += (_, e) => { if (e.Data != null) CaptureLog(e.Data); };
+            process.Exited += (_, _) => { if (!stopping && !starting) { try { SystemProxy.Restore(); } catch (Exception ex) { Log?.Invoke(ex.Message); } Exited?.Invoke(); } };
             if (!process.Start()) throw new InvalidOperationException("内核启动失败。");
             job = new ProcessJob(); job.Add(process);
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
-            api = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = new Uri($"http://127.0.0.1:{ConfigBuilder.ControllerPort}"), Timeout = TimeSpan.FromSeconds(4) };
+            api = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = new Uri($"http://127.0.0.1:{ApiPort}"), Timeout = TimeSpan.FromSeconds(2) };
             api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secret);
             var ready = false;
-            for (int i = 0; i < 80 && Running; i++)
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            for (int i = 0; i < 150 && Running && !deadline.IsCancellationRequested; i++)
             {
-                try { using var response = await api.GetAsync("/version"); if (response.IsSuccessStatusCode) { ready = true; break; } } catch (HttpRequestException) { } catch (TaskCanceledException) { }
+                try { using var response = await api.GetAsync("/version", deadline.Token); if (response.IsSuccessStatusCode) { ready = true; break; } } catch (HttpRequestException) { } catch (TaskCanceledException) { }
                 await Task.Delay(150);
             }
-            if (!ready) throw new InvalidOperationException("内核控制接口未就绪，请查看日志；10808 或 19090 端口可能被占用。");
+            if (!ready || !Running) {
+                if (process.HasExited) process.WaitForExit(1000);
+                var reason = process.HasExited ? $"内核退出（代码 {process.ExitCode}）" : $"控制接口 127.0.0.1:{ApiPort} 等待超过 30 秒";
+                throw new InvalidOperationException(reason + "。\n" + string.Join("\n", startupLog.TakeLast(8)));
+            }
             initialUpload = initialDownload = lastUpload = lastDownload = 0; lastSample = DateTime.UtcNow;
-            if (p.SystemProxy) SystemProxy.Install();
-            Log?.Invoke($"Wbox · {p.Core} 已启动 · 本地代理 127.0.0.1:{ConfigBuilder.MixedPort}");
+            if (p.SystemProxy) SystemProxy.Install(ProxyPort);
+            StartedAt = DateTime.UtcNow; previousConnections.Clear(); connectionSample = DateTime.UtcNow;
+            starting = false;
+            Log?.Invoke($"Wbox · {p.Core} 已启动 · 本地代理 127.0.0.1:{ProxyPort}");
         }
         catch { Stop(); throw; }
+    }
+    void CaptureLog(string line) {
+        line = System.Text.RegularExpressions.Regex.Replace(line, "\u001b\\[[0-9;]*m", "");
+        if (line.Length > 4096) line = line[..4096];
+        if (starting) { startupLog.Enqueue(line); while (startupLog.Count > 40) startupLog.TryDequeue(out _); }
+        Log?.Invoke(line);
     }
     public async Task<CoreStats> StatsAsync(bool details = true)
     {
@@ -86,15 +120,22 @@ public sealed class CoreManager : IDisposable
         var upRate = (long)(Math.Max(0, upload - lastUpload) / seconds); var downRate = (long)(Math.Max(0, download - lastDownload) / seconds);
         lastUpload = upload; lastDownload = download; lastSample = DateTime.UtcNow;
         var connections = new List<ConnectionItem>(); int count = 0;
+        var connectionSeconds = Math.Max(.1, (DateTime.UtcNow - connectionSample).TotalSeconds);
+        var nextConnections = new Dictionary<string, (long Up, long Down)>();
         if (root.TryGetProperty("connections", out var rows) && rows.ValueKind == JsonValueKind.Array) {
             count = rows.GetArrayLength();
             if (details) foreach (var c in rows.EnumerateArray()) {
                 if (!c.TryGetProperty("metadata", out var m)) continue;
                 string Value(string key) => m.TryGetProperty(key, out var value) ? value.ToString() : "";
                 var target = Value("host"); if (target.Length == 0) target = Value("destinationIP");
-                connections.Add(new(Value("network"), $"{Value("sourceIP")}:{Value("sourcePort")}", $"{target}:{Value("destinationPort")}", c.TryGetProperty("rule", out var rule) ? rule.ToString() : "", c.TryGetProperty("chains", out var chains) ? string.Join(" → ", chains.EnumerateArray().Select(n => n.ToString())) : "", c.TryGetProperty("upload", out var cu) ? cu.GetInt64() : 0, c.TryGetProperty("download", out var cd) ? cd.GetInt64() : 0));
+                var id = c.TryGetProperty("id", out var ci) ? ci.ToString() : "";
+                long cup = c.TryGetProperty("upload", out var cu) ? cu.GetInt64() : 0, cdown = c.TryGetProperty("download", out var cd) ? cd.GetInt64() : 0;
+                var hadPrevious = previousConnections.TryGetValue(id, out var before); nextConnections[id] = (cup, cdown);
+                var inbound = Value("inboundName"); if (inbound.Length == 0) inbound = Value("type");
+                connections.Add(new(Value("network").ToUpperInvariant(), $"{Value("sourceIP")}:{Value("sourcePort")}", $"{target}:{Value("destinationPort")}", c.TryGetProperty("rule", out var rule) ? rule.ToString() : "", c.TryGetProperty("chains", out var chains) ? string.Join(" → ", chains.EnumerateArray().Select(n => n.ToString())) : "", cup, cdown) { Id = id, Inbound = inbound, UploadRate = hadPrevious ? (long)(Math.Max(0,cup-before.Up)/connectionSeconds) : 0, DownloadRate = hadPrevious ? (long)(Math.Max(0,cdown-before.Down)/connectionSeconds) : 0 });
             }
         }
+        previousConnections = nextConnections; connectionSample = DateTime.UtcNow;
         if ((DateTime.UtcNow - memorySample).TotalSeconds >= 5) {
             try { process!.Refresh(); cachedCoreMemory = process.WorkingSet64; } catch { }
             using var self = Process.GetCurrentProcess(); cachedAppMemory = self.WorkingSet64; memorySample = DateTime.UtcNow;
@@ -106,7 +147,7 @@ public sealed class CoreManager : IDisposable
         var root = JsonNode.Parse(await api!.GetStringAsync("/proxies"))!["proxies"]!.AsObject();
         return root.Where(kv => kv.Value?["all"] is JsonArray && kv.Value?["type"]?.ToString() is "Selector" or "URLTest" or "Fallback" or "LoadBalance")
             .Where(kv => !(activeCore == "sing-box" && kv.Key == "GLOBAL"))
-            .Select(kv => new GroupItem(kv.Key, kv.Value!["now"]?.ToString() ?? "", kv.Value["all"]!.AsArray().Select(n => n!.ToString()).ToList(), kv.Value["type"]!.ToString() == "Selector")).ToList();
+            .Select(kv => new GroupItem(kv.Key, kv.Value!["now"]?.ToString() ?? "", kv.Value["all"]!.AsArray().Select(n => n!.ToString()).ToList(), kv.Value["type"]!.ToString() == "Selector") { Type = kv.Value["type"]!.ToString(), Details = kv.Value["all"]!.AsArray().Select(n => { var name = n!.ToString(); var detail = root[name]; var delay = (detail?["history"] as JsonArray)?.LastOrDefault()?["delay"]?.GetValue<int>(); return new ProxyNode(name, detail?["type"]?.ToString() ?? "—", delay); }).ToList() }).ToList();
     }
     public async Task SelectAsync(string group, string node)
     {

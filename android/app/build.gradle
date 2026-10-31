@@ -6,8 +6,8 @@ android {
         applicationId 'com.wbox.app'
         minSdk 26
         targetSdk 34
-        versionCode 3
-        versionName '0.3.0'
+        versionCode 4
+        versionName '0.4.0'
         ndk { abiFilters 'arm64-v8a' }
     }
     signingConfigs {
@@ -22,7 +22,7 @@ android {
         release { minifyEnabled false; signingConfig signingConfigs.release }
     }
     compileOptions { coreLibraryDesugaringEnabled true; sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
-    sourceSets { main { jniLibs.srcDirs = ['../../resources/cores/android'] } }
+    sourceSets { main { jniLibs.srcDirs = ['../../resources/cores/android']; assets.srcDirs = ['../../resources/ui-assets'] } }
     packagingOptions { jniLibs { useLegacyPackaging true; keepDebugSymbols += ['**/libmihomo.so', '**/libsingbox.so'] } }
     testOptions { unitTests.includeAndroidResources = true; unitTests.all { systemProperty 'wbox.root', rootProject.projectDir.parentFile.absolutePath } }
 }

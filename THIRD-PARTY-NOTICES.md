@@ -12,6 +12,8 @@ Wbox source code is distributed under GPL-3.0. No affiliation with upstream proj
 
 Wbox independently implements the UI and import workflow. v2rayN was read as a behavioral reference; no v2rayN UI or application source is copied.
 
+The 258 bundled flag images are from Twitter Twemoji v14.0.2, copyright Twitter, Inc. and other contributors, licensed under CC-BY-4.0. Source: https://github.com/twitter/twemoji/tree/v14.0.2/assets/72x72 . Files are renamed to region codes without image changes. The full license is included as `resources/cores/licenses/LICENSE-Twemoji-Graphics` and in the Windows installer. Wbox 0.4.0 follows the user-provided sing-box layout screenshots with independently written WPF and Android View code.
+
 The sing-box Android dashboard and theme source were read as a layout reference for 0.2.0. Wbox's WPF and Android View interfaces and icons are independently implemented. Robolectric 4.14.1 (MIT) and AndroidX test utilities are used only in JVM tests and are not shipped in the application.
 
 Release asset URLs, exact SHA256 values and binary sizes are recorded in `resources/cores/manifest.json`; Android ELF alignment evidence is in `resources/cores/ANDROID-ELF.txt`.

@@ -20,6 +20,7 @@ final class IconView extends View {
             case 1:c.drawCircle(12,5,2.5f,paint);c.drawCircle(5,19,2.5f,paint);c.drawCircle(19,19,2.5f,paint);c.drawLine(12,8,12,12,paint);c.drawLine(5,12,19,12,paint);c.drawLine(5,12,5,16,paint);c.drawLine(19,12,19,16,paint);break;
             case 2:path.moveTo(5,3);path.lineTo(14,3);path.lineTo(19,8);path.lineTo(19,21);path.lineTo(5,21);path.close();path.moveTo(14,3);path.lineTo(14,8);path.lineTo(19,8);c.drawPath(path,paint);c.drawLine(8,12,16,12,paint);c.drawLine(8,16,14,16,paint);break;
             case 3:c.drawRoundRect(3,3,21,21,3,3,paint);c.drawLine(7,8,17,8,paint);c.drawLine(7,12,17,12,paint);c.drawLine(7,16,13,16,paint);break;
+            case 5:c.drawLine(8,3,8,20,paint);c.drawLine(5,6,8,3,paint);c.drawLine(11,6,8,3,paint);c.drawLine(16,4,16,21,paint);c.drawLine(13,18,16,21,paint);c.drawLine(19,18,16,21,paint);break;
             default:c.drawCircle(12,12,7,paint);c.drawCircle(12,12,2.5f,paint);for(int i=0;i<8;i++){c.save();c.rotate(i*45,12,12);c.drawLine(12,2,12,5,paint);c.restore();}break;
         }c.restore();
     }

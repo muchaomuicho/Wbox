@@ -6,12 +6,13 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 
 public final class CoreApi {
-    public static final class Stats { public long upload,download; public int connections; }
-    public Stats stats()throws Exception {
+    public static final class Stats { public long upload,download; public int connections; public java.util.List<ConnectionRecord> rows=java.util.List.of(); }
+    public Stats stats()throws Exception { return snapshot(false,java.util.List.of(),1); }
+    public Stats snapshot(boolean details,java.util.List<ConnectionRecord> previous,double seconds)throws Exception {
         HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:19090/connections").openConnection();c.setConnectTimeout(1200);c.setReadTimeout(2000);c.setRequestProperty("Authorization","Bearer "+secret);
         try {if(c.getResponseCode()!=200)throw new IOException("控制接口不可用");
             try(android.util.JsonReader reader=new android.util.JsonReader(new InputStreamReader(c.getInputStream(),StandardCharsets.UTF_8))){
-                Stats result=new Stats();reader.beginObject();while(reader.hasNext()){String key=reader.nextName();switch(key){case "uploadTotal":result.upload=reader.nextLong();break;case "downloadTotal":result.download=reader.nextLong();break;case "connections":if(reader.peek()==android.util.JsonToken.NULL){reader.nextNull();break;}reader.beginArray();while(reader.hasNext()){reader.skipValue();result.connections++;}reader.endArray();break;default:reader.skipValue();}}reader.endObject();return result;
+                Stats result=new Stats();java.util.List<ConnectionRecord> rows=new java.util.ArrayList<>();java.util.Map<String,ConnectionRecord> before=new java.util.HashMap<>();if(details)for(ConnectionRecord row:previous)before.put(row.id,row);reader.beginObject();while(reader.hasNext()){String key=reader.nextName();switch(key){case "uploadTotal":result.upload=reader.nextLong();break;case "downloadTotal":result.download=reader.nextLong();break;case "connections":if(reader.peek()==android.util.JsonToken.NULL){reader.nextNull();break;}reader.beginArray();while(reader.hasNext()){if(details){ConnectionRecord row=ConnectionRecord.read(reader),old=before.get(row.id);if(old!=null){row.upRate=(long)(Math.max(0,row.upload-old.upload)/Math.max(.1,seconds));row.downRate=(long)(Math.max(0,row.download-old.download)/Math.max(.1,seconds));}rows.add(row);}else reader.skipValue();result.connections++;}reader.endArray();break;default:reader.skipValue();}}reader.endObject();result.rows=rows;return result;
             }
         }finally{c.disconnect();}
     }

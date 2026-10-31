@@ -7,10 +7,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Wbox</AssemblyName>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <ApplicationIcon Condition="Exists('../../resources/wbox.ico')">../../resources/wbox.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Resource Include="../../resources/ui-assets/flags/*.png" Link="flags/%(Filename)%(Extension)" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <Content Include="../../resources/cores/windows/*" Link="cores/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../resources/wbox.ico" Condition="Exists('../../resources/wbox.ico')" Link="wbox.ico" CopyToOutputDirectory="PreserveNewest" />

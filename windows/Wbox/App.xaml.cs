@@ -14,6 +14,8 @@ public partial class App : System.Windows.Application
         // This static 2D interface only redraws traffic once per second. Avoid a
         // dedicated GPU rendering context and its driver allocations.
         System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+        var waitIndex = Array.IndexOf(e.Args, "--wait-for");
+        if (waitIndex >= 0 && waitIndex + 1 < e.Args.Length && int.TryParse(e.Args[waitIndex+1],out var parentPid)) try { using var parent = System.Diagnostics.Process.GetProcessById(parentPid); parent.WaitForExit(10000); } catch (ArgumentException) { }
         var sid = System.Security.Principal.WindowsIdentity.GetCurrent().User!.Value;
         var isolated = Environment.GetEnvironmentVariable("WBOX_DATA_DIR");
         if (isolated != null) sid += "-" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(isolated))))[..12];
@@ -26,7 +28,7 @@ public partial class App : System.Windows.Application
         window = new MainWindow(preferences); MainWindow = window;
         waiter = ThreadPool.RegisterWaitForSingleObject(activation, (_, _) => Dispatcher.BeginInvoke(() => window.ShowFromTray()), null, -1, false);
         DispatcherUnhandledException += (_, args) => { args.Handled = true; System.Windows.MessageBox.Show(args.Exception.Message, "Wbox"); window.ExitApp(); };
-        if (!(e.Args.Contains("--silent") || preferences.Silent)) window.Show();
+        if (e.Args.Contains("--show") || !(e.Args.Contains("--silent") || preferences.Silent)) window.Show();
         if (preferences.AutoConnect) Dispatcher.BeginInvoke(async () => await window.ConnectAsync());
     }
     protected override void OnExit(ExitEventArgs e)

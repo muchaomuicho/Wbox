@@ -22,13 +22,9 @@ public sealed class TrafficChart : FrameworkElement
     {
         base.OnRender(dc);
         if (ActualWidth < 1 || ActualHeight < 1) return;
-        var width = ActualWidth; var top = 24d; var bottom = ActualHeight - 3;
-        var grid = new Pen(new SolidColorBrush(Color.FromRgb(55, 55, 55)), 1);
-        for (int i = 0; i < 4; i++) dc.DrawLine(grid, new Point(0, top + (bottom - top) * i / 3), new Point(width, top + (bottom - top) * i / 3));
+        var width = ActualWidth; var top = 2d; var bottom = ActualHeight - 3;
         var data = samples.ToArray();
-        var max = Math.Max(1024, data.Length == 0 ? 0 : data.Max(s => Math.Max(s.Up, s.Down)) * 1.15);
-        var label = max >= 1048576 ? $"{max / 1048576:0.#} MiB/s" : $"{max / 1024:0.#} KiB/s";
-        dc.DrawText(new FormattedText(label, CultureInfo.CurrentCulture, System.Windows.FlowDirection.LeftToRight, new Typeface("Segoe UI"), 10, new SolidColorBrush(Color.FromRgb(143, 150, 160)), VisualTreeHelper.GetDpi(this).PixelsPerDip), new Point(0, 0));
+        var max = Math.Max(1024, data.Length == 0 ? 0 : data.Max(s => Series == "Upload" ? s.Up : s.Down) * 1.15);
         if (data.Length < 2) { dc.DrawLine(new Pen(new SolidColorBrush(Color.FromRgb(90, 90, 90)), 1.5), new Point(0, bottom), new Point(width, bottom)); return; }
         Draw(Series == "Upload", Color.FromRgb(222, 222, 222));
         void Draw(bool up, Color color)
@@ -42,13 +38,13 @@ public sealed class TrafficChart : FrameworkElement
                 for (int i = 1; i < data.Length; i++)
                 {
                     var prev = PointAt(i - 1); var next = PointAt(i); var x = (prev.X + next.X) / 2;
-                    path.BezierTo(new Point(x, prev.Y), new Point(x, next.Y), next, true, false);
-                    fill.BezierTo(new Point(x, prev.Y), new Point(x, next.Y), next, true, false);
+                    path.LineTo(next, true, false);
+                    fill.LineTo(next, true, false);
                 }
                 fill.LineTo(new Point(PointAt(data.Length - 1).X, bottom), true, false);
             }
             line.Freeze(); area.Freeze();
-            if (!up) dc.DrawGeometry(new LinearGradientBrush(Color.FromArgb(24, 220, 220, 220), Color.FromArgb(2, 220, 220, 220), 90), null, area);
+            dc.DrawGeometry(new LinearGradientBrush(Color.FromArgb(24, 220, 220, 220), Color.FromArgb(2, 220, 220, 220), 90), null, area);
             var pen = new Pen(new SolidColorBrush(color), 2);
             
             dc.DrawGeometry(null, pen, line);

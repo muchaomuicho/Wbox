@@ -17,7 +17,7 @@ public static class ConfigBuilder
         // JSON is a YAML 1.2 subset accepted by mihomo and preserves scalar types without double conversion.
         return value.ToJsonString(Store.JsonOptions);
     }
-    public static string Build(Preferences preferences, string secret)
+    public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort)
     {
         JsonObject root;
         bool singbox = preferences.Core == "sing-box";
@@ -34,24 +34,34 @@ public static class ConfigBuilder
         }
         if (singbox)
         {
+            if (preferences.Mode == "config" && !preferences.NativeInbounds) {
+                var mixed = (root["inbounds"] as JsonArray)?.OfType<JsonObject>().FirstOrDefault(i => i["type"]?.ToString() == "mixed");
+                var inbound = mixed?.DeepClone().AsObject() ?? new JsonObject { ["type"] = "mixed", ["tag"] = "wbox-mixed" };
+                inbound["listen"] = "127.0.0.1"; inbound["listen_port"] = mixedPort; inbound.Remove("users"); inbound.Remove("set_system_proxy");
+                root["inbounds"] = new JsonArray(inbound);
+            }
             var experimental = root["experimental"] as JsonObject ?? new JsonObject(); root["experimental"] = experimental.DeepClone();
             var e = root["experimental"]!.AsObject();
             var clash = e["clash_api"] as JsonObject ?? new JsonObject(); e["clash_api"] = clash.DeepClone();
-            e["clash_api"]!["external_controller"] = $"127.0.0.1:{ControllerPort}";
+            e["clash_api"]!["external_controller"] = $"127.0.0.1:{controllerPort}";
             e["clash_api"]!["secret"] = secret;
             // Keep all user inbounds; add a dedicated loopback inbound only when our port is not occupied by an existing mixed inbound.
             var inbounds = root["inbounds"] as JsonArray ?? new JsonArray(); root["inbounds"] = inbounds.DeepClone();
             var a = root["inbounds"]!.AsArray();
-            var existing = a.OfType<JsonObject>().FirstOrDefault(i => i["listen_port"]?.ToString() == MixedPort.ToString());
+            var existing = a.OfType<JsonObject>().FirstOrDefault(i => i["listen_port"]?.ToString() == mixedPort.ToString());
             if (existing != null && existing["type"]?.ToString() != "mixed") throw new InvalidOperationException("配置的 10808 端口已被非 mixed 入站使用，请修改原配置端口。");
-            if (existing == null) a.Add(new JsonObject { ["type"] = "mixed", ["tag"] = "wbox-mixed", ["listen"] = "127.0.0.1", ["listen_port"] = MixedPort });
+            if (existing == null) a.Add(new JsonObject { ["type"] = "mixed", ["tag"] = "wbox-mixed", ["listen"] = "127.0.0.1", ["listen_port"] = mixedPort });
             else { existing["listen"] = "127.0.0.1"; existing.Remove("users"); }
         }
         else
         {
-            root["external-controller"] = $"127.0.0.1:{ControllerPort}"; root["secret"] = secret;
+            root["external-controller"] = $"127.0.0.1:{controllerPort}"; root["secret"] = secret;
             root.Remove("external-controller-tls"); root.Remove("external-controller-unix"); root.Remove("external-controller-pipe");
-            root["mixed-port"] = MixedPort; root["allow-lan"] = false; root["bind-address"] = "127.0.0.1";
+            if (preferences.Mode == "config" && !preferences.NativeInbounds) {
+                root.Remove("tun"); root.Remove("listeners");
+                foreach (var port in new[] { "port", "socks-port", "redir-port", "tproxy-port" }) root.Remove(port);
+            }
+            root["mixed-port"] = mixedPort; root["allow-lan"] = false; root["bind-address"] = "127.0.0.1";
             root.Remove("authentication");
             root["ipv6"] ??= true;
         }
