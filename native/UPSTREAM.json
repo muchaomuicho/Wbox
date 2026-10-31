@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/heiher/hev-socks5-tunnel",
+  "revision": "c5584feca8f6df70ee53eb2879e034b849a3d15a",
+  "submodules": {
+    "src/core": "dadbb54bf7509f6dea3c1b30e45198efa400679c",
+    "third-part/hev-task-system": "d0365c370aadd39129924b563b80751cb63332d7",
+    "third-part/lwip": "495671e59d736ef59f6cfa7dc9d35b7359921062",
+    "third-part/yaml": "94441ec8777eb319936735a58b376963d09c73d4"
+  },
+  "modifications": [
+    "Symlink header files replaced by equivalent relative #include forwarding headers for Windows builds",
+    "Added wbox_socks5_tunnel_reset_stop to clear stale cancellation state after completed HEV invocation"
+  ]
+}

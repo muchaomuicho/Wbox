@@ -1,0 +1,11 @@
+{
+  "source": "https://github.com/heiher/hev-socks5-tunnel",
+  "sourceRevision": "c5584feca8f6df70ee53eb2879e034b849a3d15a",
+  "ndkVersion": "28.0.13004108",
+  "minApi": 23,
+  "abi": "arm64-v8a",
+  "pageSizeAlignment": 16384,
+  "file": "android/arm64-v8a/libwboxtun.so",
+  "size": 237136,
+  "sha256": "fa40cd5a9b0535e455897825a740e6547014fe3adbaffb9229e4d6e24f3e6a1a"
+}

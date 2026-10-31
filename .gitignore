@@ -1,0 +1,15 @@
+.tools/
+dist/
+**/bin/
+**/obj/
+**/build/
+**/publish/
+**/.gradle/
+android/local.properties
+signing/
+windows/test-runtime/
+*.log
+*.pdb
+resources/cores/windows/*
+resources/cores/android/*
+resources/source/*

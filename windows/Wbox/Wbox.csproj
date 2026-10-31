@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Wbox</AssemblyName>
+    <Version>0.2.0</Version>
+    <ApplicationIcon Condition="Exists('../../resources/wbox.ico')">../../resources/wbox.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <Content Include="../../resources/cores/windows/*" Link="cores/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../resources/wbox.ico" Condition="Exists('../../resources/wbox.ico')" Link="wbox.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../resources/wbox.png" Condition="Exists('../../resources/wbox.png')" Link="wbox.png" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
