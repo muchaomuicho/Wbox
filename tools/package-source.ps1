@@ -1,4 +1,4 @@
-param([string]$Version = '0.5.2', [string]$AndroidVersion = '0.5.2')
+param([string]$Version = '0.6.0', [string]$AndroidVersion = '0.6.0')
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = Join-Path $repo "dist/Wbox-$Version-source.zip"
@@ -14,7 +14,7 @@ try {
         -g '!windows/backend-publish/**' -g '!windows/desktop-publish/**' -g '!windows/desktop-test-runtime/**' `
         -g '!**/*.tsbuildinfo' -g '!**/.pnpm-store/**' -g '!**/test-results/**' `
         -g '!**/.git/**' -g '!**/.git' -g '!**/publish/**' -g '!windows/test-runtime/**' `
-        -g '!windows/ui-*.png' -g '!android/local.properties' `
+        -g '!windows/memory-test-*/**' -g '!windows/ui-*.png' -g '!android/local.properties' `
         -g '!resources/cores/windows/**' -g '!resources/cores/android/**' -g '!*.log'
     if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate source files' }
     $file = [IO.File]::Open($output,[IO.FileMode]::Create)

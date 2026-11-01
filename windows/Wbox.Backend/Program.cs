@@ -78,7 +78,7 @@ async Task<object?> Handle(string method, JsonElement a) {
     switch (method) {
         case "state": return State();
         case "service": return new { running = core.Running, startedAt = core.Running ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
-        case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.WorkingSet64;
+        case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.PrivateMemorySize64;
         case "start": coreGeneration++; await core.StartAsync(prefs); Save(); return null;
         case "stop": nodeTestCancellation.Cancel(); core.Stop(); coreGeneration++; Save(); return null;
         case "logs": return logs.ToArray();

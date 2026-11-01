@@ -1,0 +1,52 @@
+{
+  "android": "15",
+  "abi": "x86_64",
+  "shellUid": "uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid),3012(readtracefs) context=u:r:shell:s0",
+  "engines": [
+    {
+      "engine": "sing-box",
+      "tcp": true,
+      "udp": true,
+      "restart": true,
+      "networkAfterStop": true,
+      "uploaded": 1276,
+      "downloaded": 5381,
+      "memoryDebugBuild": "Applications Memory Usage (in Kilobytes):\r\nUptime: 3972459 Realtime: 3972459\r\n\r\n** MEMINFO in pid 5365 [com.wbox.app] **\r\n                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap\r\n                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free\r\n                ------   ------   ------   ------   ------   ------   ------   ------\r\n  Native Heap    13577    13528       28       78    14536    28044    21086     2214\r\n  Dalvik Heap     3751     3688        4      147     5760    10226     5113     5113\r\n Dalvik Other     9939     4256        4        1    15940                           \r\n        Stack     1408     1408        0        0     1412                           \r\n       Ashmem       18        0        0        0      572                           \r\n    Other dev       18        0       16        0      332                           \r\n     .so mmap     4383      160     1636       24    33812                           \r\n    .jar mmap     3353        0     1124        0    43820                           \r\n    .apk mmap      162        0        0        0     1536                           \r\n    .ttf mmap      335        0      104        0     1188                           \r\n    .dex mmap       17        0        0        0      832                           \r\n    .oat mmap       41        0        0        0     1476                           \r\n    .art mmap     9972     7988     1452      136    24628                           \r\n   Other mmap     6066        4     2236        0    11264                           \r\n      Unknown    53885    53876        0        0    54336                           \r\n        TOTAL   107311    84908     6604      386   211444    38270    26199     7327\r\n \r\n App Summary\r\n                       Pss(KB)                        Rss(KB)\r\n                        ------                         ------\r\n           Java Heap:    13128                          30388\r\n         Native Heap:    13528                          14536\r\n                Code:     3212                          94204\r\n               Stack:     1408                           1412\r\n            Graphics:        0                              0\r\n       Private Other:    60236\r\n              System:    15799\r\n             Unknown:                                   70904\r\n \r\n           TOTAL PSS:   107311            TOTAL RSS:   211444       TOTAL SWAP PSS:      386\r\n \r\n Objects\r\n               Views:        8         ViewRootImpl:        1\r\n         AppContexts:        6           Activities:        1\r\n              Assets:       21        AssetManagers:        0\r\n       Local Binders:       18        Proxy Binders:       58\r\n       Parcel memory:        6         Parcel count:       24\r\n    Death Recipients:        0             WebViews:        0\r\n \r\n SQL\r\n         MEMORY_USED:        0\r\n  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0\r\n \r\n",
+      "logs": [
+        "04:39:47  WARN[0000] network: initialize package manager: read packages list: open /data/system/packages.xml: permission denied",
+        "04:39:47  INFO[0000] inbound/mixed[wbox-in]: tcp server started at 127.0.0.1:10808",
+        "04:39:47  INFO[0000] clash-api: restful api listening at 127.0.0.1:19090",
+        "04:39:48  INFO[0000] sing-box started (0.21s)",
+        "04:39:48  sing-box 已连接 · IPv6 开启",
+        "04:39:48  INFO[0000] [3148814182 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48554",
+        "04:39:48  INFO[0000] [4194209557 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48562",
+        "04:39:48  INFO[0000] [182663550 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48566",
+        "04:39:48  INFO[0000] [300160819 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48576",
+        "04:39:48  INFO[0000] [3148814182 207ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "04:39:48  INFO[0000] [3148814182 208ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "04:39:48  INFO[0000] [4194209557 208ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "04:39:48  INFO[0000] [4194209557 209ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "04:39:48  INFO[0000] [182663550 219ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "04:39:48  INFO[0000] [182663550 219ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "04:39:48  INFO[0000] [300160819 232ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "04:39:48  INFO[0000] [300160819 232ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "04:39:48  INFO[0001] [1367062959 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48582",
+        "04:39:48  INFO[0001] [2012565431 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48590",
+        "04:39:49  INFO[0001] [1367062959 209ms] inbound/mixed[wbox-in]: inbound packet connection to 198.18.10.222:123",
+        "04:39:49  INFO[0001] [1367062959 210ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "04:39:49  INFO[0001] [2012565431 213ms] inbound/mixed[wbox-in]: inbound connection to 198.18.0.23:5228",
+        "04:39:49  INFO[0001] [2012565431 214ms] outbound/direct[🇯🇵 Tokyo]: outbound connection to 198.18.0.23:5228",
+        "04:39:49  INFO[0001] [3266647593 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48598",
+        "04:39:49  INFO[0001] [3266647593 209ms] inbound/mixed[wbox-in]: inbound connection to 10.0.2.2:19281",
+        "04:39:49  INFO[0001] [3266647593 210ms] outbound/direct[🇯🇵 Tokyo]: outbound connection to 10.0.2.2:19281",
+        "04:39:50  INFO[0002] [142172736 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48602",
+        "04:39:50  INFO[0003] [142172736 212ms] inbound/mixed[wbox-in]: inbound packet connection to 10.0.2.2:19282",
+        "04:39:50  INFO[0003] [142172736 212ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "04:39:53  INFO[0006] [1455182344 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:48614",
+        "04:39:54  INFO[0006] [1455182344 213ms] inbound/mixed[wbox-in]: inbound packet connection to [fc00::a83]:123",
+        "04:39:54  INFO[0006] [1455182344 213ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection"
+      ]
+    }
+  ],
+  "originalFailureReproduced": true
+}

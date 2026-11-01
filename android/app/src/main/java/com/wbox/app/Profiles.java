@@ -100,12 +100,14 @@ public final class Profiles {
             JSONObject cache=ex.optJSONObject("cache_file");if(cache==null)cache=new JSONObject();cache.put("enabled",true).put("store_fakeip",true);
             String cacheId=mode().equals("config")&&activeConfig()!=null?activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";
             cache.put("path",new File(file.getParentFile(),"cache-"+cacheId+".db").getAbsolutePath());ex.put("cache_file",cache);
+            AndroidConfig.adaptSingBox(j,in);
             return j.toString(2);
         }
         Map<String,Object> m;
         if(mode().equals("config")){String cfg=data.optString("config_mihomo");if(cfg.isBlank())throw new IllegalArgumentException("请导入 mihomo YAML 配置");m=yamlMap(cfg);}
         else{m=new LinkedHashMap<>();m.put("log-level","warning");List<Object> proxies=new ArrayList<>();List<String> names=new ArrayList<>();for(Node n:ns){proxies.add(n.mihomo());names.add(n.name);}String selected=data.optString("selected");if(names.remove(selected))names.add(0,selected);names.add("DIRECT");m.put("proxies",proxies);m.put("proxy-groups",List.of(Map.of("name","Wbox","type","select","proxies",names)));m.put("rules",List.of("MATCH,Wbox"));m.put("ipv6",data.optBoolean("ipv6",true));m.put("dns",Map.of("enable",true,"ipv6",data.optBoolean("ipv6",true),"enhanced-mode","redir-host","nameserver",List.of("https://1.1.1.1/dns-query")));}
         m.put("mixed-port",10808);m.put("allow-lan",false);m.put("bind-address","127.0.0.1");m.put("external-controller","127.0.0.1:19090");m.put("secret",secret);m.put("tun",Map.of("enable",false));m.putIfAbsent("ipv6",true);
+        AndroidConfig.adaptMihomo(m);
         return new Yaml().dump(m);
     }
 }

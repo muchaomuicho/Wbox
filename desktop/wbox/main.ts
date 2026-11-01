@@ -7,6 +7,8 @@ import { homedir } from 'node:os';
 import { createTrayController } from './tray-window';
 
 app.setName('Wbox');
+// This UI is 2D. Avoid a persistent hardware texture cache while in the tray.
+if (process.env.WBOX_SOFTWARE_RENDERING !== '0') app.disableHardwareAcceleration();
 app.setPath('userData', join(process.env.WBOX_DATA_DIR || join(process.env.LOCALAPPDATA || homedir(), 'Wbox'), 'Desktop'));
 if (!app.requestSingleInstanceLock()) { app.quit(); } else {
 let window: BrowserWindow | null = null;
@@ -47,7 +49,7 @@ async function showWindow() {
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
   window.webContents.on('will-attach-webview', event => event.preventDefault());
-  window.on('close', event => { if (!quitting) { event.preventDefault(); window?.hide(); releaseTimer = setTimeout(() => { window?.destroy(); window = null; }, 30000); } });
+  window.on('close', event => { if (!quitting) { event.preventDefault(); window?.hide(); releaseTimer = setTimeout(() => { window?.destroy(); window = null; }, 1500); } });
   window.once('ready-to-show', () => window?.show());
   if (process.env.ELECTRON_RENDERER_URL) await window.loadURL(process.env.ELECTRON_RENDERER_URL);
   else await window.loadFile(join(import.meta.dirname, '../renderer/index.html'));
@@ -61,7 +63,7 @@ async function quit() {
 const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','connections','mode','setMode','select','close','delay','delayNodes','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile']);
 ipcMain.handle('wbox:call', async (event, method: string, args: any = {}) => {
   if (closing || quitting) throw new Error('Wbox 正在退出。');
-  if (event.sender === window?.webContents && method === 'memory') return app.getAppMetrics().reduce((sum, p) => sum + p.memory.workingSetSize * 1024, 0) + await rpc('memory');
+  if (event.sender === window?.webContents && method === 'memory') return app.getAppMetrics().reduce((sum, p) => sum + (p.memory.privateBytes ?? p.memory.workingSetSize) * 1024, 0) + await rpc('memory');
   if ((event.sender !== window?.webContents && event.sender !== trayMenu.window?.webContents) || !methods.has(method)) throw new Error('无效操作');
   const result = await rpc(method, args);
   if (method === 'settings' && !process.env.WBOX_DATA_DIR) { const state = await rpc('state'); app.setLoginItemSettings({ openAtLogin: state.autoStart, path: process.execPath, args: state.silent ? ['--silent'] : [] }); }

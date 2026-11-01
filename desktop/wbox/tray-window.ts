@@ -11,7 +11,7 @@ export function createTrayController() {
   function hide() {
     menu?.hide();
     clearTimeout(release);
-    release = setTimeout(destroy, 5000);
+    release = setTimeout(destroy, 1500);
   }
   async function show(anchor: Rectangle) {
     if (opening) return;
@@ -36,6 +36,9 @@ export function createTrayController() {
       const query = { side, align };
       if (process.env.ELECTRON_RENDERER_URL) await current.loadURL(`${process.env.ELECTRON_RENDERER_URL}/tray.html?${new URLSearchParams(query)}`);
       else await current.loadFile(join(import.meta.dirname, '../renderer/tray.html'), { query });
+      // A completed navigation is not a painted, themed React menu. Keep it
+      // hidden until fonts and the first themed frames have been committed.
+      await current.webContents.executeJavaScript(`document.fonts.ready.then(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))`);
       if (!current.isDestroyed()) { current.show(); current.focus(); }
     } finally { opening = false; }
   }

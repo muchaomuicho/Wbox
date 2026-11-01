@@ -1,0 +1,63 @@
+{
+  "label": "software",
+  "visible": [
+    {
+      "pid": 46208,
+      "type": "Browser",
+      "workingSetSize": 152868,
+      "peakWorkingSetSize": 153256,
+      "privateBytes": 76032,
+      "cpu": 0
+    },
+    {
+      "pid": 40764,
+      "type": "GPU",
+      "workingSetSize": 112556,
+      "peakWorkingSetSize": 112556,
+      "privateBytes": 29372,
+      "cpu": 0
+    },
+    {
+      "pid": 27320,
+      "type": "Utility",
+      "workingSetSize": 48600,
+      "peakWorkingSetSize": 48600,
+      "privateBytes": 12192,
+      "cpu": 0
+    },
+    {
+      "pid": 31392,
+      "type": "Tab",
+      "workingSetSize": 138332,
+      "peakWorkingSetSize": 173768,
+      "privateBytes": 65780,
+      "cpu": 0
+    }
+  ],
+  "hidden": [
+    {
+      "pid": 46208,
+      "type": "Browser",
+      "workingSetSize": 150724,
+      "peakWorkingSetSize": 154716,
+      "privateBytes": 72880,
+      "cpu": 0.021555074497979845
+    },
+    {
+      "pid": 40764,
+      "type": "GPU",
+      "workingSetSize": 97896,
+      "peakWorkingSetSize": 112604,
+      "privateBytes": 29332,
+      "cpu": 0.0011898429125678312
+    },
+    {
+      "pid": 27320,
+      "type": "Utility",
+      "workingSetSize": 48612,
+      "peakWorkingSetSize": 48652,
+      "privateBytes": 12184,
+      "cpu": 0.0006939584047194694
+    }
+  ]
+}

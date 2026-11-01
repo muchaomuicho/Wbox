@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>Wbox.Backend</AssemblyName><Version>0.5.2</Version></PropertyGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>Wbox.Backend</AssemblyName><Version>0.6.0</Version></PropertyGroup>
   <ItemGroup>
     <Compile Include="../Wbox/LogFormatting.cs" />
     <Compile Include="../Wbox/GlobalUsings.cs;../Wbox/Models.cs;../Wbox/NodeParser.cs;../Wbox/NodeEditing.cs;../Wbox/NodeOptions.cs;../Wbox/ConfigBuilder.cs;../Wbox/CoreManager.cs;../Wbox/StartupPolicy.cs;../Wbox/ProcessJob.cs;../Wbox/SystemProxy.cs;../Wbox/ProfileImport.cs;../Wbox/DisplayFormat.cs" />
