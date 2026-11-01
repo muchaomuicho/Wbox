@@ -1,4 +1,4 @@
-param([string]$Version = '0.4.0')
+param([string]$Version = '0.5.0', [string]$AndroidVersion = '0.5.0')
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = Join-Path $repo "dist/Wbox-$Version-source.zip"
@@ -7,8 +7,12 @@ Push-Location $repo
 try {
     # Explicit roots exclude user data, signing keys, caches and published binaries.
     $paths = @('README.md','LICENSE','THIRD-PARTY-NOTICES.md','.gitignore')
-    $paths += & rg --files --hidden android windows native resources tools docs `
+    $paths += 'desktop/dashboard/vendor/iterm2-color-schemes/LICENSE'
+    $paths += & rg --files --hidden --no-ignore android windows native resources tools docs desktop `
         -g '!**/bin/**' -g '!**/obj/**' -g '!**/build/**' -g '!**/.gradle/**' `
+        -g '!**/node_modules/**' -g '!desktop/out/**' -g '!desktop/dashboard/vendor/**' `
+        -g '!windows/backend-publish/**' -g '!windows/desktop-publish/**' -g '!windows/desktop-test-runtime/**' `
+        -g '!**/*.tsbuildinfo' -g '!**/.pnpm-store/**' -g '!**/test-results/**' `
         -g '!**/.git/**' -g '!**/.git' -g '!**/publish/**' -g '!windows/test-runtime/**' `
         -g '!windows/ui-*.png' -g '!android/local.properties' `
         -g '!resources/cores/windows/**' -g '!resources/cores/android/**' -g '!*.log'
@@ -23,7 +27,7 @@ try {
             try { $input.CopyTo($stream) } finally { $stream.Dispose(); $input.Dispose() }
         }
     } finally { $archive.Dispose(); $file.Dispose() }
-    $files = @("Wbox-$Version-windows-x64-setup.exe","Wbox-$Version-android-arm64-v8a.apk","Wbox-$Version-source.zip")
+    $files = @("Wbox-$Version-windows-x64-setup.exe","Wbox-$AndroidVersion-android-arm64-v8a.apk","Wbox-$Version-source.zip")
     $lines = foreach ($name in $files) { $hash=Get-FileHash -LiteralPath (Join-Path "$repo/dist" $name) -Algorithm SHA256; "$($hash.Hash.ToLowerInvariant())  $name" }
     [IO.File]::WriteAllLines((Join-Path $repo 'dist/SHA256SUMS.txt'),$lines)
     Get-Item -LiteralPath $output | Select-Object Name,Length

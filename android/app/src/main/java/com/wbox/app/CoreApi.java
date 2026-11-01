@@ -26,6 +26,8 @@ public final class CoreApi {
         }finally{c.disconnect();}
     }
     public JSONObject connections()throws Exception{return request("GET","/connections",null);}
+    public void closeConnection(String id)throws Exception{request("DELETE","/connections/"+encode(id),null);}
+    public void closeAllConnections()throws Exception{request("DELETE","/connections",null);}
     public JSONObject proxies()throws Exception{return request("GET","/proxies",null).getJSONObject("proxies");}
     public void select(String group,String node)throws Exception{request("PUT","/proxies/"+encode(group),new JSONObject().put("name",node));}
     public long delay(String node,String url)throws Exception{if(!url.startsWith("https://")&&!url.startsWith("http://"))throw new IllegalArgumentException("测试地址必须是 HTTP / HTTPS");return request("GET","/proxies/"+encode(node)+"/delay?timeout=8000&url="+encode(url),null).getLong("delay");}

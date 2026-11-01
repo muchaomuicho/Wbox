@@ -65,6 +65,15 @@ public class ProfilesTest {
     @Test public void jsonRetainsRoutesAndOtherInbound()throws Exception{String src="{\"inbounds\":[{\"type\":\"tun\",\"tag\":\"old\"},{\"type\":\"http\",\"tag\":\"keep\",\"listen_port\":8099}],\"outbounds\":[{\"type\":\"direct\",\"tag\":\"direct\"}],\"route\":{\"final\":\"direct\"}}";p.importText(src,null);JSONObject out=new JSONObject(p.compile("secret"));assertEquals("direct",out.getJSONObject("route").getString("final"));assertEquals(2,out.getJSONArray("inbounds").length());assertEquals("keep",out.getJSONArray("inbounds").getJSONObject(0).getString("tag"));assertEquals(src,p.data.getString("config_sing-box"));}
     @Test public void bothCompilersSupportProtocols()throws Exception{String[] links={SS,"vless://b831381d-6324-4d53-ad4f-8cda48b30811@127.0.0.1:443?security=tls&sni=example.com&type=ws&path=%2Fa#VLESS","trojan://pw@127.0.0.1:443#Trojan","hy2://pw@127.0.0.1:443#HY2","tuic://b831381d-6324-4d53-ad4f-8cda48b30811:pw@127.0.0.1:443#TUIC"};p.importText(String.join("\n",links),null);for(String e:List.of("sing-box","mihomo")){p.data.put("engine",e);String config=p.compile("s");assertTrue(config.contains("Wbox"));assertTrue(config.contains("127.0.0.1"));}}
     @Test public void selectedNodeAppliedToBoth()throws Exception{p.importText(SS+"\n"+SS.replace("#Test","#Second"),null);p.data.put("selected","Second");JSONObject sb=new JSONObject(p.compile("s"));JSONArray out=sb.getJSONArray("outbounds");assertEquals("Second",out.getJSONObject(out.length()-1).getString("default"));p.data.put("engine","mihomo");Map<String,Object> yaml=Profiles.yamlMap(p.compile("s"));Map<?,?> group=(Map<?,?>)((List<?>)yaml.get("proxy-groups")).get(0);assertEquals("Second",((List<?>)group.get("proxies")).get(0));}
+    @Test public void flagNamesPassBothCoreCompilers()throws Exception{
+        p.importNodes(SS.replace("#Test","#%F0%9F%87%AF%F0%9F%87%B5%20Tokyo"),null);
+        p.data.put("selected","🇯🇵 Tokyo");
+        for(String engine:List.of("sing-box","mihomo")){
+            p.data.put("engine",engine);String compiled=p.compile("test");
+            assertTrue(compiled.contains("🇯🇵 Tokyo")||Profiles.yamlMap(compiled).toString().contains("🇯🇵 Tokyo"));
+            if("1".equals(System.getenv("WBOX_CORE_TESTS")))validateExpanded(engine);
+        }
+    }
     @Test public void protocolAndRealityConfigsPassActualCoreValidation()throws Exception{
         Assume.assumeTrue("1".equals(System.getenv("WBOX_CORE_TESTS")));
         String id="b831381d-6324-4d53-ad4f-8cda48b30811";

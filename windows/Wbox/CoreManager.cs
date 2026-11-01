@@ -19,6 +19,8 @@ public sealed record CoreStats(int Inbound, int Outbound, long Uploaded, long Do
 
 public sealed class CoreManager : IDisposable
 {
+    readonly Func<bool> restoreProxy;
+    public CoreManager(Func<bool>? restoreProxy = null) { this.restoreProxy = restoreProxy ?? SystemProxy.Restore; }
     Process? process;
     ProcessJob? job;
     HttpClient? api;
@@ -154,6 +156,12 @@ public sealed class CoreManager : IDisposable
         using var content = new StringContent(new JsonObject { ["name"] = node }.ToJsonString(), Encoding.UTF8, "application/json");
         using var response = await api!.PutAsync("/proxies/" + Uri.EscapeDataString(group), content); response.EnsureSuccessStatusCode();
     }
+    public async Task<JsonNode?> RequestAsync(string method, string path, JsonNode? body = null) {
+        using var request = new HttpRequestMessage(new HttpMethod(method), path);
+        if (body != null) request.Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
+        using var response = await api!.SendAsync(request); response.EnsureSuccessStatusCode();
+        var text = await response.Content.ReadAsStringAsync(); return text.Length == 0 ? null : JsonNode.Parse(text);
+    }
     public async Task<int> DelayAsync(string node, string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")) throw new ArgumentException("延迟测试地址需要是 HTTP 或 HTTPS URL。");
@@ -168,8 +176,10 @@ public sealed class CoreManager : IDisposable
     }
     public void Stop()
     {
+        // Follow boxdd: reset platform options first. A failed reset must not
+        // close the listener which Windows may still be using.
+        restoreProxy();
         stopping = true;
-        try { SystemProxy.Restore(); } catch (Exception ex) { Log?.Invoke("系统代理恢复失败：" + ex.Message); }
         try { if (Running) { process!.Kill(true); process.WaitForExit(3000); } } catch { }
         job?.Dispose(); job = null; process?.Dispose(); process = null; api?.Dispose(); api = null;
         if (runtimePath != null) { try { File.Delete(runtimePath); } catch { } runtimePath = null; }

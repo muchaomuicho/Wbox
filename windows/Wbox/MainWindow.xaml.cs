@@ -91,7 +91,7 @@ public partial class MainWindow : Window, IDisposable
         try { if (Environment.GetEnvironmentVariable("WBOX_DATA_DIR") == null) SystemProxy.SetAutoStart(preferences.AutoStart, preferences.Silent); if (show) Notice.Text = "设置已保存"; }
         catch (Exception ex) { Notice.Text = "开机启动设置失败：" + ex.Message; AddLog(Notice.Text); }
     }
-    async Task ToggleAsync() { if (busy) return; if (core.Running) { core.Stop(); SetState(false); Notice.Text = "已停止，系统代理已恢复"; } else await ConnectAsync(); }
+    async Task ToggleAsync() { if (busy) return; if (core.Running) { try { core.Stop(); SetState(false); Notice.Text = "已停止，系统代理已恢复"; } catch (Exception ex) { AddLog(ex.Message); Notice.Text = "系统代理未恢复，内核保持运行：" + ex.Message; } } else await ConnectAsync(); }
     public async Task ConnectAsync()
     {
         if (busy || core.Running) return; busy = true; StartButton.IsEnabled = false; SaveSettings(false); StateLabel.Text = "正在连接…";

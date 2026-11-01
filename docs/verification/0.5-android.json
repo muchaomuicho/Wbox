@@ -1,0 +1,26 @@
+{
+  "version": "0.5.0",
+  "tests": {
+    "passed": 30,
+    "skipped": 1,
+    "failed": 0,
+    "ui": 11,
+    "configurationAndCore": 19
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 13
+  },
+  "apk": {
+    "file": "Wbox-0.5.0-android-arm64-v8a.apk",
+    "abi": "arm64-v8a",
+    "signatureScheme": "v2",
+    "certificateSha256": "774e7eef8410a54c9d80fe18ebd3980d07701afb176d7e94ddfee5b796c7b026",
+    "versionCode": 5
+  },
+  "limits": [
+    "UI renders use Robolectric at 360 and 412 px, with synthetic traffic data.",
+    "Android-generated configs were checked using pinned Windows cores, including IPv4/IPv6 HTTP and SOCKS5 UDP forwarding.",
+    "Android device VPN, battery use, and 16 KiB page devices have not been tested."
+  ]
+}

@@ -11,6 +11,8 @@ public final class WaveView extends View {
     private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path line=new Path(),fill=new Path();
     private final boolean upload;
+    private int ink=0xff1a1a1a;
+    public void setInk(int color){ink=color;invalidate();}
     public WaveView(Context context){this(context,false);}
     public WaveView(Context context,boolean upload){super(context);this.upload=upload;setContentDescription(upload?"上传流量波形":"下载流量波形");}
     public void setSamples(List<WboxVpnService.TrafficSample> values){
@@ -20,7 +22,7 @@ public final class WaveView extends View {
     @Override protected void onDraw(Canvas c){
         super.onDraw(c);float d=getResources().getDisplayMetrics().density,l=0,r=getWidth(),t=16*d,b=getHeight()-3*d;
         long max=1024;for(WboxVpnService.TrafficSample s:samples)max=Math.max(max,upload?s.up:s.down);max=(long)(max*1.1);
-        if(samples.size()<2){paint.setColor(0xffb9c0ca);paint.setStrokeWidth(1.5f*d);c.drawLine(l,b,r,b,paint);return;}
+        if(samples.size()<2){paint.setColor((ink&0xffffff)|0x30000000);paint.setStrokeWidth(1.5f*d);c.drawLine(l,b,r,b,paint);return;}
         drawSeries(c,upload,l,r,t,b,max,d);
     }
     private void drawSeries(Canvas c,boolean up,float l,float r,float t,float b,long max,float d){
@@ -31,7 +33,7 @@ public final class WaveView extends View {
             else{float mid=(prevX+x)/2;line.lineTo(x,y);fill.lineTo(x,y);}prevX=x;prevY=y;
         }
         fill.lineTo(prevX,b);fill.close();
-        {paint.setShader(new LinearGradient(0,t,0,b,0x22dddddd,0x02dddddd,Shader.TileMode.CLAMP));paint.setStyle(Paint.Style.FILL);c.drawPath(fill,paint);paint.setShader(null);}
-        paint.setStyle(Paint.Style.STROKE);paint.setColor(0xffe0e0e0);paint.setStrokeWidth(1.8f*d);c.drawPath(line,paint);paint.setPathEffect(null);
+        {paint.setShader(new LinearGradient(0,t,0,b,(ink&0xffffff)|0x24000000,ink&0xffffff,Shader.TileMode.CLAMP));paint.setStyle(Paint.Style.FILL);c.drawPath(fill,paint);paint.setShader(null);}
+        paint.setStyle(Paint.Style.STROKE);paint.setColor(ink);paint.setStrokeWidth(1.8f*d);c.drawPath(line,paint);paint.setPathEffect(null);
     }
 }

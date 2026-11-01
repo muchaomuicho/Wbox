@@ -1,26 +1,29 @@
 # Wbox Windows
 
-原生 .NET 8 WPF 客户端，使用 `sing-box 1.14.4` 与 `mihomo 1.19.33`。只有 YamlDotNet 外部托管依赖；代理内核运行时按需启动。
+0.5.0 的界面和托盘使用 `desktop/` 内的官方 sing-box desktop/dashboard 前端。`Wbox.Backend/` 是不依赖 WPF 的 .NET 8 后台，通过受限的 stdio JSON 通道管理双内核。`Wbox/` 的旧 WPF 界面保留为历史源码，不作为本次安装包入口。
+
+## 构建
+
+按 `docs/UPSTREAM-DESKTOP.md` 安装前端依赖，再运行：
 
 ```powershell
-dotnet build windows/Wbox/Wbox.csproj -c Release
-dotnet publish windows/Wbox/Wbox.csproj -c Release -r win-x64 --self-contained true -o windows/publish
+./tools/build-desktop.ps1 -InnoCompiler '<Inno Setup>/ISCC.exe'
 ```
 
-独立发布目录 `windows/publish` 包含 Wbox.exe、.NET 运行库、图标和 `cores/`。安装程序必须复制整个目录，尤其是 sing-box 同目录的 `libcronet.dll`。正式发布不包含测试程序。
+`windows/desktop-publish/win-unpacked/` 包含 Wbox.exe、Electron、后台 .NET 运行库、两内核与 sing-box 的 libcronet.dll。必须整体分发；安装程序输出到 `dist/`。
 
-配置与订阅保存到 `%LOCALAPPDATA%\Wbox`；`--silent` 参数直接收起至托盘，`WBOX_DATA_DIR` 环境变量可指定独立数据目录用于开发验证；该模式不更改 Windows 开机启动项。完整配置的运行副本暂时写在原配置目录，停止后删除，以便保留相对路径资源；原文件不修改。Windows 主模式为系统 HTTP/SOCKS 代理，需要全流量 TUN 时，先在概览选择“配置原生入站 / TUN”，再在设置中以管理员权限重启；系统代理模式使用受管 mixed 入站，保留 DNS、路由、出站和首个 mixed 标签。
+数据继续保存在 `%LOCALAPPDATA%\Wbox`。`WBOX_DATA_DIR` 隔离测试数据、实例和 Chromium 存储，并禁用测试实例写入开机启动项。`--silent` 不创建主窗口。主窗口关闭后收起托盘并在 30 秒后释放；托盘菜单关闭后 5 秒释放。
 
-分享链接与平台限制见根 README。配置工作区支持多份远程/本地完整配置；节点工作区支持独立订阅分组、搜索、选择和批量测速。原生订阅自动选择匹配内核，分享链接保留插件、混淆、ALPN 等支持的参数。`WBOX_DATA_DIR` 同时隔离实例互斥锁与数据，便于在已有 Wbox 运行时进行不设置系统代理的验证。
+完整配置的运行副本位于原配置目录，以保留相对资源路径，停止后删除。Windows 默认使用受管 mixed 入站和系统代理。原生入站/TUN 可在设置启用，TUN 配置需要管理员身份。停止前必须成功恢复 WinINet 代理，恢复失败保留运行内核和持久记录。
 
-验证：
+## 验证
 
 ```powershell
-dotnet build windows/Wbox.Tests/Wbox.Tests.csproj -c Release
-$env:WBOX_DATA_DIR = 'D:\LL\Wbox\windows\test-runtime'
+dotnet build windows/Wbox.Tests -c Release
 dotnet windows/Wbox.Tests/bin/Release/net8.0-windows/Wbox.Tests.dll --integration
-dotnet build windows/Wbox.UiSmoke/Wbox.UiSmoke.csproj -c Release
-dotnet windows/Wbox.UiSmoke/bin/Release/net8.0-windows/Wbox.UiSmoke.dll windows/ui-preview.png
+node tools/desktop-tests/smoke.mjs
 ```
 
-集成验证覆盖 53 项检查，包括两内核真实启动、12 类分享协议与原生配置校验、代理组切换、匿名控制接口拒绝、IPv6 代理传输、本地 HTTP 字节传输和流量/连接/内存统计。系统代理恢复采用持久备份与所有权比较；测试覆盖比较逻辑，集成测试不改用户正在使用的系统代理。测试入口捕获异常并退出 1，不触发 Windows 错误对话框。UI smoke 在不展示窗口的情况下构造并渲染全部六页，便于检查颜色与布局。
+集成验证 61 项；桌面自动化使用独立虚拟配置和本地 HTTP 服务，不启用系统代理。设置 `WBOX_EXE` 可验证已打包程序。托盘测试覆盖级联菜单、节点选择、关闭连接、配置切换及隐藏后的进程释放。
+
+真实代理恢复测试另用 `--proxy-native`，会短暂修改 WinINet 设置并在 finally 中还原，已有代理启用时拒绝运行。11 项覆盖恢复失败、绕过列表漂移、失效旧代理和还原一致性。本次已完成此验证；不需要为普通 UI 改动重复修改真实网络设置。

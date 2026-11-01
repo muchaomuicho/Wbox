@@ -24,9 +24,14 @@ if (args.Length == 2 && args[0] == "--subscription") {
 }
 int checks = 0;
 void Check(bool condition, string label) { if (!condition) throw new Exception("FAILED: " + label); checks++; Console.WriteLine("PASS " + label); }
+if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
 await ImportChecks.Run(Check);
 var ss = NodeParser.Parse("ss://" + Convert.ToBase64String(Encoding.UTF8.GetBytes("aes-128-gcm:p:a@ss")) + "@[2001:db8::1]:8388#IPv6");
 Check(ss.Password == "p:a@ss" && ss.Server == "2001:db8::1" && ss.Port == 8388, "SS URL credentials and IPv6");
+ss.Name = "🇯🇵 日本 IPv6";
+var unicode = new JsonObject { ["name"] = ss.Name, ["literal"] = @"\uD83C\uDDEF", ["escape"] = "a\\\"b" };
+var serializedUnicode = ConfigBuilder.SerializeYaml(unicode);
+Check(serializedUnicode.Contains("🇯🇵") && JsonNode.DeepEquals(unicode, ConfigBuilder.ParseYaml(serializedUnicode)), "YAML-safe flags preserve literal escapes and credentials");
 var vm = NodeParser.Parse("vmess://" + Convert.ToBase64String(Encoding.UTF8.GetBytes("{\"ps\":\"Test\",\"add\":\"example.org\",\"port\":\"443\",\"id\":\"99b91b8e-d4f1-459f-89d5-819553d4a9c3\",\"net\":\"ws\",\"tls\":\"tls\",\"path\":\"/path\",\"host\":\"cdn.example.org\"}")));
 Check(vm.Network == "ws" && vm.Tls && vm.Host == "cdn.example.org", "VMess TLS WebSocket");
 var vl = NodeParser.Parse("vless://99b91b8e-d4f1-459f-89d5-819553d4a9c3@example.org:443?security=reality&pbk=Q2FgNiSGAlK14obBNanOfIlu71vuoTxaJMqpWWdTEFg&sid=dafe&fp=chrome&flow=xtls-rprx-vision#Reality");
@@ -42,10 +47,23 @@ p.Core = "mihomo";
 var mihomo = JsonNode.Parse(ConfigBuilder.Build(p, "secret"))!;
 Check(mihomo["ipv6"]!.GetValue<bool>() && mihomo["mixed-port"]!.GetValue<int>() == 10808 && mihomo["proxies"]!.AsArray().Count == 3, "Mihomo IPv6 node config");
 var before = new Dictionary<string, ProxyValue> { ["ProxyEnable"] = new() { Exists = true, Dword = true, Value = "0" } };
-var owned = new Dictionary<string, ProxyValue> { ["ProxyEnable"] = new() { Exists = true, Dword = true, Value = "1" } };
+var owned = new Dictionary<string, ProxyValue> { ["ProxyEnable"] = new() { Exists = true, Dword = true, Value = "1" }, ["ProxyServer"] = new() { Exists = true, Value = "127.0.0.1:10808" } };
 var snapshot = new ProxySnapshot { Before = before, Owned = owned };
 Check(SystemProxy.CanRestore(snapshot, owned), "Proxy owned values recover");
 Check(!SystemProxy.CanRestore(snapshot, before), "Proxy user edits preserved");
+var drift = new Dictionary<string, ProxyValue>(owned) { ["ProxyOverride"] = new() { Exists = true, Value = ";localhost.*;;<local>;localhost;127.*;[::1]" }, ["AutoDetect"] = new() };
+Check(SystemProxy.CanRestore(snapshot, drift), "Proxy bypass/autodetect drift does not strand the owned listener");
+drift["ProxyServer"] = new() { Exists = true, Value = "http=127.0.0.1:10808;https=127.0.0.1:10808" };
+Check(SystemProxy.CanRestore(snapshot, drift), "Per-protocol WinINet endpoints match owned listener");
+drift["ProxyServer"] = new() { Exists = true, Value = "127.0.0.1:7890" };
+Check(!SystemProxy.CanRestore(snapshot, drift), "Another application's proxy endpoint is preserved");
+var oldLocal = new ProxySnapshot { Owned = owned, Before = new(owned) };
+Check(SystemProxy.RestorePlan(oldLocal, _ => true)["ProxyEnable"].Value == "0", "Never restore own stopped proxy as the previous proxy");
+oldLocal.Before["ProxyServer"] = new() { Exists = true, Value = "127.0.0.1:7890" };
+Check(SystemProxy.RestorePlan(oldLocal, _ => false)["ProxyEnable"].Value == "0", "Dead previous loopback proxy disabled");
+Check(SystemProxy.RestorePlan(oldLocal, _ => true)["ProxyEnable"].Value == "1", "Live previous loopback proxy restored");
+oldLocal.Before["ProxyServer"] = new() { Exists = true, Value = "proxy.example.org:8080" };
+Check(SystemProxy.RestorePlan(oldLocal, _ => false)["ProxyEnable"].Value == "1", "Remote prior proxy does not depend on a local reachability test");
 var configPath = Path.GetTempFileName();
 try
 {

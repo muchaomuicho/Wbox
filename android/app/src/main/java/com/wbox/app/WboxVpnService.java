@@ -31,6 +31,14 @@ public final class WboxVpnService extends VpnService {
     static void clearTraffic(){synchronized(traffic){traffic.clear();}}
     private final ExecutorService commands=Executors.newSingleThreadExecutor();
     private ScheduledExecutorService polling;
+    private ScheduledFuture<?> nextPoll;
+    private static volatile WboxVpnService instance;
+    static void setVisible(boolean value){visible=value;WboxVpnService service=instance;if(value&&service!=null)service.schedulePoll(0);}
+    private synchronized void schedulePoll(long delay){
+        if(!running||polling==null||polling.isShutdown())return;
+        if(nextPoll!=null)nextPoll.cancel(false);
+        try{nextPoll=polling.schedule(this::poll,delay,TimeUnit.SECONDS);}catch(RejectedExecutionException ignored){}
+    }
     private java.lang.Process core;
     private Thread tunnel;
     private ParcelFileDescriptor ownedTun;
@@ -71,15 +79,15 @@ public final class WboxVpnService extends VpnService {
         File hev=new File(dir,"tunnel.yaml");String y="tunnel:\n  name: wbox\n  mtu: 1500\n  ipv4: 172.19.0.1\n"+(ipv6?"  ipv6: 'fdfe:dcba:9876::1'\n":"")+"socks5:\n  address: 127.0.0.1\n  port: 10808\n  udp: udp\nmisc:\n  task-stack-size: 24576\n  tcp-buffer-size: 32768\n  udp-recv-buffer-size: 131072\n  max-session-count: 1024\n  connect-timeout: 8000\n  tcp-read-write-timeout: 300000\n  udp-read-write-timeout: 60000\n  log-level: warn\n";Files.write(hev.toPath(),y.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         final int fd=ownedTun.detachFd();ownedTun=null;tunnel=new Thread(()->{try{if(shuttingDown)return;int result=NativeTunnel.run(hev.getAbsolutePath(),fd);if(!shuttingDown){log("隧道结束："+result);shuttingDown=true;queueShutdown();}}catch(Throwable ex){log("隧道失败："+ex.getMessage());shuttingDown=true;queueShutdown();}finally{try{ParcelFileDescriptor.adoptFd(fd).close();}catch(IOException ignored){}}},"wbox-tun");tunnel.start();
         upload=download=upRate=downRate=previousUp=previousDown=0;clearTraffic();lastPoll=SystemClock.elapsedRealtime();startedAt=lastPoll;running=true;starting=false;status="已连接";log(p.engine()+" 已连接 · IPv6 "+(ipv6?"开启":"关闭"));
-        polling=Executors.newSingleThreadScheduledExecutor();polling.schedule(this::poll,1,TimeUnit.SECONDS);
+        polling=Executors.newSingleThreadScheduledExecutor();instance=this;schedulePoll(1);
     }
-    private void poll(){if(!running)return;pollTicks++;try{if(core==null||!core.isAlive()){throw new IOException("内核意外退出");}long now=SystemClock.elapsedRealtime();double seconds=Math.max(.001,(now-lastPoll)/1000.0);CoreApi.Stats j=api().snapshot(visible&&wantsConnections,connectionRows,seconds);connectionRows=j.rows;long u=j.upload,d=j.download;upRate=(long)(Math.max(0,u-previousUp)/seconds);downRate=(long)(Math.max(0,d-previousDown)/seconds);previousUp=u;previousDown=d;upload=u;download=d;lastPoll=now;recordTraffic(now,upRate,downRate);inbound=j.connections;outbound=inbound;if(memory==0||pollTicks%(visible?5:3)==0){appMemory=(long)Debug.getPss()*1024;coreMemory=coreRss();memory=appMemory+coreMemory;}if(visible&&wantsGroups&&pollTicks%5==0)proxies=api().proxies();if(pollTicks%(visible?30:3)==0)getSystemService(NotificationManager.class).notify(NOTIFY,notification());}
+    private void poll(){if(!running)return;pollTicks++;try{if(core==null||!core.isAlive()){throw new IOException("内核意外退出");}long now=SystemClock.elapsedRealtime();double seconds=Math.max(.001,(now-lastPoll)/1000.0);CoreApi.Stats j=api().snapshot(visible&&wantsConnections,connectionRows,seconds);connectionRows=j.rows;long u=j.upload,d=j.download;upRate=(long)(Math.max(0,u-previousUp)/seconds);downRate=(long)(Math.max(0,d-previousDown)/seconds);previousUp=u;previousDown=d;upload=u;download=d;lastPoll=now;recordTraffic(now,upRate,downRate);inbound=j.connections;outbound=inbound;if(visible&&(memory==0||pollTicks%5==0)){appMemory=(long)Debug.getPss()*1024;coreMemory=coreRss();memory=appMemory+coreMemory;}if(visible&&wantsGroups&&pollTicks%5==0)proxies=api().proxies();if(pollTicks%(visible?30:1)==0)getSystemService(NotificationManager.class).notify(NOTIFY,notification());}
         catch(Exception ex){if(core!=null&&!core.isAlive()){log(ex.getMessage());shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});}}
-        finally{if(running&&polling!=null&&!polling.isShutdown())try{polling.schedule(this::poll,visible?1:10,TimeUnit.SECONDS);}catch(RejectedExecutionException ignored){}}
+        finally{schedulePoll(visible?1:30);}
     }
     private long coreRss(){try{for(String line:Files.readAllLines(Paths.get("/proc/"+corePid+"/status"))){if(line.startsWith("VmRSS:"))return Long.parseLong(line.replaceAll("[^0-9]",""))*1024;}}catch(Exception ignored){}return 0;}
     private void queueShutdown(){try{commands.execute(()->{stopCore();stopSelf();});}catch(RejectedExecutionException ignored){}}
     private void stopCore(){stopping=true;shuttingDown=true;running=false;starting=false;status="正在关闭";if(polling!=null){polling.shutdownNow();polling=null;}try{NativeTunnel.stop();}catch(Throwable ignored){}if(tunnel!=null){while(tunnel.isAlive()){try{tunnel.join(2000);if(tunnel.isAlive())NativeTunnel.stop();}catch(InterruptedException ignored){}catch(Throwable ignored){}}tunnel=null;}if(ownedTun!=null){try{ownedTun.close();}catch(IOException ignored){}ownedTun=null;}if(core!=null){core.destroy();try{if(!core.waitFor(2,TimeUnit.SECONDS))core.destroyForcibly();}catch(InterruptedException ignored){core.destroyForcibly();}core=null;}inbound=outbound=0;upRate=downRate=memory=appMemory=coreMemory=0;connections=new JSONObject();connectionRows=List.of();proxies=new JSONObject();status="未连接";stopping=false;log("连接已关闭");stopForeground(STOP_FOREGROUND_REMOVE);}
     @Override public void onRevoke(){shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});super.onRevoke();}
-    @Override public void onDestroy(){shuttingDown=true;commands.execute(this::stopCore);commands.shutdown();super.onDestroy();}
+    @Override public void onDestroy(){if(instance==this)instance=null;shuttingDown=true;commands.execute(this::stopCore);commands.shutdown();super.onDestroy();}
 }

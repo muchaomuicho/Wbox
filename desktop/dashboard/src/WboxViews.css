@@ -1,0 +1,10 @@
+.wbox-controls { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.wbox-controls input { flex:1; min-width:0; }
+.wbox-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
+.wbox-row:last-child { border-bottom:0; }
+.wbox-row-main { display:flex; align-items:center; gap:12px; flex:1; min-width:0; text-align:start; background:transparent; color:var(--text); border:0; padding:0; cursor:pointer; font:inherit; }
+.wbox-row-main strong { font-weight:500; overflow-wrap:anywhere; }
+.wbox-row small,.wbox-grow small { display:block; color:var(--text-secondary); font-size:12px; margin-top:5px; }
+.wbox-grow { flex:1; min-width:0; overflow-wrap:anywhere; }
+.wbox-hint { font-size:12px; color:var(--text-secondary); line-height:1.7; }
+.wbox-editor { min-height:260px; width:100%; resize:vertical; font-family:var(--font-mono); font-size:12px; }

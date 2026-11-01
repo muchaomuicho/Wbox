@@ -110,4 +110,39 @@ public class MainActivityUiTest {
         String json="{\"id\":\"test\",\"metadata\":{\"network\":\"tcp\",\"host\":\"example.org\",\"destinationPort\":443,\"sourceIP\":\"127.0.0.1\",\"sourcePort\":5000,\"inboundName\":\"tun/0\",\"unknown\":{\"large\":[1,2,3]}},\"chains\":[\"JP\",\"Proxy\"],\"upload\":123,\"download\":456}";
         try(android.util.JsonReader reader=new android.util.JsonReader(new StringReader(json))){ConnectionRecord row=ConnectionRecord.read(reader);assertEquals("example.org:443",row.destination);assertEquals("tun/0",row.inbound);assertEquals("JP → Proxy",row.outbound);assertEquals(456,row.download);assertTrue(row.matches("PROXY"));}
     }
+    @Test public void themeAndTrafficRenderInLightAndDark()throws Exception {
+        for(String theme:List.of("light","dark")){
+            Profiles profiles=new Profiles(RuntimeEnvironment.getApplication());profiles.data.put("theme",theme);profiles.save();
+            try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
+                MainActivity activity=controller.get();assertEquals(theme.equals("dark"),((UiPalette)field(activity,"palette")).dark);
+                long now=android.os.SystemClock.elapsedRealtime();WboxVpnService.running=true;
+                WboxVpnService.coreMemory=32*1024*1024;WboxVpnService.appMemory=21*1024*1024;
+                WboxVpnService.upload=123456789;WboxVpnService.download=987654321;WboxVpnService.upRate=13456;WboxVpnService.downRate=234567;
+                for(int i=0;i<60;i++)WboxVpnService.recordTraffic(now-59000+i*1000,10000+(i%9)*4500,120000+(i%7)*24000);
+                java.lang.reflect.Method update=MainActivity.class.getDeclaredMethod("update");update.setAccessible(true);update.invoke(activity);
+                screenshot(activity,"overview-"+theme+"-360");assertEquals("32.0 MB",((TextView)field(activity,"memory")).getText().toString());
+            }finally{WboxVpnService.running=false;WboxVpnService.clearTraffic();}
+        }
+    }
+    @Test public void editsRemoteProfileWithoutLosingItsSource()throws Exception {
+        Profiles profiles=new Profiles(RuntimeEnvironment.getApplication());profiles.importConfig("{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"DIRECT\"}]}","https://example.org/profile",null);profiles.setWorkspace("config");profiles.save();String id=profiles.activeConfig().getString("id");
+        try(ActivityController<MainActivity> controller=Robolectric.buildActivity(MainActivity.class).setup()){
+            MainActivity activity=controller.get();navigate(activity,2);
+            java.lang.reflect.Method actions=MainActivity.class.getDeclaredMethod("profileActions",org.json.JSONObject.class);actions.setAccessible(true);actions.invoke(activity,((Profiles)field(activity,"profiles")).activeConfig());
+            android.app.AlertDialog menu=org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();menu.getListView().performItemClick(null,0,0);
+            android.app.AlertDialog edit=org.robolectric.shadows.ShadowAlertDialog.getLatestAlertDialog();EditText input=findEdit(edit.getWindow().getDecorView());assertNotNull(input);
+            input.setText("{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"Edited\"}]}");edit.getButton(android.content.DialogInterface.BUTTON_POSITIVE).performClick();org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle();
+            Profiles saved=new Profiles(activity);assertEquals(id,saved.activeConfig().getString("id"));assertEquals("https://example.org/profile",saved.activeConfig().getString("url"));assertTrue(saved.activeConfig().getString("content").contains("Edited"));
+        }
+    }
+    private static EditText findEdit(View view){if(view instanceof EditText)return (EditText)view;if(view instanceof android.view.ViewGroup){android.view.ViewGroup group=(android.view.ViewGroup)view;for(int i=0;i<group.getChildCount();i++){EditText found=findEdit(group.getChildAt(i));if(found!=null)return found;}}return null;}
+    @Test public void connectionCloseUsesAuthenticatedDelete()throws Exception {
+        try(java.net.ServerSocket server=new java.net.ServerSocket(19090,2,java.net.InetAddress.getLoopbackAddress())){
+            java.util.concurrent.CompletableFuture<List<String>> received=java.util.concurrent.CompletableFuture.supplyAsync(()->{java.util.ArrayList<String> paths=new java.util.ArrayList<>();try{for(int i=0;i<2;i++)try(java.net.Socket socket=server.accept()){
+                BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));paths.add(input.readLine());String line;boolean auth=false;while((line=input.readLine())!=null&&!line.isEmpty())if(line.equals("Authorization: Bearer close-test"))auth=true;if(!auth)throw new AssertionError("Missing authorization");socket.getOutputStream().write("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n".getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+            }}catch(Exception error){throw new RuntimeException(error);}return paths;});
+            CoreApi api=new CoreApi("close-test");api.closeConnection("id with space");api.closeAllConnections();
+            assertEquals(List.of("DELETE /connections/id%20with%20space HTTP/1.1","DELETE /connections HTTP/1.1"),received.get(5,java.util.concurrent.TimeUnit.SECONDS));
+        }
+    }
 }

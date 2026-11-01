@@ -1,0 +1,25 @@
+{
+  "checks": [
+    "Remote JSON imported through desktop UI",
+    "Official emoji font loaded",
+    "Group node selection",
+    "Real traffic appears in official connections page",
+    "Top stop shuts down the core",
+    "Independent workspaces retain their data",
+    "UTF-8 names and flags round-trip through backend",
+    "Second core starts in node workspace",
+    "Tray idle releases renderer window",
+    "Core survives renderer release and reopen",
+    "Official tray switch reflects running service",
+    "Tray selects an outbound without opening main view",
+    "Tray closes all connections",
+    "Tray profile switch safely restarts the selected core",
+    "No renderer errors: "
+  ],
+  "errors": [],
+  "electronWorkingSetKiB": {
+    "visible": 713940,
+    "tray": 466352
+  },
+  "packaged": true
+}

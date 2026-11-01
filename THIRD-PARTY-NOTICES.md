@@ -10,10 +10,12 @@ Wbox source code is distributed under GPL-3.0. No affiliation with upstream proj
 - Android desugar JDK libraries 2.1.4 — https://github.com/google/desugar_jdk_libs — GPL-2.0 with Classpath Exception / upstream component licenses.
 - .NET 8 runtime and Windows Desktop runtime — https://github.com/dotnet/runtime — MIT and third-party notices supplied by Microsoft.
 
-Wbox independently implements the UI and import workflow. v2rayN was read as a behavioral reference; no v2rayN UI or application source is copied.
+Wbox 0.5.0 for Windows is derived from SagerNet/sing-box-for-desktop and SagerNet/sing-box-dashboard, GPL-3.0-or-later with the additional naming/association restriction in their LICENSE files. Original licenses and copyright notices are retained. Wbox is an independent derivative, not an official SagerNet application. The original shell, pages, controls and styles are reused with Wbox branding and a dual-core transport. Exact commits and modified integration points are documented in `docs/UPSTREAM-DESKTOP.md`. v2rayN remains a behavioral reference; no v2rayN application source is copied.
+
+The Windows frontend includes Electron (MIT and Chromium third-party licenses, supplied in the packaged runtime), React (MIT), ConnectRPC (Apache-2.0), protobuf-es (Apache-2.0), Schibsted Grotesk / Source Serif 4 / IBM Plex Mono / Noto Color Emoji (SIL OFL-1.1). Frontend dependency versions and transitive dependencies are pinned in `desktop/pnpm-lock.yaml` and `desktop/dashboard/pnpm-lock.yaml`. Original font licenses are included with the installer. iTerm2-Color-Schemes uses MIT; its license is included.
 
 The 258 bundled flag images are from Twitter Twemoji v14.0.2, copyright Twitter, Inc. and other contributors, licensed under CC-BY-4.0. Source: https://github.com/twitter/twemoji/tree/v14.0.2/assets/72x72 . Files are renamed to region codes without image changes. The full license is included as `resources/cores/licenses/LICENSE-Twemoji-Graphics` and in the Windows installer. Wbox 0.4.0 follows the user-provided sing-box layout screenshots with independently written WPF and Android View code.
 
-The sing-box Android dashboard and theme source were read as a layout reference for 0.2.0. Wbox's WPF and Android View interfaces and icons are independently implemented. Robolectric 4.14.1 (MIT) and AndroidX test utilities are used only in JVM tests and are not shipped in the application.
+The sing-box Android dashboard and lifecycle source were read as references; the 0.5.0 Android interface remains independently implemented with native Java views and desktop semantic colors. Robolectric 4.14.1 (MIT) and AndroidX test utilities are used only in JVM tests and are not shipped in the application.
 
 Release asset URLs, exact SHA256 values and binary sizes are recorded in `resources/cores/manifest.json`; Android ELF alignment evidence is in `resources/cores/ANDROID-ELF.txt`.

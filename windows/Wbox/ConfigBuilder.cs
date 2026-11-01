@@ -14,8 +14,23 @@ public static class ConfigBuilder
     }
     public static string SerializeYaml(JsonObject value)
     {
-        // JSON is a YAML 1.2 subset accepted by mihomo and preserves scalar types without double conversion.
-        return value.ToJsonString(Store.JsonOptions);
+        // YAML rejects JSON's UTF-16 surrogate escapes. Emit actual supplementary
+        // code points, while leaving escaped literal backslashes untouched.
+        var json = value.ToJsonString(Store.JsonOptions);
+        var output = new StringBuilder(json.Length);
+        for (int i = 0; i < json.Length; i++) {
+            if (json[i] == '\\' && i + 1 < json.Length) {
+                if (i + 11 < json.Length && json[i + 1] == 'u' && json[i + 6] == '\\' && json[i + 7] == 'u'
+                    && ushort.TryParse(json.AsSpan(i + 2, 4), System.Globalization.NumberStyles.HexNumber, null, out var high)
+                    && ushort.TryParse(json.AsSpan(i + 8, 4), System.Globalization.NumberStyles.HexNumber, null, out var low)
+                    && char.IsHighSurrogate((char)high) && char.IsLowSurrogate((char)low)) {
+                    output.Append(char.ConvertFromUtf32(char.ConvertToUtf32((char)high, (char)low))); i += 11; continue;
+                }
+                output.Append(json[i]).Append(json[++i]); continue;
+            }
+            output.Append(json[i]);
+        }
+        return output.ToString();
     }
     public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort)
     {
@@ -65,7 +80,7 @@ public static class ConfigBuilder
             root.Remove("authentication");
             root["ipv6"] ??= true;
         }
-        return root.ToJsonString(Store.JsonOptions);
+        return singbox ? root.ToJsonString(Store.JsonOptions) : SerializeYaml(root);
     }
     static JsonObject SingboxNodes(Preferences p)
     {
