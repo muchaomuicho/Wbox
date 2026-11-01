@@ -93,7 +93,9 @@ export function DesktopServiceControls(props: { host: DesktopHost }) {
 
   return (
     <div className={styles.toolbarService}>
-      {transitioning || busy ? (
+      {statusType === ServiceStatus_Type.STARTING ? (
+        <IconButton title="取消启动" onClick={() => {void host.service.stop().then(()=>{setBusy(false);setWaitingFor(null);api.serviceStatus.reconnectNow();}).catch(showError);}}><Spinner /></IconButton>
+      ) : transitioning || busy ? (
         <span className={styles.toolbarSpinner} role="status" aria-label={started ? "正在停止" : "正在启动"}>
           <Spinner />
         </span>

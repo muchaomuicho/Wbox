@@ -1,0 +1,7 @@
+{
+  "checks": [
+    "Remote YAML with boundary-split flag imports through actual Android form while connected",
+    "Mihomo UA, active sing-box config, running session and Unicode content preserved",
+    "VPN continues forwarding after adding a config"
+  ]
+}

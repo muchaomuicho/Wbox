@@ -12,6 +12,17 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context context,Intent intent){
         PendingResult pending=goAsync();new Thread(()->{try{
             String action=intent.getStringExtra("operation");
+            if("fetch".equals(action)) {
+                JSONObject result=new JSONObject();
+                try {
+                    result.put("stage","download");
+                    String content=Profiles.fetch(intent.getStringExtra("url"));
+                    result.put("stage","parse").put("length",content.length());
+                    Profiles copy=new Profiles(context).copy();copy.importConfig(content,null,null,false);
+                    result.put("ok",true).put("length",content.length()).put("core",copy.configs().getJSONObject(copy.configs().length()-1).getString("core"));
+                }catch(Exception e){StringWriter trace=new StringWriter();e.printStackTrace(new PrintWriter(trace));result.put("ok",false).put("type",e.getClass().getName()).put("message",ErrorMessage.describe(e)).put("trace",trace.toString());}
+                Files.write(new File(context.getFilesDir(),"probe-fetch.json").toPath(),result.toString().getBytes());return;
+            }
             if("stop".equals(action)){context.startService(new Intent(context,WboxVpnService.class).setAction(WboxVpnService.STOP));return;}
             if("connect".equals(action)){if(android.net.VpnService.prepare(context)!=null)throw new IllegalStateException("Test VPN approval missing");context.startForegroundService(new Intent(context,WboxVpnService.class));return;}
             if("status".equals(action)){

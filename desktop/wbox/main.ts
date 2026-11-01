@@ -26,7 +26,7 @@ function rpc(method: string, args: unknown = {}): Promise<any> {
   return new Promise((resolve, reject) => {
     if (quitting || !backend || backend.stdin.destroyed || backend.stdin.writableEnded) { reject(new Error('Wbox 正在退出。')); return; }
     const id = ++sequence;
-    const timer = setTimeout(() => { pending.delete(id); reject(new Error('操作超时，请检查日志。')); }, method === 'delayNodes' ? 600000 : 90000);
+    const timer = setTimeout(() => { pending.delete(id); reject(new Error('操作超时，请检查日志。')); }, method === 'delayNodes' ? 600000 : method === 'start' ? 135000 : 90000);
     pending.set(id, { resolve, reject, timer });
     backend.stdin.write(JSON.stringify({ id, method, args }) + '\n', error => { if (error) { clearTimeout(timer); pending.delete(id); reject(error); } });
   });

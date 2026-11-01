@@ -76,7 +76,7 @@ public final class WboxVpnService extends VpnService {
         if(intent!=null&&STOP.equals(intent.getAction())){stopRequested=true;shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});return START_NOT_STICKY;}
         if(running||starting||stopping)return START_NOT_STICKY;
         stopRequested=false;startingForeground();
-        commands.execute(()->{try{startCore();if(shuttingDown){stopCore();stopSelf();}}catch(Throwable ex){lastError=startStage+"："+(ex.getMessage()==null?ex.getClass().getSimpleName():ex.getMessage());log("ERROR 启动失败 · "+lastError);persistFailure();stopCore();stopSelf();}});
+        commands.execute(()->{try{startCore();if(shuttingDown){stopCore();stopSelf();}}catch(Throwable ex){if(!shuttingDown){lastError=startStage+"："+ErrorMessage.describe(ex);log("ERROR 启动失败 · "+lastError);persistFailure();}stopCore();stopSelf();}});
         return START_NOT_STICKY;
     }
     private void startCore()throws Exception{
@@ -92,16 +92,23 @@ public final class WboxVpnService extends VpnService {
         ProcessBuilder pb=new ProcessBuilder(cmd).directory(dir).redirectErrorStream(true);pb.environment().put("GOMEMLIMIT","96MiB");pb.environment().put("GOGC","75");core=pb.start();
         BufferedReader reader=new BufferedReader(new InputStreamReader(core.getInputStream()));String pidLine=reader.readLine();try{corePid=Long.parseLong(pidLine);}catch(Exception ignored){log(pidLine==null?"内核未返回 PID":pidLine);}
         new Thread(()->{try{String line;while((line=reader.readLine())!=null)log(line);}catch(IOException ignored){}} ,"core-log").start();
-        boolean ready=false;for(int i=0;i<80&&!shuttingDown;i++){if(!core.isAlive())throw new IOException("内核退出，请查看日志");try{api().request("GET","/version",null);ready=true;break;}catch(Exception ignored){Thread.sleep(100);}}
-        if(shuttingDown)return;if(!ready)throw new IOException("内核控制接口启动超时");
+        CoreApi controller=api();
+        if(!CoreStartup.await(CoreStartup.TIMEOUT_MS,SystemClock::elapsedRealtime,Thread::sleep,
+                ()->core.isAlive(),()->shuttingDown,controller::checkReady,()->{
+                    status="正在初始化内核";
+                    log("INFO 内核仍在初始化，等待远程规则集及服务就绪；可随时停止连接");
+                    getSystemService(NotificationManager.class).notify(NOTIFY,notification());
+                }))return;
         if(p.engine().equals("sing-box"))api().request("PATCH","/configs",new JSONObject().put("mode","rule"));
         else {globalTarget=CoreApi.globalTarget(new String(Files.readAllBytes(config.toPath()),java.nio.charset.StandardCharsets.UTF_8));if(api().request("GET","/configs",null).optString("mode").equals("global"))api().setMode("global",globalTarget);}
         startStage="建立 VPN";
+        if(shuttingDown)return;
         Builder b=new Builder().setSession("Wbox · "+p.engine()).setMtu(1500).addAddress("172.19.0.1",30).addRoute("0.0.0.0",0).addDnsServer("1.1.1.1");
         boolean ipv6=p.data.optBoolean("ipv6",true);if(ipv6)b.addAddress("fdfe:dcba:9876::1",126).addRoute("::",0).addDnsServer("2606:4700:4700::1111");
         String appMode=p.data.optString("app_mode","all");JSONArray apps=p.data.optJSONArray("apps");int count=0;
         if(appMode.equals("include")){if(apps!=null)for(int i=0;i<apps.length();i++){String pkg=apps.getString(i);if(!pkg.equals(getPackageName())){try{b.addAllowedApplication(pkg);count++;}catch(android.content.pm.PackageManager.NameNotFoundException ignored){}}}if(count==0)throw new IOException("分应用白名单为空；请选择至少一个已安装应用");}
         else{b.addDisallowedApplication(getPackageName());if(appMode.equals("exclude")&&apps!=null)for(int i=0;i<apps.length();i++){String pkg=apps.getString(i);if(!pkg.equals(getPackageName()))try{b.addDisallowedApplication(pkg);}catch(android.content.pm.PackageManager.NameNotFoundException ignored){}}}
+        if(shuttingDown)return;
         b.setBlocking(true);if(Build.VERSION.SDK_INT>=29)b.setMetered(false);ownedTun=b.establish();if(ownedTun==null)throw new IOException("VPN 权限被撤销");
         File hev=new File(dir,"tunnel.yaml");String y="tunnel:\n  name: wbox\n  mtu: 1500\n  ipv4: 172.19.0.1\n"+(ipv6?"  ipv6: 'fdfe:dcba:9876::1'\n":"")+"socks5:\n  address: 127.0.0.1\n  port: 10808\n  udp: udp\nmisc:\n  task-stack-size: 24576\n  tcp-buffer-size: 32768\n  udp-recv-buffer-size: 131072\n  max-session-count: 1024\n  connect-timeout: 8000\n  tcp-read-write-timeout: 300000\n  udp-read-write-timeout: 60000\n  log-level: warn\n";Files.write(hev.toPath(),y.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         final int fd=ownedTun.detachFd();ownedTun=null;tunnel=new Thread(()->{try{if(shuttingDown)return;int result=NativeTunnel.run(hev.getAbsolutePath(),fd);if(!shuttingDown){log("隧道结束："+result);shuttingDown=true;queueShutdown();}}catch(Throwable ex){log("隧道失败："+ex.getMessage());shuttingDown=true;queueShutdown();}finally{try{ParcelFileDescriptor.adoptFd(fd).close();}catch(IOException ignored){}}},"wbox-tun");tunnel.start();

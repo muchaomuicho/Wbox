@@ -20,6 +20,18 @@ public final class CoreApi {
     private final int port;
     public CoreApi(String secret){this(secret,19090);}
     public CoreApi(String secret,int port){this.secret=secret;this.port=port;}
+    void checkReady(int timeoutMs)throws Exception {
+        HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:"+port+"/version").openConnection(Proxy.NO_PROXY);
+        c.setConnectTimeout(timeoutMs);c.setReadTimeout(timeoutMs);c.setRequestProperty("Authorization","Bearer "+secret);
+        try {
+            int status=c.getResponseCode();
+            if(status==401||status==403)throw new CoreStartup.Rejected("内核控制接口认证失败（HTTP "+status+"），请检查端口是否被其他进程占用");
+            if(status!=200)throw new IOException("内核控制接口 HTTP "+status);
+            try(InputStream in=c.getInputStream()) {
+                if(!new JSONObject(Profiles.readLimited(in)).has("version"))throw new CoreStartup.Rejected("控制端口响应不是代理内核的版本信息");
+            }catch(JSONException e){throw new CoreStartup.Rejected("控制端口返回了无效的版本信息");}
+        }finally{c.disconnect();}
+    }
     public JSONObject request(String method,String path,JSONObject body) throws Exception {
         HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:"+port+path).openConnection();c.setRequestMethod(method);c.setConnectTimeout(1200);c.setReadTimeout(path.contains("delay")?6000:2000);c.setRequestProperty("Authorization","Bearer "+secret);
         try{if(body!=null){c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");try(OutputStream out=c.getOutputStream()){out.write(body.toString().getBytes(StandardCharsets.UTF_8));}}

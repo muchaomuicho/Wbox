@@ -11,6 +11,20 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class ProfilesTest {
+    @Test public void jsonEscapesUseJsonGrammar()throws Exception {
+        String text="{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"a\\/b\"}],\"route\":{\"final\":\"a\\/b\"}}";
+        java.util.Map<?,?> route=(java.util.Map<?,?>)Profiles.yamlMap(text).get("route");
+        assertEquals("a/b",route.get("final"));
+    }
+    @Test public void flagsAcrossReaderBoundaryDoNotBreakYamlImport()throws Exception {
+        String prefix="proxies:\n  - name: \"";
+        for(int boundary:new int[]{1023,2047,3071,4095}) {
+            String name="x".repeat(boundary-prefix.length())+"🇯🇵 Tokyo";
+            String yaml=prefix+name+"\"\n    type: ss\n    server: example.test\n    port: 443\n    cipher: aes-128-gcm\n    password: test\n";
+            java.util.Map<?,?> node=(java.util.Map<?,?>)((java.util.List<?>)Profiles.yamlMap(yaml).get("proxies")).get(0);
+            assertEquals(name,node.get("name"));
+        }
+    }
     private File folder;
     private Profiles p;
     static final String SS="ss://YWVzLTEyOC1nY206cGFzc3dvcmQ@127.0.0.1:8388#Test";

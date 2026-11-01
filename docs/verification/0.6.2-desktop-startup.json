@@ -1,0 +1,6 @@
+{
+  "checks": [
+    "Packaged Windows UI exposes cancel while remote rules initialize and returns to idle"
+  ],
+  "cancelMs": 106
+}

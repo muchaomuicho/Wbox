@@ -66,6 +66,7 @@ export function WorkspaceView() {
   const editNode=(index:number)=>{void call('readNode',{index}).then(initial=>setNodeEditor({index,initial})).catch(showError);};
   return <div className="page wbox-page"><PageHeader title={config?'配置':'节点与订阅'} />
     {config?<Card title="配置" icon="folder" actions={<IconButton title="添加配置" disabled={busy} onClick={()=>setImporting(true)}><Icon name="add" /></IconButton>}>
+      {s.running&&<p className="wbox-hint">连接期间可添加、编辑和更新配置，更改在下次连接时生效。</p>}
       {!s.configs.length&&<EmptyState icon="folder">添加远程配置地址，或导入本地 JSON / YAML。</EmptyState>}
       {s.configs.map(c=><div className="wbox-row" key={c.id}><button className="wbox-row-main" disabled={busy} onClick={()=>void run('selectProfile',{id:c.id})}><Icon name={s.configPath===c.path?'check':'language'} /><span><strong>{c.name}</strong><small>{c.core} · {c.url?'远程配置':'本地配置'} · {new Date(c.updated).toLocaleString()}</small></span></button>
         {c.url&&<IconButton title="更新配置" onClick={()=>void run('updateProfile',{id:c.id})}><Icon name="sync" /></IconButton>}

@@ -26,7 +26,7 @@ import org.json.JSONObject
     Dialog(onDismissRequest={if(!saving)dismiss()},properties=DialogProperties(usePlatformDefaultWidth=false,decorFitsSystemWindows=false)) {
         Surface(Modifier.fillMaxSize(),color=MaterialTheme.colorScheme.surface) {
             Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-                TopAppBar(title={Text("编辑配置",style=MaterialTheme.typography.titleLarge)},navigationIcon={IconButton(onClick={if(!saving)dismiss()}){Icon(Icons.Outlined.ArrowBack,"返回")}},actions={TextButton(enabled=!saving,onClick={scope.launch{saving=true;error="";try{m.writeProfile(profile,content);dismiss()}catch(e:Exception){error=e.message ?: "保存失败"}finally{saving=false}}}){Text(if(saving)"保存中…" else "保存")}})
+                TopAppBar(title={Text("编辑配置",style=MaterialTheme.typography.titleLarge)},navigationIcon={IconButton(onClick={if(!saving)dismiss()}){Icon(Icons.Outlined.ArrowBack,"返回")}},actions={TextButton(enabled=!saving,onClick={scope.launch{saving=true;error="";try{m.writeProfile(profile,content);dismiss()}catch(e:Exception){error=ErrorMessage.describe(e)}finally{saving=false}}}){Text(if(saving)"保存中…" else "保存")}})
                 Text(profile.optString("name"),Modifier.padding(horizontal=16.dp,vertical=4.dp),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 if(error.isNotEmpty())Text(error,Modifier.padding(16.dp),color=MaterialTheme.colorScheme.error)
                 HorizontalDivider()

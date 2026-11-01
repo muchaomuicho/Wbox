@@ -47,14 +47,14 @@ async Task CommitNodes(Preferences next) {
         Save(); throw;
     }
 }
-void Idle() { if (core.Running) throw new InvalidOperationException("请先停止连接，再切换工作区、内核或运行配置。"); }
+void Idle() { if (core.Running || core.Starting) throw new InvalidOperationException("请先停止连接，再切换工作区、内核或运行配置。"); }
 ConfigProfile Profile(string id) => prefs.Configs.FirstOrDefault(p => p.Id == id) ?? throw new ArgumentException("配置不存在。");
 object State() => new {
     delayTesting,
     prefs.Core, prefs.Mode, prefs.ConfigPath, prefs.DelayUrl, prefs.Silent, prefs.AutoStart, prefs.AutoConnect, prefs.SystemProxy, prefs.NativeInbounds, prefs.SelectedNode,
     configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
-    prefs.Subscriptions, running = core.Running, startedAt = core.Running ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
+    prefs.Subscriptions, running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
 };
 async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation) {
     using var starts = new SemaphoreSlim(1);
@@ -85,16 +85,16 @@ async Task<object?> Handle(string method, JsonElement a) {
     int I(string name) => a.GetProperty(name).GetInt32();
     switch (method) {
         case "state": return State();
-        case "service": return new { running = core.Running, startedAt = core.Running ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
+        case "service": return new { running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
         case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.PrivateMemorySize64;
-        case "start": coreGeneration++; await core.StartAsync(prefs); Save(); return null;
+        case "start": coreGeneration++; if(prefs.Mode=="config"){var selected=prefs.Configs.FirstOrDefault(p=>p.Path==prefs.ConfigPath);if(selected!=null)prefs.Core=selected.Core;}await core.StartAsync(CopyPreferences()); Save(); return null;
         case "stop": nodeTestCancellation.Cancel(); core.Stop(); coreGeneration++; Save(); return null;
         case "logs": return logs.ToArray();
         case "clearLogs": logs.Clear(); return null;
-        case "stats": return core.Running ? await core.StatsAsync(false) : null;
-        case "groups": return core.Running ? await core.GroupsAsync() : [];
-        case "connections": return core.Running ? await core.RequestAsync("GET", "/connections") : null;
-        case "mode": return core.Running && prefs.Core=="mihomo" ? await core.RequestAsync("GET", "/configs") : null;
+        case "stats": return core.Ready ? await core.StatsAsync(false) : null;
+        case "groups": return core.Ready ? await core.GroupsAsync() : [];
+        case "connections": return core.Ready ? await core.RequestAsync("GET", "/connections") : null;
+        case "mode": return core.Ready && prefs.Core=="mihomo" ? await core.RequestAsync("GET", "/configs") : null;
         case "setMode": await core.SetModeAsync(S("mode")); return null;
         case "select":
             await core.SelectAsync(S("group"), S("node"));
@@ -175,7 +175,7 @@ async Task<object?> Handle(string method, JsonElement a) {
             await CommitNodes(next); return nodes.Count;
         }
         case "profiles": return new { selectedId = prefs.Mode == "nodes" ? (prefs.Nodes.Count > 0 ? "nodes" : null) : prefs.Configs.FirstOrDefault(p => p.Path == prefs.ConfigPath)?.Id, profiles = prefs.Mode == "nodes" ? new[] { new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = 0L } } : prefs.Configs.Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = c.Url.Length > 0 ? "remote" : "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = new DateTimeOffset(c.Updated).ToUnixTimeMilliseconds() }).ToArray() };
-        case "createProfile": { Idle(); var url = S("remoteUrl"); var text = url.Length > 0 ? await ProfileImport.FetchAsync(url) : S("content"); var p = ProfileImport.SaveConfig(prefs, text, S("name", "配置"), url); prefs.Mode = "config"; prefs.ConfigPath = p.Path; prefs.Core = p.Core; Save(); return null; }
+        case "createProfile": { var url = S("remoteUrl"); var text = url.Length > 0 ? await ProfileImport.FetchAsync(url) : S("content"); var p = ProfileImport.SaveConfig(prefs, text, S("name", "配置"), url); if(!core.Running&&!core.Starting){prefs.Mode = "config"; prefs.ConfigPath = p.Path; prefs.Core = p.Core;} Save(); return null; }
         case "trayProfiles": {
             var entries = prefs.Configs.Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = "local" }).ToList();
             if (prefs.Nodes.Count > 0) entries.Add(new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local" });
@@ -195,14 +195,21 @@ async Task<object?> Handle(string method, JsonElement a) {
         }
         case "selectProfile": { Idle(); var p = Profile(S("id")); prefs.ConfigPath = p.Path; prefs.Core = p.Core; Save(); return null; }
         case "removeProfile": Idle(); prefs.Configs.Remove(Profile(S("id"))); if (!prefs.Configs.Any(p => p.Path == prefs.ConfigPath)) { prefs.ConfigPath = prefs.Configs.FirstOrDefault()?.Path ?? ""; prefs.Core = prefs.Configs.FirstOrDefault()?.Core ?? "mihomo"; } Save(); return null;
-        case "updateProfile": { Idle(); var p = Profile(S("id")); if (p.Url.Length == 0) throw new ArgumentException("这是本地配置。"); ProfileImport.SaveConfig(prefs, await ProfileImport.FetchAsync(p.Url), p.Name, p.Url, p); if (prefs.ConfigPath == p.Path) prefs.Core = p.Core; Save(); return null; }
+        case "updateProfile": { var p = Profile(S("id")); if (p.Url.Length == 0) throw new ArgumentException("这是本地配置。"); var selected=prefs.ConfigPath==p.Path;ProfileImport.SaveConfig(prefs, await ProfileImport.FetchAsync(p.Url), p.Name, p.Url, p); if(selected){prefs.ConfigPath=p.Path;if(!core.Running&&!core.Starting)prefs.Core=p.Core;} Save(); return null; }
         case "readProfile": return File.ReadAllText(Profile(S("id")).Path);
         case "renameProfile": { var name = S("name").Trim(); if (name.Length == 0 || name.Length > 100) throw new ArgumentException("名称需要为 1–100 个字符。"); Profile(S("id")).Name = name; Save(); return null; }
-        case "writeProfile": { Idle(); var p = Profile(S("id")); ProfileImport.SaveConfig(prefs, S("content"), p.Name, p.Url, p); Save(); return null; }
+        case "writeProfile": { var p = Profile(S("id"));var selected=prefs.ConfigPath==p.Path; ProfileImport.SaveConfig(prefs, S("content"), p.Name, p.Url, p);if(selected){prefs.ConfigPath=p.Path;if(!core.Running&&!core.Starting)prefs.Core=p.Core;} Save(); return null; }
         default: throw new ArgumentException("未知操作：" + method);
     }
 }
 string? line;
+Task startTask=Task.CompletedTask;
+async Task ReplyStart(long id,JsonElement arguments) {
+    try { var result=await Handle("start",arguments);Write(new {id,result}); }
+    catch(OperationCanceledException) { Write(new {id,result=(object?)null}); }
+    catch(Exception ex) {Write(new {id,error=ex.Message});}
+    finally {Write(new {changed=true});}
+}
 var delaySlots = new SemaphoreSlim(8);
 var delayTasks = new List<Task>();
 async Task ReplyDelay(long id, string tag, long generation, string url) {
@@ -220,6 +227,15 @@ while ((line = await Console.In.ReadLineAsync()) != null) {
         id = request.RootElement.GetProperty("id").GetInt64();
         string method = request.RootElement.GetProperty("method").GetString()!;
         var arguments = request.RootElement.GetProperty("args");
+        // Only the startup wait runs in the background. Stop cancels that wait
+        // and joins it before disposing the core; settings never race a start.
+        if(method=="start") {
+            if(!startTask.IsCompleted)throw new InvalidOperationException("内核正在启动，可点击停止取消。");
+            startTask=ReplyStart(id,arguments.Clone());continue;
+        }
+        if(method=="stop") {core.CancelStartup();await startTask;}
+        if(!startTask.IsCompleted && method is not ("state" or "service" or "memory" or "logs" or "clearLogs" or "stats" or "groups" or "connections" or "mode" or "profiles" or "trayProfiles" or "readProfile" or "createProfile" or "writeProfile" or "updateProfile" or "renameProfile"))
+            throw new InvalidOperationException("内核正在启动，请稍候或点击停止取消。");
         // Network tests must not prevent the tray or main window from stopping
         // the service. Only these read-only requests run concurrently.
         if (method == "delay") {
@@ -232,6 +248,7 @@ while ((line = await Console.In.ReadLineAsync()) != null) {
     catch (Exception ex) { Write(new { id, error = ex.Message }); }
 }
 // Parent closed normally or crashed. Retry restoration before releasing the job.
+core.CancelStartup();await startTask;
 for (int attempt = 0; ; attempt++) {
     try { core.Stop(); break; } catch (Exception ex) { Log(ex.Message); await Task.Delay(Math.Min(30_000, 1000 * (attempt + 1))); }
 }

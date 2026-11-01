@@ -22,5 +22,5 @@ try {
     & ./gradlew.bat @tasks --console=plain
     if ($LASTEXITCODE -ne 0) { throw 'Android build failed' }
     New-Item -ItemType Directory -Force "$repo/dist" | Out-Null
-    Copy-Item -LiteralPath app/build/outputs/apk/release/app-release.apk -Destination "$repo/dist/Wbox-0.6.1-android-arm64-v8a.apk" -Force
+    Copy-Item -LiteralPath app/build/outputs/apk/release/app-release.apk -Destination "$repo/dist/Wbox-0.6.2-android-arm64-v8a.apk" -Force
 } finally { Pop-Location }

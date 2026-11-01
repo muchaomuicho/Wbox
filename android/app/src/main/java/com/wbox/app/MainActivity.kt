@@ -89,7 +89,7 @@ internal data class RuntimeState(
     val currentName get() = if(workspace=="config") profiles.activeConfig()?.optString("name") ?: "选择配置" else profiles.data.optString("selected").ifEmpty { "选择节点" }
     val transition get() = runtime.starting || runtime.stopping
     internal fun reload() { profiles=Profiles(activity); nodes=profiles.nodes().toList(); configs=profiles.configs().objects() }
-    fun work(action: suspend () -> Unit) { activity.lifecycleScope.launch { try { action() } catch(e: CancellationException){throw e} catch(e: Exception){ message=e.cause?.message ?: e.message ?: "操作失败"; WboxVpnService.log("ERROR $message") } } }
+    fun work(action: suspend () -> Unit) { activity.lifecycleScope.launch { try { action() } catch(e: CancellationException){throw e} catch(e: Exception){ message=ErrorMessage.describe(e); WboxVpnService.log("ERROR $message") } } }
     suspend fun sample() {
         WboxVpnService.wantsGroups = sheet=="groups"
         WboxVpnService.wantsConnections = sheet=="connections"
@@ -129,12 +129,12 @@ internal data class RuntimeState(
         } else { mutable(); runtime=runtime.copy(starting=true); activity.connect() }
     }
     suspend fun importText(text: String, name: String) {
-        val config=workspace=="config"; mutable(config); busy=true
+        val config=workspace=="config"; mutable(); busy=true
         try {
             withContext(Dispatchers.IO) {
                 val url=Profiles.subscriptionAddress(text); val content=if(url)Profiles.fetch(text,!config) else text
                 val p=Profiles(activity).copy()
-                if(config){p.importConfig(content,if(url)text else null,null);if(name.isNotBlank())p.activeConfig().put("name",name.trim());val stored=Profiles(activity);stored.data=p.data;stored.save()}
+                if(config){p.importConfig(content,if(url)text else null,null,!WboxVpnService.running);if(name.isNotBlank())p.configs().getJSONObject(p.configs().length()-1).put("name",name.trim().take(100));val stored=Profiles(activity);stored.data=p.data;stored.save()}
                 else {p.importNodes(content,if(url)text else null);WboxVpnService.commitNodes(activity,p.data).get()}
             }; reload(); message="已添加"
         } finally {busy=false}
@@ -146,8 +146,8 @@ internal data class RuntimeState(
     }
     fun selectProfile(id: String) = work { change(true){it.activateConfig(id)} }
     suspend fun renameProfile(id: String, name: String) { require(name.isNotBlank()){ "请填写配置名称" }; change { p -> p.configs().objects().first {it.optString("id")==id}.put("name",name.trim().take(100)) } }
-    fun updateProfile(p: JSONObject) = work { mutable(true); busy=true;try { withContext(Dispatchers.IO){val stored=Profiles(activity);stored.importConfig(Profiles.fetch(p.getString("url")),p.getString("url"),p.getString("id"))};reload();message="配置已更新"}finally{busy=false} }
-    suspend fun writeProfile(p: JSONObject, content: String) { change(true){it.importConfig(content,p.optString("url").ifEmpty{null},p.getString("id"))} }
+    fun updateProfile(p: JSONObject) = work { mutable(); busy=true;try { withContext(Dispatchers.IO){val content=Profiles.fetch(p.getString("url"));val stored=Profiles(activity);stored.importConfig(content,p.getString("url"),p.getString("id"),false)};reload();message=if(WboxVpnService.running)"配置已更新，下次连接生效" else "配置已更新"}finally{busy=false} }
+    suspend fun writeProfile(p: JSONObject, content: String) { change {it.importConfig(content,p.optString("url").ifEmpty{null},p.getString("id"),false)};message=if(WboxVpnService.running)"配置已保存，下次连接生效" else "配置已保存" }
     fun removeProfile(id: String) = work { change(true){p -> val kept=p.configs().objects().filter {it.optString("id")!=id};p.data.put("configs",JSONArray(kept));if(p.data.optString("active_config")==id){p.data.remove("active_config");p.data.remove("config_sing-box");p.data.remove("config_mihomo");if(kept.isNotEmpty())p.activateConfig(kept.first().getString("id"))}} }
     fun selectNode(name: String, group: String?=null) = work {
         if(group==null) { check(workspace=="nodes"){"请先切换到节点工作区"};changeNodes{it.data.put("selected",name)} }

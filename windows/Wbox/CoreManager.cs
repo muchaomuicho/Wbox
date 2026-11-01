@@ -43,14 +43,19 @@ public sealed class CoreManager : IDisposable
     long cachedAppMemory, cachedCoreMemory;
     DateTime memorySample;
     public bool Running => process is { HasExited: false };
+    public bool Starting => starting;
+    public bool Ready => Running && !starting;
+    public void CancelStartup() { if(starting) sessionCancellation.Cancel(); }
     public event Action<string>? Log;
     public event Action? Exited;
     public async Task StartAsync(Preferences p, bool transient = false)
     {
-        if (Running) return;
+        if (Running || starting) return;
         var startupWatch=Stopwatch.StartNew();
         stopping = false; starting = true; startupLog.Clear();
         sessionCancellation.Dispose(); sessionCancellation = new();
+        try
+        {
         activeCore = p.Core;
         var executable = Path.Combine(AppContext.BaseDirectory, "cores", p.Core + ".exe");
         if (!File.Exists(executable)) throw new FileNotFoundException("安装包缺少代理内核：" + executable);
@@ -66,8 +71,6 @@ public sealed class CoreManager : IDisposable
         Directory.CreateDirectory(working);
         runtimePath = Path.Combine(working, $".wbox-runtime-{Guid.NewGuid():N}.{(p.Core == "sing-box" ? "json" : "yaml")}");
         File.WriteAllText(runtimePath, config);
-        try
-        {
             // run performs the same validation and reports startup errors. Avoid
             // spawning a second core and loading remote resources twice.
             var host = Path.Combine(AppContext.BaseDirectory, "cores", "wbox-core-host.exe");
@@ -88,15 +91,26 @@ public sealed class CoreManager : IDisposable
             api = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = new Uri($"http://127.0.0.1:{ApiPort}"), Timeout = TimeSpan.FromSeconds(2) };
             api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", secret);
             var ready = false;
-            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            for (int i = 0; i < 150 && Running && !deadline.IsCancellationRequested; i++)
-            {
-                try { using var response = await api.GetAsync("/version", deadline.Token); if (response.IsSuccessStatusCode) { ready = true; break; } } catch (HttpRequestException) { } catch (TaskCanceledException) { }
-                await Task.Delay(150);
-            }
+            string lastProbe = "控制接口尚未监听";
+            var waitWatch=Stopwatch.StartNew();bool explained=false;
+            using var deadline = CancellationTokenSource.CreateLinkedTokenSource(sessionCancellation.Token);
+            deadline.CancelAfter(TimeSpan.FromSeconds(120));
+            try {
+                while (Running && !deadline.IsCancellationRequested) {
+                    if(!explained && waitWatch.Elapsed.TotalSeconds>=5) {explained=true;Log?.Invoke("INFO Wbox: 内核仍在初始化，等待远程规则集及服务就绪；可随时停止连接。");}
+                    try {
+                        using var response = await api.GetAsync("/version", deadline.Token);
+                        if(response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)throw new InvalidOperationException($"控制接口认证失败（HTTP {(int)response.StatusCode}），请检查端口占用。");
+                        if (response.IsSuccessStatusCode) { ready = true; break; }
+                        lastProbe=$"控制接口返回 HTTP {(int)response.StatusCode}";
+                    } catch (HttpRequestException ex) { lastProbe=ex.Message; } catch (TaskCanceledException) { }
+                    await Task.Delay(200,deadline.Token);
+                }
+            } catch(OperationCanceledException) when(!sessionCancellation.IsCancellationRequested) { }
+            sessionCancellation.Token.ThrowIfCancellationRequested();
             if (!ready || !Running) {
                 if (process.HasExited) process.WaitForExit(1000);
-                var reason = process.HasExited ? $"内核退出（代码 {process.ExitCode}）" : $"控制接口 127.0.0.1:{ApiPort} 等待超过 30 秒";
+                var reason = process.HasExited ? $"内核退出（代码 {process.ExitCode}）" : $"内核初始化超过 120 秒，控制接口仍未就绪。{lastProbe}";
                 throw new InvalidOperationException(reason + "。\n" + string.Join("\n", startupLog.TakeLast(8)));
             }
             if (!transient) {
@@ -104,12 +118,14 @@ public sealed class CoreManager : IDisposable
                 else if ((await RequestAsync("GET", "/configs"))?["mode"]?.ToString() == "global") await SetModeAsync("global");
             }
             initialUpload = initialDownload = lastUpload = lastDownload = 0; lastSample = DateTime.UtcNow;
+            sessionCancellation.Token.ThrowIfCancellationRequested();
             if (p.SystemProxy) SystemProxy.Install(ProxyPort);
             StartedAt = DateTime.UtcNow; previousConnections.Clear(); connectionSample = DateTime.UtcNow;
             starting = false;
             Log?.Invoke($"Wbox · {p.Core} 已启动（{startupWatch.ElapsedMilliseconds} ms） · 本地代理 127.0.0.1:{ProxyPort}");
         }
         catch { Stop(); throw; }
+        finally { starting=false; }
     }
     void CaptureLog(string line) {
         if (line.StartsWith("__WBOX_CORE_PID__") && int.TryParse(line[17..], out var pid)) {

@@ -49,6 +49,9 @@ public final class Profiles {
     public JSONObject activeConfig(){JSONArray a=configs();for(int i=0;i<a.length();i++){JSONObject p=a.optJSONObject(i);if(p!=null&&p.optString("id").equals(data.optString("active_config")))return p;}return a.optJSONObject(0);}
     public void activateConfig(String id)throws Exception {for(int i=0;i<configs().length();i++){JSONObject p=configs().getJSONObject(i);if(p.getString("id").equals(id)){data.put("active_config",id);data.put("config_"+p.getString("core"),p.getString("content"));if(mode().equals("config"))data.put("engine",p.getString("core"));return;}}}
     public String importConfig(String body,String source,String id)throws Exception {
+        return importConfig(body,source,id,true);
+    }
+    public String importConfig(String body,String source,String id,boolean select)throws Exception {
         String text=body.trim();Map<String,Object> root=yamlMap(text);
         String core=root.containsKey("outbounds")||root.containsKey("inbounds")||root.containsKey("endpoints")?"sing-box":"mihomo";
         if(core.equals("sing-box"))new JSONObject(text);
@@ -57,7 +60,9 @@ public final class Profiles {
         if(profile==null){profile=new JSONObject().put("id",UUID.randomUUID().toString());a.put(profile);}
         if(!profile.has("name"))profile.put("name",source==null?core+" 配置 "+a.length():new URL(source).getHost());
         profile.put("core",core).put("content",text).put("url",source==null?"":source).put("updated",System.currentTimeMillis());
-        data.put("configs",a);activateConfig(profile.getString("id"));save();return "已保存 "+core+" 配置";
+        data.put("configs",a);
+        if(select||data.optString("active_config").isEmpty()||profile.getString("id").equals(data.optString("active_config")))activateConfig(profile.getString("id"));
+        save();return "已保存 "+core+" 配置";
     }
     public String importNodes(String body,String source)throws Exception {
         String text=body.trim();List<Node> parsed=new ArrayList<>();
@@ -80,7 +85,19 @@ public final class Profiles {
         if(compatible!=null){data.put("node_engine",compatible);if(mode().equals("nodes"))data.put("engine",compatible);}
         save();return "已导入 "+parsed.size()+" 个节点";
     }
-    public static Map<String,Object> yamlMap(String text){LoaderOptions o=new LoaderOptions();o.setCodePointLimit(4*1024*1024);o.setMaxAliasesForCollections(30);Object v=new Yaml(new SafeConstructor(o)).load(text);if(!(v instanceof Map))throw new IllegalArgumentException("配置必须是 YAML 对象");return (Map<String,Object>)v;}
+    public static Map<String,Object> yamlMap(String text){
+        text=text.trim();if(text.startsWith("\uFEFF"))text=text.substring(1).trim();
+        // JSON permits escapes such as \/ which a YAML 1.1 parser rejects.
+        // Parse JSON with its own grammar, including Android JSONObject output.
+        if(text.startsWith("{"))try{return (Map<String,Object>)jsonValue(new JSONObject(text));}catch(JSONException e){throw new IllegalArgumentException("JSON 配置格式无效："+e.getMessage(),e);}
+        LoaderOptions o=new LoaderOptions();o.setCodePointLimit(4*1024*1024);o.setMaxAliasesForCollections(30);Object v=new Yaml(new SafeConstructor(o)).load(text);if(!(v instanceof Map))throw new IllegalArgumentException("配置必须是 YAML 对象");return (Map<String,Object>)v;
+    }
+    private static Object jsonValue(Object value)throws JSONException {
+        if(value==JSONObject.NULL)return null;
+        if(value instanceof JSONObject object){Map<String,Object> map=new LinkedHashMap<>();Iterator<String> keys=object.keys();while(keys.hasNext()){String key=keys.next();map.put(key,jsonValue(object.get(key)));}return map;}
+        if(value instanceof JSONArray array){List<Object> list=new ArrayList<>();for(int i=0;i<array.length();i++)list.add(jsonValue(array.get(i)));return list;}
+        return value;
+    }
     public static String fetch(String address)throws Exception{return fetch(address,false);}
     public static String fetch(String address,boolean nodes) throws Exception {URL url=new URL(address);if(!List.of("https","http").contains(url.getProtocol()))throw new IllegalArgumentException("订阅必须是 HTTP / HTTPS 地址");HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setConnectTimeout(15000);c.setReadTimeout(20000);c.setRequestProperty("User-Agent","clash.meta/1.19.33");try{if(c.getResponseCode()!=200)throw new IOException("订阅 HTTP "+c.getResponseCode());try(InputStream in=c.getInputStream()){return readLimited(in);}}finally{c.disconnect();}}
     public static String readLimited(InputStream in)throws Exception{ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1){out.write(buf,0,n);if(out.size()>4*1024*1024)throw new IOException("配置超过 4 MB");}return out.toString("UTF-8");}

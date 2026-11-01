@@ -25,7 +25,7 @@ function connection(c: any) {
 }
 async function unary(name: string, input: any): Promise<any> {
   switch (name) {
-    case 'GetVersion': return { version: '0.6.1', apiVersion: 1 };
+    case 'GetVersion': return { version: '0.6.2', apiVersion: 1 };
     case 'GetStartedAt': return { startedAt: (await call('service')).startedAt };
     case 'GetDefaultLogLevel': return { level: 4 };
     case 'GetDeprecatedWarnings': return { warnings: [] };
@@ -55,7 +55,7 @@ async function* stream(name: string, signal?: AbortSignal): AsyncGenerator<any> 
   while (!signal?.aborted) {
     if (document.hidden) { await pause(500, signal); continue; }
     switch (name) {
-      case 'SubscribeServiceStatus': { const s = await call('service'); if(s.startedAt!==serviceKey){serviceKey=s.startedAt;results.clear();expanded.clear();} yield { status: s.running ? 2 : 0 }; break; }
+      case 'SubscribeServiceStatus': { const s = await call('service'); if(s.startedAt!==serviceKey){serviceKey=s.startedAt;results.clear();expanded.clear();} yield { status: s.starting ? 1 : s.running ? 2 : 0 }; break; }
       case 'SubscribeStatus': { const s = await call('stats'); yield s ? { memory: s.coreMemory, connectionsIn: s.inbound, connectionsOut: s.outbound, trafficAvailable: true, uplink: s.uploadRate, downlink: s.downloadRate, uplinkTotal: s.uploaded, downlinkTotal: s.downloaded } : {}; break; }
       case 'SubscribeGroups': { const groups = await call('groups'); const resultFor=(name:string,seen=new Set<string>()):{delay:number;time:number}|undefined=>{if(seen.has(name))return;seen.add(name);const g=groups.find((g:any)=>g.name===name);return g?.selected?resultFor(g.selected,seen):results.get(name);}; yield { group: groups.map((g: any,index:number) => ({ tag: g.name, type: g.type.toLowerCase() === 'selector' ? 'selector' : g.type.toLowerCase(), selected: g.selected, selectable: g.selectable, isExpand: expanded.get(g.name) ?? index===0, items: g.details.map((n: any) => {const result=resultFor(n.name);return {tag: n.name, type: n.type.toLowerCase(), urlTestDelay: result?.delay ?? n.delay ?? 0, urlTestTime: result?.time ?? (n.delay!=null?1:0)};}) })) }; break; }
       case 'SubscribeClashMode': { const s = await call('mode'); yield {mode: s?.mode || 'rule'}; break; }

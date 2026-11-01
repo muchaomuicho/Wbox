@@ -73,6 +73,22 @@ class ComposeUiTest {
         assertEquals("我的配置",Profiles(ui.activity).activeConfig().getString("name"))
         assertEquals("org.example.browser",Profiles(ui.activity).data.getJSONArray("apps").getString(0))
     }
+    @Test fun addAndEditConfigWhileConnectedPreservesActiveProfile(){
+        val original="""{"outbounds":[{"type":"direct","tag":"DIRECT"}]}"""
+        ui.runOnIdle{val p=Profiles(ui.activity);p.setWorkspace("config");p.importConfig(original,null,null);p.save();m.reload();WboxVpnService.running=true}
+        val active=m.profiles.activeConfig().getString("id")
+        val before=m.profiles.compile("fixed-secret")
+        runBlocking{m.importText("proxies: []\nproxy-groups: []\nrules: [MATCH,DIRECT]","New YAML")}
+        var saved=Profiles(ui.activity)
+        assertEquals(2,saved.configs().length());assertEquals(active,saved.activeConfig().getString("id"))
+        assertEquals("sing-box",saved.engine());assertEquals(before,saved.compile("fixed-secret"));assertTrue(WboxVpnService.running)
+        assertEquals("New YAML",saved.configs().getJSONObject(1).getString("name"))
+        runBlocking{m.writeProfile(saved.configs().getJSONObject(1),"proxies: []\nrules: ['MATCH,DIRECT']")}
+        saved=Profiles(ui.activity);assertEquals(active,saved.activeConfig().getString("id"))
+        assertEquals(before,saved.compile("fixed-secret"));assertTrue(WboxVpnService.running)
+        runBlocking{m.writeProfile(saved.activeConfig(),original.replace("DIRECT","Updated"))}
+        assertTrue(WboxVpnService.running);assertTrue(Profiles(ui.activity).activeConfig().getString("content").contains("Updated"))
+    }
     @Test fun groupsExpandFirstAndKeepOtherChildrenHidden(){
         ui.runOnIdle{m.groups=JSONObject("""{"First":{"all":["🇯🇵 Tokyo"],"now":"🇯🇵 Tokyo"},"Second":{"all":["Hidden node"],"now":"DIRECT"}}""");m.sheet="groups";WboxVpnService.proxies=m.groups}
         ui.onAllNodesWithText("🇯🇵 Tokyo").assertCountEquals(1);ui.onNodeWithText("Hidden node").assertDoesNotExist()

@@ -258,7 +258,7 @@ function TrayMenuContent(props: { host: DesktopHost }) {
               <Switch
                 label={t("Service")}
                 value={switchOn}
-                disabled={busy || transitioning || (!switchOn && profiles.length === 0)}
+                  disabled={statusType === ServiceStatus_Type.STARTING ? false : busy || transitioning || (!switchOn && profiles.length === 0)}
                 onChange={toggleService}
               />
             ) : (

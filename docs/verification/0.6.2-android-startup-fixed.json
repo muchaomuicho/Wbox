@@ -1,0 +1,125 @@
+{
+  "baseline": false,
+  "checks": [
+    "Slow rule download succeeds despite packages.xml warning",
+    "Reconnect reuses persistent rule cache",
+    "Stop during initialization cancels without reporting failure",
+    "Actual core error exits promptly with original diagnostic"
+  ],
+  "slow": {
+    "elapsed": 13.60858410014771,
+    "state": {
+      "running": true,
+      "starting": false,
+      "status": "已连接",
+      "error": "",
+      "upload": 0,
+      "download": 0,
+      "logs": [
+        "06:58:21  WARN[0000] network: initialize package manager: read packages list: open /data/system/packages.xml: permission denied",
+        "06:58:21  WARN[0000] legacy `download_detour` remote rule-set option is deprecated in sing-box 1.14.0 and will be removed in sing-box 1.16.0.",
+        "06:58:21  INFO[0000] outbound/direct[DIRECT]: outbound connection to 127.0.0.1:55570",
+        "06:58:26  INFO 内核仍在初始化，等待远程规则集及服务就绪；可随时停止连接",
+        "06:58:31  WARN[0010] router: initialize rule-set take too much time to finish!",
+        "06:58:31  WARN[0010] start router take too much time to finish!",
+        "06:58:33  INFO[0012] router: updated rule-set slow-rule",
+        "06:58:33  INFO[0012] inbound/mixed[wbox-in]: tcp server started at 127.0.0.1:10808",
+        "06:58:33  INFO[0012] clash-api: restful api listening at 127.0.0.1:19090",
+        "06:58:33  INFO[0012] sing-box started (12.14s)",
+        "06:58:33  sing-box 已连接（12414 ms） · IPv6 开启",
+        "06:58:33  INFO[0012] [2421510246 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41342",
+        "06:58:33  INFO[0012] [3899072389 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41350",
+        "06:58:33  INFO[0012] [3858403600 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41364",
+        "06:58:33  INFO[0012] [900231017 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41372"
+      ]
+    },
+    "requests": [
+      "/slow.json"
+    ]
+  },
+  "cached": {
+    "elapsed": 1.1417912999168038,
+    "requests": [],
+    "state": {
+      "running": true,
+      "starting": false,
+      "status": "已连接",
+      "error": "",
+      "upload": 0,
+      "download": 0,
+      "logs": [
+        "06:58:21  WARN[0000] network: initialize package manager: read packages list: open /data/system/packages.xml: permission denied",
+        "06:58:21  WARN[0000] legacy `download_detour` remote rule-set option is deprecated in sing-box 1.14.0 and will be removed in sing-box 1.16.0.",
+        "06:58:21  INFO[0000] outbound/direct[DIRECT]: outbound connection to 127.0.0.1:55570",
+        "06:58:26  INFO 内核仍在初始化，等待远程规则集及服务就绪；可随时停止连接",
+        "06:58:31  WARN[0010] router: initialize rule-set take too much time to finish!",
+        "06:58:31  WARN[0010] start router take too much time to finish!",
+        "06:58:33  INFO[0012] router: updated rule-set slow-rule",
+        "06:58:33  INFO[0012] inbound/mixed[wbox-in]: tcp server started at 127.0.0.1:10808",
+        "06:58:33  INFO[0012] clash-api: restful api listening at 127.0.0.1:19090",
+        "06:58:33  INFO[0012] sing-box started (12.14s)",
+        "06:58:33  sing-box 已连接（12414 ms） · IPv6 开启",
+        "06:58:33  INFO[0012] [2421510246 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41342",
+        "06:58:33  INFO[0012] [3899072389 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41350",
+        "06:58:33  INFO[0012] [3858403600 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41364",
+        "06:58:33  INFO[0012] [900231017 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41372",
+        "06:58:33  INFO[0012] [2421510246 215ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "06:58:33  INFO[0012] [2421510246 216ms] outbound/direct[DIRECT]: outbound packet connection",
+        "06:58:33  INFO[0012] [3899072389 215ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "06:58:33  INFO[0012] [3899072389 216ms] outbound/direct[DIRECT]: outbound packet connection",
+        "06:58:33  INFO[0012] [3858403600 214ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "06:58:33  INFO[0012] [3858403600 214ms] outbound/direct[DIRECT]: outbound packet connection",
+        "06:58:33  INFO[0012] [900231017 214ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "06:58:33  INFO[0012] [900231017 214ms] outbound/direct[DIRECT]: outbound packet connection",
+        "06:58:34  INFO[0012] [3177655248 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41378",
+        "06:58:34  INFO[0012] [3485800501 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41386",
+        "06:58:34  连接已关闭",
+        "06:58:34  WARN[0000] network: initialize package manager: read packages list: open /data/system/packages.xml: permission denied",
+        "06:58:34  WARN[0000] legacy `download_detour` remote rule-set option is deprecated in sing-box 1.14.0 and will be removed in sing-box 1.16.0.",
+        "06:58:34  INFO[0000] inbound/mixed[wbox-in]: tcp server started at 127.0.0.1:10808",
+        "06:58:34  INFO[0000] clash-api: restful api listening at 127.0.0.1:19090",
+        "06:58:34  INFO[0000] sing-box started (0.04s)",
+        "06:58:35  sing-box 已连接（273 ms） · IPv6 开启",
+        "06:58:35  INFO[0000] [2312871605 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41402",
+        "06:58:35  INFO[0000] [1763317850 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:41406",
+        "06:58:35  INFO[0000] [2312871605 214ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "06:58:35  INFO[0000] [2312871605 215ms] outbound/direct[DIRECT]: outbound packet connection",
+        "06:58:35  INFO[0000] [1763317850 214ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "06:58:35  INFO[0000] [1763317850 215ms] outbound/direct[DIRECT]: outbound packet connection"
+      ]
+    }
+  },
+  "cancelled": {
+    "elapsed": 1.1837474000640213,
+    "state": {
+      "running": false,
+      "starting": false,
+      "status": "未连接",
+      "error": "",
+      "upload": 0,
+      "download": 0,
+      "logs": [
+        "06:58:38  WARN[0000] network: initialize package manager: read packages list: open /data/system/packages.xml: permission denied",
+        "06:58:38  WARN[0000] legacy `download_detour` remote rule-set option is deprecated in sing-box 1.14.0 and will be removed in sing-box 1.16.0.",
+        "06:58:38  INFO[0000] outbound/direct[DIRECT]: outbound connection to 127.0.0.1:55570",
+        "06:58:40  连接已关闭"
+      ]
+    }
+  },
+  "invalid": {
+    "elapsed": 1.965430499985814,
+    "state": {
+      "running": false,
+      "starting": false,
+      "status": "连接失败",
+      "error": "启动 sing-box：内核已退出，请查看下方内核日志",
+      "upload": 0,
+      "download": 0,
+      "logs": [
+        "06:58:45  FATAL[0000] start service: initialize outbound: default outbound not found: missing-outbound",
+        "06:58:45  ERROR 启动失败 · 启动 sing-box：内核已退出，请查看下方内核日志",
+        "06:58:45  连接已关闭"
+      ]
+    }
+  }
+}

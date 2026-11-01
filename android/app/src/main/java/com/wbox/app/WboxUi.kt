@@ -77,7 +77,14 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
                 Box { TextButton(onClick={showWorkspace=true}){Text(if(m.workspace=="config")"配置工作区" else "节点工作区",fontSize=12.sp);Icon(Icons.Outlined.ExpandMore,null,Modifier.size(18.dp))}
                     DropdownMenu(showWorkspace,{showWorkspace=false}){listOf("config" to "配置工作区","nodes" to "节点工作区").forEach{(key,label)->DropdownMenuItem(text={Text(label)},onClick={showWorkspace=false;m.switchWorkspace(key)},leadingIcon={Icon(if(key=="config")Icons.Outlined.Folder else Icons.Outlined.Dns,null)},trailingIcon={if(m.workspace==key)Icon(Icons.Outlined.Check,null)})}}
             }})},
-            snackbarHost={SnackbarHost(snackbar)},
+            snackbarHost={SnackbarHost(snackbar){data->Snackbar(
+                snackbarData=data,
+                containerColor=MaterialTheme.colorScheme.surfaceVariant,
+                contentColor=MaterialTheme.colorScheme.onSurface,
+                actionColor=MaterialTheme.colorScheme.primary,
+                dismissActionContentColor=MaterialTheme.colorScheme.onSurfaceVariant,
+                shape=RoundedCornerShape(12.dp)
+            )}},
             floatingActionButton={
                 if(!m.runtime.running && !m.runtime.stopping) FloatingActionButton(
                     onClick={if(!m.busy)m.toggle()},shape=RoundedCornerShape(18.dp),

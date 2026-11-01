@@ -43,7 +43,7 @@ import java.net.URI
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){TextButton(onClick={testUrl=Profiles.TEST_URL}){Text("恢复默认")};Button(onClick={m.work{val uri=URI(testUrl);require(uri.scheme in listOf("https","http") && uri.host!=null){"请填写 HTTP / HTTPS 地址"};require(m.profiles.engine()!="sing-box" || uri.scheme=="https"){"sing-box 延迟测试需要 HTTPS 地址"};m.setting("test_url",testUrl.trim())}}){Text("保存")}}
             }
         }}
-        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox 0.6.1",style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
+        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox 0.6.2",style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
     }
 }
 @Composable private fun SettingsPanel(title:String,content:@Composable ColumnScope.()->Unit) {Column(verticalArrangement=Arrangement.spacedBy(8.dp)){Text(title,Modifier.padding(start=12.dp),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant);Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(content=content)}}}
@@ -140,7 +140,7 @@ import java.net.URI
                             node!=null->{val json=if(native)JSONObject(content) else JSONObject(initial.toString()).apply{fields.forEach{(k,v)->put(k,when(k){"port","alterId"->v.toInt();"tls","insecure"->v.toBoolean();"options"->JSONObject(v);else->v})}};NodeEditing.prepare(node,json);m.writeNode(editor.index,revision,json)}
                             else->{require(content.isNotBlank()){ "请填写地址或内容" };m.importText(content.trim(),name)}
                         };dismiss()
-                    }catch(e:CancellationException){throw e}catch(e:Exception){error=e.cause?.message ?: e.message ?: "保存失败"}finally{saving=false}
+                    }catch(e:CancellationException){throw e}catch(e:Exception){error=ErrorMessage.describe(e);WboxVpnService.log("ERROR 保存配置或节点失败 · $error")}finally{saving=false}
                 }}){if(saving){CircularProgressIndicator(Modifier.size(16.dp),strokeWidth=2.dp,color=MaterialTheme.colorScheme.onPrimary);Spacer(Modifier.width(8.dp))};Text(if(editor.type=="import")"添加" else "保存")}
             }
         }
