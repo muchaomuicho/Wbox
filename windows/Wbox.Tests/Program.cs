@@ -6,18 +6,19 @@ try
 {
 Environment.SetEnvironmentVariable("WBOX_DATA_DIR", Path.GetFullPath("windows/test-runtime"));
 if(args.Length==2&&args[0]=="--diagnose"){await DiagnosticChecks.Run(args[1]);return;}
-if (args.Length == 2 && args[0] == "--subscription") {
+if (args.Length == 2 && args[0] is "--subscription" or "--nodes-subscription") {
     var imported = NodeParser.ParseSubscription(File.ReadAllText(args[1]));
     Console.WriteLine("Imported " + imported.Count + " nodes: " + string.Join(", ", imported.GroupBy(n => n.Protocol).Select(g => g.Key + "=" + g.Count())));
     foreach (var engine in new[] { "sing-box", "mihomo" }) {
         if (!imported.Any(n => NodeOptions.Compatible(n,engine))) { Console.WriteLine(engine + " requires switching to the native subscription core"); continue; }
-        var options = new Preferences { Core = engine, Nodes = imported, SystemProxy = false };
+        var options = new Preferences { Core = engine, Nodes = imported, SelectedNode=imported.FindIndex(n=>NodeOptions.Compatible(n,engine)), SystemProxy = false };
         var generated = ConfigBuilder.Build(options, "test");
         var checkPath = Path.Combine(Store.DirectoryPath, "subscription-check.json"); File.WriteAllText(checkPath,generated);
         await ImportChecks.Validate(engine,checkPath,(ok,label) => { if(!ok) throw new Exception("Native subscription config check failed"); });
         File.Delete(checkPath);
         Console.WriteLine(engine + " configuration generated successfully");
     }
+    if(args[0]=="--nodes-subscription")return;
     var content = File.ReadAllText(args[1]); var fullCore=ProfileImport.DetectCore(content);
     var fullPath=Path.Combine(Store.DirectoryPath,"remote-check.json"); File.WriteAllText(fullPath,content);
     await ImportChecks.Validate(fullCore,fullPath,(ok,label) => {if(!ok)throw new Exception("Remote config check failed");});File.Delete(fullPath);
@@ -28,6 +29,7 @@ void Check(bool condition, string label) { if (!condition) throw new Exception("
 if(args.Contains("--forwarding")){await ForwardingChecks.Run(Check);Console.WriteLine($"{checks} forwarding checks passed.");return;}
 if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
 await ImportChecks.Run(Check);
+await IsolationChecks.Run(Check);
 NodeEditingChecks.Run(Check);
 Check(LogFormatting.Format("+0800 2026-11-01 09:54:42 INFO [123 0ms] connection: error.example").Level == 4, "Log content does not override header severity");
 Check(LogFormatting.Format("time=\"2026-11-01\" level=warning msg=\"retry\"").Level == 3, "Mihomo warning level matches official filter");
@@ -49,10 +51,10 @@ var native = NodeParser.ParseSubscription("proxies:\n  - name: A\n    type: ss\n
 Check(native.Count == 1 && native[0].NativeMihomo != null, "Native YAML subscription");
 var p = new Preferences { Nodes = [ss, vm, vl], Core = "sing-box" };
 var sing = JsonNode.Parse(ConfigBuilder.Build(p, "secret"))!;
-Check(sing["outbounds"]![0]!["outbounds"]!.AsArray().Count == 3 && sing["experimental"]!["clash_api"]!["secret"]!.ToString() == "secret", "Sing-box selector and protected controller");
+Check(sing["outbounds"]![0]!["outbounds"]!.AsArray().Count == 1 && sing["experimental"]!["clash_api"]!["secret"]!.ToString() == "secret", "Sing-box selector and protected controller");
 p.Core = "mihomo";
 var mihomo = JsonNode.Parse(ConfigBuilder.Build(p, "secret"))!;
-Check(mihomo["ipv6"]!.GetValue<bool>() && mihomo["mixed-port"]!.GetValue<int>() == 10808 && mihomo["proxies"]!.AsArray().Count == 3, "Mihomo IPv6 node config");
+Check(mihomo["ipv6"]!.GetValue<bool>() && mihomo["mixed-port"]!.GetValue<int>() == 10808 && mihomo["proxies"]!.AsArray().Count == 1, "Mihomo IPv6 node config");
 var before = new Dictionary<string, ProxyValue> { ["ProxyEnable"] = new() { Exists = true, Dword = true, Value = "0" } };
 var owned = new Dictionary<string, ProxyValue> { ["ProxyEnable"] = new() { Exists = true, Dword = true, Value = "1" }, ["ProxyServer"] = new() { Exists = true, Value = "127.0.0.1:10808" } };
 var snapshot = new ProxySnapshot { Before = before, Owned = owned };

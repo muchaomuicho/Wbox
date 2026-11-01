@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Dialog, Field, Select, Switch } from './components/ui';
+import { Button, Dialog, Field, Select, Switch, SecretInput } from './components/ui';
 import { call } from '../../wbox/transport';
 
 export function NodeEditor({ index, initial, onClose }: { index: number; initial: {node: Record<string, any>; revision: string}; onClose: () => void }) {
@@ -26,7 +26,7 @@ export function NodeEditor({ index, initial, onClose }: { index: number; initial
         <Field label="协议"><input className="input" value={node.protocol.toUpperCase()} readOnly /></Field>
         {['vmess','vless','tuic'].includes(node.protocol) && field('uuid', 'UUID')}
         {['http','socks','naive'].includes(node.protocol) && field('username', '用户名')}
-        {!['vmess','vless'].includes(node.protocol) && field('password', node.protocol === 'wireguard' ? '私钥' : '密码', 'password')}
+        {!['vmess','vless'].includes(node.protocol) && <Field label={node.protocol === 'wireguard' ? '私钥' : '密码'}><SecretInput value={node.password ?? ''} onChange={v=>change('password',v)} /></Field>}
         {['ss','vmess'].includes(node.protocol) && field('cipher', '加密方式')}
         {node.protocol === 'vmess' && field('alterId', 'Alter ID', 'number')}
         {['vmess','vless','trojan'].includes(node.protocol) && <>

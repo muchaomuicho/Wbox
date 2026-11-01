@@ -231,7 +231,7 @@ public partial class MainWindow : Window, IDisposable
     }
     async Task ImportSubscriptionAsync(string url)
     {
-        var text = await ProfileImport.FetchAsync(url, "v2rayN/7.24 Wbox/0.4.0");
+        var text = await ProfileImport.FetchAsync(url, "clash.meta/1.19.33");
         var nodes = NodeParser.ParseSubscription(text);
         var selected = preferences.Nodes.ElementAtOrDefault(preferences.SelectedNode);
         preferences.Nodes.RemoveAll(n => n.SourceSubscription == url);

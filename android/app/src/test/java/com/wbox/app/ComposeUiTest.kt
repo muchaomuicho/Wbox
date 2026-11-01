@@ -75,7 +75,7 @@ class ComposeUiTest {
     }
     @Test fun groupsExpandFirstAndKeepOtherChildrenHidden(){
         ui.runOnIdle{m.groups=JSONObject("""{"First":{"all":["🇯🇵 Tokyo"],"now":"🇯🇵 Tokyo"},"Second":{"all":["Hidden node"],"now":"DIRECT"}}""");m.sheet="groups";WboxVpnService.proxies=m.groups}
-        ui.onAllNodesWithText("🇯🇵 Tokyo").assertCountEquals(2);ui.onNodeWithText("Hidden node").assertDoesNotExist()
+        ui.onAllNodesWithText("🇯🇵 Tokyo").assertCountEquals(1);ui.onNodeWithText("Hidden node").assertDoesNotExist()
         ui.onNodeWithContentDescription("展开 Second").performClick();ui.onNodeWithText("Hidden node").assertExists()
     }
     @Test fun logColorSpansKeepOriginalText(){

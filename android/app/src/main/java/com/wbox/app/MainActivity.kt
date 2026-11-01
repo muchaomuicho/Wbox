@@ -78,6 +78,7 @@ internal data class RuntimeState(
     var runtime by mutableStateOf(RuntimeState())
     var history by mutableStateOf<List<WboxVpnService.TrafficSample>>(emptyList())
     var groups by mutableStateOf(JSONObject())
+    var proxyMode by mutableStateOf("rule")
     var connections by mutableStateOf<List<ConnectionRecord>>(emptyList())
     var logs by mutableStateOf<List<String>>(WboxVpnService.logSnapshot())
     var logsPaused by mutableStateOf(false)
@@ -98,6 +99,7 @@ internal data class RuntimeState(
             if(WboxVpnService.running) (SystemClock.elapsedRealtime()-WboxVpnService.startedAt)/1000 else 0,
             WboxVpnService.upload,WboxVpnService.download,WboxVpnService.upRate,WboxVpnService.downRate,WboxVpnService.inbound,WboxVpnService.outbound,WboxVpnService.coreMemory,mem)
         if(page=="overview") history=WboxVpnService.trafficSnapshot()
+        if(runtime.running&&page=="overview"&&profiles.engine()=="mihomo"&&sampleCount%3==0) try{proxyMode=withContext(Dispatchers.IO){WboxVpnService.api().request("GET","/configs",null).optString("mode","rule")}}catch(_:Exception){}
         if(sheet=="groups") groups=WboxVpnService.proxies
         if(sheet=="connections") connections=WboxVpnService.connectionRows else connections=emptyList()
         if(page=="logs" && !logsPaused) logs=WboxVpnService.logSnapshot()
@@ -124,7 +126,7 @@ internal data class RuntimeState(
         if(WboxVpnService.running || WboxVpnService.starting) {
             latencyJob?.cancel(); runtime=runtime.copy(stopping=true)
             activity.startService(Intent(activity,WboxVpnService::class.java).setAction(WboxVpnService.STOP))
-        } else { mutable(); withContext(Dispatchers.IO){profiles.compile("check")}; activity.connect() }
+        } else { mutable(); runtime=runtime.copy(starting=true); activity.connect() }
     }
     suspend fun importText(text: String, name: String) {
         val config=workspace=="config"; mutable(config); busy=true
@@ -148,8 +150,8 @@ internal data class RuntimeState(
     suspend fun writeProfile(p: JSONObject, content: String) { change(true){it.importConfig(content,p.optString("url").ifEmpty{null},p.getString("id"))} }
     fun removeProfile(id: String) = work { change(true){p -> val kept=p.configs().objects().filter {it.optString("id")!=id};p.data.put("configs",JSONArray(kept));if(p.data.optString("active_config")==id){p.data.remove("active_config");p.data.remove("config_sing-box");p.data.remove("config_mihomo");if(kept.isNotEmpty())p.activateConfig(kept.first().getString("id"))}} }
     fun selectNode(name: String, group: String?=null) = work {
-        if(WboxVpnService.running){ withContext(Dispatchers.IO){WboxVpnService.api().select(group ?: "Wbox",name);WboxVpnService.proxies=WboxVpnService.api().proxies()}; groups=WboxVpnService.proxies }
-        if(group==null || group=="Wbox") change {it.data.put("selected",name)}
+        if(group==null) { check(workspace=="nodes"){"请先切换到节点工作区"};changeNodes{it.data.put("selected",name)} }
+        else if(WboxVpnService.running) { withContext(Dispatchers.IO){WboxVpnService.api().select(group,name);WboxVpnService.proxies=WboxVpnService.api().proxies()};groups=WboxVpnService.proxies }
     }
     suspend fun writeNode(index: Int, revision: String, fields: JSONObject) { changeNodes {NodeEditing.replace(it,index,revision,fields)} }
     fun cloneNode(index: Int) = work { changeNodes{NodeEditing.cloneNode(it,index)} }
@@ -160,11 +162,17 @@ internal data class RuntimeState(
         if(testing){latencyJob?.cancel();return}
         latencyJob=activity.lifecycleScope.launch {
             try { mutable();testing=true;names.forEach{delays[it]="测试中"}; val snapshot=profiles.copy()
-                runInterruptible(Dispatchers.IO){NodeLatencyTester.run(activity,snapshot,names){name,value->activity.runOnUiThread{delays[name]=value}}}
+                val updates=kotlinx.coroutines.channels.Channel<Pair<String,String>>(kotlinx.coroutines.channels.Channel.UNLIMITED)
+                coroutineScope {
+                    val collect=launch {for((name,value) in updates)delays[name]=value}
+                    try {runInterruptible(Dispatchers.IO){NodeLatencyTester.run(activity,snapshot,names){name,value->updates.trySend(name to value)}}}
+                    finally {updates.close();collect.join()}
+                }
             } catch(e:CancellationException){throw e} catch(e:Exception){message=e.message ?: "测速失败"}
             finally {testing=false;names.forEach{if(delays[it]=="测试中")delays[it]="未测试"}}
         }
     }
+    fun changeProxyMode(value:String) = work {check(profiles.engine()=="mihomo");withContext(Dispatchers.IO){WboxVpnService.api().setMode(value,WboxVpnService.globalTarget)};proxyMode=value}
     fun closeConnection(id: String?) = work { withContext(Dispatchers.IO){if(id==null)WboxVpnService.api().closeAllConnections() else WboxVpnService.api().closeConnection(id)} }
     fun copyLogs() { (activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Wbox logs",WboxVpnService.logSnapshot().joinToString("\n")));message="日志已复制" }
     fun clearLogs() { synchronized(WboxVpnService.logs){WboxVpnService.logs.clear()};logs=emptyList() }

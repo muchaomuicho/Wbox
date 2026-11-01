@@ -3,44 +3,54 @@ package com.wbox.app;
 import android.content.Context;
 import org.json.JSONObject;
 import java.io.*;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
 
-/** Runs a temporary node core without establishing a VPN. Always closes its process. */
+/** Each library node is measured in isolation without changing the active VPN. */
 final class NodeLatencyTester {
-    static void run(Context context, Profiles source, List<String> names, BiConsumer<String,String> result)throws Exception {
-        java.lang.Process process=null;
-        File config=null;
-        ExecutorService tests=Executors.newFixedThreadPool(8);
+    static void run(Context context,Profiles source,List<String> names,BiConsumer<String,String> result)throws Exception {
+        ExecutorService workers=Executors.newFixedThreadPool(4);
+        Semaphore starts=new Semaphore(1);
         try {
-            String secret=WboxVpnService.secret;
-            if(!WboxVpnService.running) {
-                if(!source.mode().equals("nodes"))throw new IllegalStateException("请先连接配置工作区，再测试代理组。");
-                Profiles p=new Profiles(context);p.data=new JSONObject(source.data.toString());
-                secret=UUID.randomUUID().toString();
-                File dir=new File(context.getCacheDir(),"latency");dir.mkdirs();
-                config=new File(dir,"latency.json");Files.write(config.toPath(),p.compile(secret).getBytes(StandardCharsets.UTF_8));
+            List<Future<?>> pending=new ArrayList<>();
+            if(source.mode().equals("config")) {
+                if(!WboxVpnService.running)throw new IllegalStateException("请先连接配置工作区，再测试代理组。");
+                CoreApi api=new CoreApi(WboxVpnService.secret);JSONObject groups=api.proxies();
+                Map<String,List<String>> targets=new LinkedHashMap<>();
+                for(String name:names)targets.computeIfAbsent(resolve(groups,name,new HashSet<>()),k->new ArrayList<>()).add(name);
+                for(var entry:targets.entrySet())pending.add(workers.submit(()->{String value;try{value=api.delay(entry.getKey(),source.data.optString("test_url",Profiles.TEST_URL))+" ms";}catch(Exception e){value="失败";}for(String name:entry.getValue())result.accept(name,value);}));
+            } else {
+                for(String name:names)pending.add(workers.submit(()->{String value;try{value=measure(context,source,name,starts)+" ms";}catch(InterruptedException e){Thread.currentThread().interrupt();return;}catch(Exception e){value="失败";}result.accept(name,value);}));
+            }
+            for(Future<?> task:pending)task.get();
+        } finally {workers.shutdownNow();workers.awaitTermination(3,TimeUnit.SECONDS);}
+    }
+    private static long measure(Context context,Profiles source,String name,Semaphore starts)throws Exception {
+        Process process=null;File dir=null;CoreApi api;
+        try {
+            starts.acquire();
+            try {
+                Profiles p=source.copy();p.data.put("selected",name);
+                String secret=UUID.randomUUID().toString();
+                int mixed,controller;try(ServerSocket one=new ServerSocket(0);ServerSocket two=new ServerSocket(0)){mixed=one.getLocalPort();controller=two.getLocalPort();}
+                dir=new File(context.getCacheDir(),"latency/"+UUID.randomUUID());dir.mkdirs();
+                File config=new File(dir,"config.json");Files.write(config.toPath(),p.compile(secret,mixed,controller,true).getBytes(StandardCharsets.UTF_8));
                 File binary=new File(context.getApplicationInfo().nativeLibraryDir,p.engine().equals("sing-box")?"libsingbox.so":"libmihomo.so");
                 List<String> command=new ArrayList<>(List.of(binary.getAbsolutePath()));
                 if(p.engine().equals("sing-box"))command.addAll(List.of("run","-c",config.getAbsolutePath(),"-D",dir.getAbsolutePath()));else command.addAll(List.of("-f",config.getAbsolutePath(),"-d",dir.getAbsolutePath()));
                 ProcessBuilder builder=new ProcessBuilder(command).directory(dir).redirectErrorStream(true).redirectOutput(new File("/dev/null"));
-                builder.environment().put("GOMEMLIMIT","96MiB");process=builder.start();
-                boolean ready=false;for(int i=0;i<60;i++){if(!process.isAlive())throw new IOException("测速内核启动失败，请检查节点协议。");try{new CoreApi(secret).proxies();ready=true;break;}catch(Exception ignored){Thread.sleep(100);}}
-                if(!ready)throw new IOException("测速内核启动超时。");
-            }
-            CoreApi api=new CoreApi(secret);String url=source.data.optString("test_url",Profiles.TEST_URL);
-            JSONObject groups=api.proxies();Map<String,List<String>> targets=new LinkedHashMap<>();
-            for(String name:names){String target=resolve(groups,name,new HashSet<>());targets.computeIfAbsent(target,k->new ArrayList<>()).add(name);}
-            List<Future<?>> futures=new ArrayList<>();
-            for(Map.Entry<String,List<String>> entry:targets.entrySet())futures.add(tests.submit(()->{String value;try{value=api.delay(entry.getKey(),url)+" ms";}catch(Exception e){value="失败";}for(String name:entry.getValue())result.accept(name,value);}));
-            for(Future<?> future:futures)future.get();
+                builder.environment().put("GOMEMLIMIT","48MiB");process=builder.start();api=new CoreApi(secret,controller);
+                boolean ready=false;for(int i=0;i<60;i++){if(!process.isAlive())throw new IOException("测速内核启动失败");try{api.proxies();ready=true;break;}catch(IOException ignored){Thread.sleep(100);}}
+                if(!ready)throw new IOException("测速内核启动超时");
+            } finally {starts.release();}
+            return api.delay(name,source.data.optString("test_url",Profiles.TEST_URL));
         } finally {
-            tests.shutdownNow();
-            if(process!=null){process.destroy();try{if(!process.waitFor(2,TimeUnit.SECONDS))process.destroyForcibly();}catch(InterruptedException ignored){process.destroyForcibly();Thread.currentThread().interrupt();}}
-            if(config!=null)Files.deleteIfExists(config.toPath());
+            if(process!=null){process.destroy();try{if(!process.waitFor(1,TimeUnit.SECONDS))process.destroyForcibly();}catch(InterruptedException e){process.destroyForcibly();Thread.currentThread().interrupt();}}
+            if(dir!=null){File[] files=dir.listFiles();if(files!=null)for(File file:files)file.delete();dir.delete();}
         }
     }
     static String resolve(JSONObject groups,String name,Set<String> seen){if(!seen.add(name))return name;JSONObject group=groups.optJSONObject(name);String selected=group==null?"":group.optString("now");return selected.isEmpty()?name:resolve(groups,selected,seen);}

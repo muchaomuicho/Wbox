@@ -22,12 +22,13 @@ def center(node):
 def tap(value,attr='text'):
     x,y=center(find(value,attr));adb('shell','input','tap',str(x),str(y));time.sleep(.4)
 def screenshot(name):
-    (ROOT/f'docs/previews/0.6.0-android-{name}.png').write_bytes(adb('exec-out','screencap','-p'))
+    (ROOT/f'docs/previews/0.6.1-android-{name}.png').write_bytes(adb('exec-out','screencap','-p'))
 adb('shell','input','keyevent','KEYCODE_WAKEUP')
 adb('shell','wm','dismiss-keyguard')
 adb('shell','am','broadcast','-n','com.wbox.app/.RuntimeProbeReceiver','--es','operation','seed','--es','engine','sing-box')
 time.sleep(.5)
 adb('shell','am','force-stop','com.wbox.app');adb('shell','am','start','-n','com.wbox.app/.MainActivity')
+tap('设置');tap('主题');tap('深色');tap('概览')
 button=find('连接代理','content-desc');x,y=center(button)
 assert x>750 and y>1700,(x,y)
 checks.append('Idle start FAB is at bottom right above navigation')
@@ -43,5 +44,5 @@ tap('概览');find('断开代理连接','content-desc');screenshot('overview-lig
 tap('断开代理连接','content-desc');find('连接代理','content-desc');screenshot('idle-light')
 checks.append('Light theme and stop control work through actual UI')
 adb('shell','rm','/sdcard/wbox-ui.xml')
-(ROOT/'docs/verification/0.6.0-android-ui.json').write_text(json.dumps({'checks':checks},indent=2),encoding='utf-8')
+(ROOT/'docs/verification/0.6.1-android-ui.json').write_text(json.dumps({'checks':checks},indent=2),encoding='utf-8')
 print('\n'.join('PASS '+c for c in checks))

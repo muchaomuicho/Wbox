@@ -65,6 +65,18 @@ export class StreamStore<T> {
 
   getSnapshot = (): StreamSnapshot<T> => this.snapshot;
 
+  // Resolve only after fresh stream data has reached the subscribers.
+  refresh = (): Promise<void> => new Promise((resolve, reject) => {
+    let unsubscribe = () => {};
+    const finish = (error?: Error) => { clearTimeout(timeout); unsubscribe(); error ? reject(error) : resolve(); };
+    const timeout = setTimeout(() => finish(new Error('更新测速结果超时')), 10000);
+    unsubscribe = this.subscribe(() => {
+      if (this.snapshot.phase === 'active') finish();
+      else if (this.snapshot.phase === 'error') finish(new Error(this.snapshot.error));
+    });
+    this.reconnectNow();
+  });
+
   retryNow = (): void => {
     this.skipBackoff = true;
     this.wakeBackoff?.();

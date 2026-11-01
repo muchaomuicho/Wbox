@@ -101,8 +101,8 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
         }
         if(m.sheet.isNotEmpty()) {
             val sheet=m.sheet
-            ModalBottomSheet(onDismissRequest={m.sheet=""},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=MaterialTheme.colorScheme.surface){
-                Box(Modifier.fillMaxHeight(.88f)) {when(sheet){"groups"->Groups(m);"connections"->Connections(m);"picker"->ProfilePicker(m);"apps"->Apps(m)}}
+            ModalBottomSheet(onDismissRequest={m.sheet=""},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp){
+                Box(Modifier.fillMaxHeight()) {when(sheet){"groups"->Groups(m);"connections"->Connections(m);"picker"->ProfilePicker(m);"apps"->Apps(m)}}
             }
         }
         editor?.let { EditSheet(m,it){editor=null} }
@@ -155,6 +155,8 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
             }
         }}
         if(m.runtime.running) {
+            if(m.profiles.engine()=="mihomo")item{Panel{SectionTitle("代理模式",Icons.Outlined.Route);SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()){listOf("rule" to "规则","global" to "全局","direct" to "直连").forEachIndexed{index,(mode,label)->SegmentedButton(selected=m.proxyMode==mode,onClick={m.changeProxyMode(mode)},shape=SegmentedButtonDefaults.itemShape(index,3)){Text(label)}}}}}
+
             item {Row(horizontalArrangement=Arrangement.spacedBy(12.dp)){TrafficCard("上传",m.runtime.up,m.runtime.upload,m.history.map{it.up.toFloat()},Icons.Outlined.Upload,Modifier.weight(1f));TrafficCard("下载",m.runtime.down,m.runtime.download,m.history.map{it.down.toFloat()},Icons.Outlined.Download,Modifier.weight(1f))}}
             item {Panel{SectionTitle("连接",Icons.Outlined.Cable){TextButton(onClick={m.sheet="connections"}){Text("查看")}};Row{Metric("入站",m.runtime.connectionsIn.toString(),Modifier.weight(1f));Metric("出站",m.runtime.connectionsOut.toString(),Modifier.weight(1f))}}}
             item {Panel{SectionTitle("内存",Icons.Outlined.Memory);Row{Metric("内核",MainActivity.bytes(m.runtime.coreMemory),Modifier.weight(1f));Metric("应用",MainActivity.bytes(m.runtime.appMemory),Modifier.weight(1f))}}}
@@ -237,18 +239,49 @@ private fun host(url:String):String=try{URI(url).host ?: "订阅"}catch(_:Except
 @Composable private fun DelayText(value:String?) {Text(value ?: "未测试",fontFamily=FontFamily.Monospace,fontSize=11.sp,color=delayColor(value))}
 @Composable private fun delayColor(value:String?):Color {val n=value?.substringBefore(" ")?.toLongOrNull();return when{value=="失败"->MaterialTheme.colorScheme.error;n==null->MaterialTheme.colorScheme.onSurfaceVariant;n<800->Color(0xff539675);n<1500->Color(0xffbd9747);else->Color(0xffce6e63)}}
 private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return it};val values=m.groups.optJSONObject(name)?.optJSONArray("history");val n=values?.optJSONObject(values.length()-1)?.optInt("delay") ?: return null;return if(n>0)"$n ms" else "失败"}
+// Group header, rounded row surfaces and selected latency dots follow SFA GroupsCard.
 @Composable private fun Groups(m:MobileModel) {
-    val groups=m.groups.keys().asSequence().filter{m.groups.optJSONObject(it)?.has("all")==true}.toList()
+    val groups=m.groups.keys().asSequence().filter{it!="GLOBAL"&&m.groups.optJSONObject(it)?.has("all")==true}.toList()
     val expanded=remember{mutableStateMapOf<String,Boolean>()}
     LaunchedEffect(groups.firstOrNull()){if(expanded.isEmpty())groups.firstOrNull()?.let{expanded[it]=true}}
-    Column {Text("代理组",Modifier.padding(horizontal=20.dp,vertical=12.dp),style=MaterialTheme.typography.titleLarge)
-        LazyColumn(contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
+    Column {
+        Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically){Text("组",Modifier.weight(1f),style=MaterialTheme.typography.headlineSmall);IconButton(onClick={val open=groups.none{expanded[it]==true};groups.forEach{expanded[it]=open}}){Icon(if(groups.any{expanded[it]==true})Icons.Outlined.UnfoldLess else Icons.Outlined.UnfoldMore,"展开或收起全部")}}
+        LazyColumn(contentPadding=PaddingValues(horizontal=16.dp,vertical=8.dp)){
             if(groups.isEmpty())item{EmptyState("暂无代理组","连接配置后可选择节点。",Icons.Outlined.AccountTree)}
-            groups.forEach{tag->val group=m.groups.getJSONObject(tag);val all=group.getJSONArray("all").strings();val open=expanded[tag]==true
-                item(key="header:$tag"){Column{Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f).clickable{expanded[tag]=!open}.padding(vertical=10.dp)){Text(tag,style=MaterialTheme.typography.titleMedium);Muted(group.optString("now"))};IconButton(onClick={m.latency(all)}){Icon(Icons.Outlined.Speed,"测试 $tag")};IconButton(onClick={expanded[tag]=!open}){Icon(if(open)Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,if(open)"收起 $tag" else "展开 $tag")}}
-                    if(!open)FlowRow(horizontalArrangement=Arrangement.spacedBy(3.dp),verticalArrangement=Arrangement.spacedBy(3.dp)){all.forEach{node->val color=delayColor(delay(m,node));Box(Modifier.size(7.dp).clip(RoundedCornerShape(1.dp)).background(color))}}
-                }}
-                if(open) all.chunked(2).forEachIndexed{index,pair->item(key="$tag:$index"){Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){pair.forEach{node->val selected=group.optString("now")==node;Surface(onClick={m.selectNode(node,tag)},modifier=Modifier.weight(1f),shape=RoundedCornerShape(12.dp),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,border=if(selected)BorderStroke(1.dp,MaterialTheme.colorScheme.outline)else null){Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){Text(node,style=MaterialTheme.typography.bodyMedium,maxLines=2,overflow=TextOverflow.Ellipsis);DelayText(delay(m,node))}}};if(pair.size==1)Spacer(Modifier.weight(1f))}}}
+            groups.forEach{tag->
+                val group=m.groups.getJSONObject(tag);val all=group.getJSONArray("all").strings();val open=expanded[tag]==true
+                val testing=m.testing&&all.any{m.delays[it]=="测试中"}
+                item(key="header:$tag"){
+                    Surface(color=MaterialTheme.colorScheme.surfaceVariant,contentColor=MaterialTheme.colorScheme.onSurface,shape=RoundedCornerShape(topStart=20.dp,topEnd=20.dp)) {
+                        Row(Modifier.fillMaxWidth().padding(start=16.dp,end=6.dp,top=6.dp,bottom=2.dp),verticalAlignment=Alignment.CenterVertically){
+                            Row(Modifier.weight(1f).clickable{expanded[tag]=!open},verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(6.dp)){Text(tag,Modifier.weight(1f,fill=false),style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold,maxLines=1,overflow=TextOverflow.Ellipsis);Muted(group.optString("type","Selector"))}
+                            Surface(shape=RoundedCornerShape(99.dp),color=MaterialTheme.colorScheme.onSurface.copy(alpha=.08f)){Text(all.size.toString(),Modifier.padding(horizontal=8.dp,vertical=2.dp),style=MaterialTheme.typography.labelSmall)}
+                            IconButton(onClick={m.latency(all)},modifier=Modifier.size(40.dp)){if(testing)CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp)else Icon(Icons.Outlined.Speed,"测试 $tag",Modifier.size(20.dp))}
+                            IconButton(onClick={expanded[tag]=!open},modifier=Modifier.size(40.dp)){Icon(if(open)Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,if(open)"收起 $tag" else "展开 $tag")}
+                        }
+                    }
+                }
+                if(!open)item(key="dots:$tag"){
+                    Surface(Modifier.fillMaxWidth().padding(bottom=12.dp),color=MaterialTheme.colorScheme.surfaceVariant,shape=RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)){
+                        FlowRow(Modifier.padding(start=16.dp,end=16.dp,top=6.dp,bottom=16.dp),horizontalArrangement=Arrangement.spacedBy(4.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){all.forEach{node->Box(Modifier.size(11.dp).clip(RoundedCornerShape(4.dp)).background(delayColor(delay(m,node))),contentAlignment=Alignment.Center){if(group.optString("now")==node)Box(Modifier.size(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White))}}}
+                    }
+                }
+                else all.chunked(2).forEachIndexed{index,pair->val last=index==(all.size-1)/2
+                    item(key="$tag:$index"){
+                        Surface(Modifier.fillMaxWidth().padding(bottom=if(last)12.dp else 0.dp),color=MaterialTheme.colorScheme.surfaceVariant,shape=if(last)RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)else RoundedCornerShape(0.dp)){
+                            Row(Modifier.padding(start=16.dp,end=16.dp,top=8.dp,bottom=if(last)16.dp else 0.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){
+                                pair.forEach{node->val selected=group.optString("now")==node
+                                    Surface(onClick={m.selectNode(node,tag)},modifier=Modifier.weight(1f),shape=RoundedCornerShape(16.dp),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface){
+                                        Column(Modifier.padding(horizontal=12.dp,vertical=10.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
+                                            Text(node,style=MaterialTheme.typography.bodyMedium,fontWeight=FontWeight.SemiBold,maxLines=2,overflow=TextOverflow.Ellipsis)
+                                            Row(verticalAlignment=Alignment.CenterVertically){Muted(m.groups.optJSONObject(node)?.optString("type") ?: "",Modifier.weight(1f));DelayText(delay(m,node))}
+                                        }
+                                    }
+                                };if(pair.size==1)Spacer(Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
         }
     }

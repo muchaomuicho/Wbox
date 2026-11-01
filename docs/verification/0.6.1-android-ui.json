@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Idle start FAB is at bottom right above navigation",
+    "Production FAB starts VPN and exposes bottom stop control",
+    "Groups show Unicode flags and selected outbound",
+    "Light theme and stop control work through actual UI"
+  ]
+}

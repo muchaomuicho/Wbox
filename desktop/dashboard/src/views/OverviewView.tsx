@@ -175,7 +175,7 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
         return (
           <Card key={card} icon="route" title={t("Mode")} wide>
             <AdaptiveSegmented
-              options={modeList.map((mode) => ({ value: mode, label: mode }))}
+              options={modeList.map((mode) => ({ value: mode, label: ({rule:"规则",global:"全局",direct:"直连"} as Record<string,string>)[mode] || mode }))}
               value={currentMode}
               onChange={(mode) => {
                 setPendingMode(mode);

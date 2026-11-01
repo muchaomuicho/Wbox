@@ -82,22 +82,27 @@ public final class Profiles {
     }
     public static Map<String,Object> yamlMap(String text){LoaderOptions o=new LoaderOptions();o.setCodePointLimit(4*1024*1024);o.setMaxAliasesForCollections(30);Object v=new Yaml(new SafeConstructor(o)).load(text);if(!(v instanceof Map))throw new IllegalArgumentException("配置必须是 YAML 对象");return (Map<String,Object>)v;}
     public static String fetch(String address)throws Exception{return fetch(address,false);}
-    public static String fetch(String address,boolean nodes) throws Exception {URL url=new URL(address);if(!List.of("https","http").contains(url.getProtocol()))throw new IllegalArgumentException("订阅必须是 HTTP / HTTPS 地址");HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setConnectTimeout(15000);c.setReadTimeout(20000);c.setRequestProperty("User-Agent",nodes?"v2rayN/7.24 Wbox/0.3.0":"Wbox/0.3.0");try{if(c.getResponseCode()!=200)throw new IOException("订阅 HTTP "+c.getResponseCode());try(InputStream in=c.getInputStream()){return readLimited(in);}}finally{c.disconnect();}}
+    public static String fetch(String address,boolean nodes) throws Exception {URL url=new URL(address);if(!List.of("https","http").contains(url.getProtocol()))throw new IllegalArgumentException("订阅必须是 HTTP / HTTPS 地址");HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setConnectTimeout(15000);c.setReadTimeout(20000);c.setRequestProperty("User-Agent","clash.meta/1.19.33");try{if(c.getResponseCode()!=200)throw new IOException("订阅 HTTP "+c.getResponseCode());try(InputStream in=c.getInputStream()){return readLimited(in);}}finally{c.disconnect();}}
     public static String readLimited(InputStream in)throws Exception{ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1){out.write(buf,0,n);if(out.size()>4*1024*1024)throw new IOException("配置超过 4 MB");}return out.toString("UTF-8");}
-    public String compile(String secret) throws Exception {
+    public String compile(String secret) throws Exception { return compile(secret,10808,19090,false); }
+    public String compile(String secret,int mixedPort,int controllerPort,boolean transientConfig) throws Exception {
         boolean sb=engine().equals("sing-box");List<Node> ns=mode().equals("nodes")?nodes():List.of();
-        if(mode().equals("nodes")){if(ns.isEmpty())throw new IllegalArgumentException("请先导入节点或订阅");String selected=data.optString("selected");for(Node n:ns)if(n.name.equals(selected)&&!n.compatible(engine()))throw new IllegalArgumentException("所选节点不兼容当前内核");ns.removeIf(n->!n.compatible(engine()));}if(mode().equals("nodes")&&ns.isEmpty())throw new IllegalArgumentException("没有兼容节点；Android 内核未包含 NaiveProxy");
+        LinkedHashMap<Node,JSONObject> active=new LinkedHashMap<>();
+        if(mode().equals("nodes")) {
+            if(ns.isEmpty())throw new IllegalArgumentException("请先导入节点或订阅");
+            active=ActiveNodeConfig.resolve(ns,data.optString("selected"),engine());ns=new ArrayList<>(active.keySet());
+        }
         if(sb) {
             JSONObject j;
             if(mode().equals("config")){String cfg=data.optString("config_sing-box");if(cfg.isBlank())throw new IllegalArgumentException("请导入 sing-box JSON 配置");j=new JSONObject(cfg);}
-            else {JSONArray outs=new JSONArray(),names=new JSONArray(),endpoints=new JSONArray();for(Node n:ns){if(n.protocol.equals("wireguard"))endpoints.put(n.singbox());else outs.put(n.singbox());names.put(n.name);}names.put("DIRECT");outs.put(new JSONObject().put("type","direct").put("tag","DIRECT"));outs.put(new JSONObject().put("type","selector").put("tag","Wbox").put("outbounds",names).put("default",ns.get(0).name));
+            else {JSONArray outs=new JSONArray(),names=new JSONArray(),endpoints=new JSONArray();for(Node n:ns){if(n.protocol.equals("wireguard"))endpoints.put(active.get(n));else outs.put(active.get(n));if(n==ns.get(0))names.put(n.name);}names.put("DIRECT");outs.put(new JSONObject().put("type","direct").put("tag","DIRECT"));outs.put(new JSONObject().put("type","selector").put("tag","Wbox").put("outbounds",names).put("default",ns.get(0).name));
                 String selected=data.optString("selected");for(Node n:ns)if(n.name.equals(selected))outs.getJSONObject(outs.length()-1).put("default",selected);
                 j=new JSONObject().put("endpoints",endpoints).put("log",new JSONObject().put("level","warn")).put("outbounds",outs).put("route",new JSONObject().put("final","Wbox").put("default_domain_resolver","dns")).put("dns",new JSONObject().put("servers",new JSONArray().put(new JSONObject().put("type","udp").put("tag","dns").put("server","1.1.1.1"))).put("strategy",data.optBoolean("ipv6",true)?"prefer_ipv6":"ipv4_only"));}
             // Android owns the VPN. Preserve user rules/outbounds, replace only OS-facing TUN and reserved mixed listener.
             JSONArray in=j.optJSONArray("inbounds"),kept=new JSONArray();if(in!=null)for(int i=0;i<in.length();i++){JSONObject v=in.getJSONObject(i);if(!v.optString("type").equals("tun")&&v.optInt("listen_port")!=10808)kept.put(v);}
-            kept.put(new JSONObject().put("type","mixed").put("tag","wbox-in").put("listen","127.0.0.1").put("listen_port",10808));j.put("inbounds",kept);
-            JSONObject ex=j.optJSONObject("experimental");if(ex==null)ex=new JSONObject();ex.put("clash_api",new JSONObject().put("external_controller","127.0.0.1:19090").put("secret",secret));j.put("experimental",ex);
-            JSONObject cache=ex.optJSONObject("cache_file");if(cache==null)cache=new JSONObject();cache.put("enabled",true).put("store_fakeip",true);
+            kept.put(new JSONObject().put("type","mixed").put("tag","wbox-in").put("listen","127.0.0.1").put("listen_port",mixedPort));j.put("inbounds",kept);
+            JSONObject ex=j.optJSONObject("experimental");if(ex==null)ex=new JSONObject();ex.put("clash_api",new JSONObject().put("external_controller","127.0.0.1:"+controllerPort).put("secret",secret));j.put("experimental",ex);
+            JSONObject cache=ex.optJSONObject("cache_file");if(cache==null)cache=new JSONObject();cache.put("enabled",!transientConfig).put("store_fakeip",true);
             String cacheId=mode().equals("config")&&activeConfig()!=null?activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";
             cache.put("path",new File(file.getParentFile(),"cache-"+cacheId+".db").getAbsolutePath());ex.put("cache_file",cache);
             AndroidConfig.adaptSingBox(j,in);
@@ -105,8 +110,8 @@ public final class Profiles {
         }
         Map<String,Object> m;
         if(mode().equals("config")){String cfg=data.optString("config_mihomo");if(cfg.isBlank())throw new IllegalArgumentException("请导入 mihomo YAML 配置");m=yamlMap(cfg);}
-        else{m=new LinkedHashMap<>();m.put("log-level","warning");List<Object> proxies=new ArrayList<>();List<String> names=new ArrayList<>();for(Node n:ns){proxies.add(n.mihomo());names.add(n.name);}String selected=data.optString("selected");if(names.remove(selected))names.add(0,selected);names.add("DIRECT");m.put("proxies",proxies);m.put("proxy-groups",List.of(Map.of("name","Wbox","type","select","proxies",names)));m.put("rules",List.of("MATCH,Wbox"));m.put("ipv6",data.optBoolean("ipv6",true));m.put("dns",Map.of("enable",true,"ipv6",data.optBoolean("ipv6",true),"enhanced-mode","redir-host","nameserver",List.of("https://1.1.1.1/dns-query")));}
-        m.put("mixed-port",10808);m.put("allow-lan",false);m.put("bind-address","127.0.0.1");m.put("external-controller","127.0.0.1:19090");m.put("secret",secret);m.put("tun",Map.of("enable",false));m.putIfAbsent("ipv6",true);
+        else{m=new LinkedHashMap<>();m.put("log-level","warning");List<Object> proxies=new ArrayList<>();List<String> names=new ArrayList<>();for(Node n:ns){proxies.add(yamlMap(active.get(n).toString()));if(n==ns.get(0))names.add(n.name);}String selected=data.optString("selected");if(names.remove(selected))names.add(0,selected);names.add("DIRECT");m.put("proxies",proxies);m.put("proxy-groups",List.of(Map.of("name","Wbox","type","select","proxies",names)));m.put("rules",List.of("MATCH,Wbox"));m.put("ipv6",data.optBoolean("ipv6",true));m.put("dns",Map.of("enable",true,"ipv6",data.optBoolean("ipv6",true),"enhanced-mode","redir-host","nameserver",List.of("https://1.1.1.1/dns-query")));}
+        m.put("mixed-port",mixedPort);m.put("allow-lan",false);m.put("bind-address","127.0.0.1");m.put("external-controller","127.0.0.1:"+controllerPort);m.put("secret",secret);m.put("tun",Map.of("enable",false));m.putIfAbsent("ipv6",true);
         AndroidConfig.adaptMihomo(m);
         return new Yaml().dump(m);
     }

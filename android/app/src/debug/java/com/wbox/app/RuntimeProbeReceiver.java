@@ -21,7 +21,7 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
             String core=intent.getStringExtra("engine");if(core==null)core="sing-box";
             String json="{\"log\":{\"level\":\"info\"},\"inbounds\":[{\"type\":\"tun\",\"tag\":\"tun-in\",\"address\":[\"172.18.0.1/30\"],\"auto_route\":true}],\"route\":{\"auto_detect_interface\":true,\"final\":\"Proxy\"},\"outbounds\":[{\"type\":\"selector\",\"tag\":\"Proxy\",\"outbounds\":[\"🇯🇵 Tokyo\",\"🇭🇰 Hong Kong\"]},{\"type\":\"direct\",\"tag\":\"🇯🇵 Tokyo\"},{\"type\":\"direct\",\"tag\":\"🇭🇰 Hong Kong\"},{\"type\":\"selector\",\"tag\":\"Media\",\"outbounds\":[\"🇯🇵 Tokyo\",\"🇭🇰 Hong Kong\"]}]}";
             String yaml="log-level: info\nproxies: []\nproxy-groups:\n - {name: Proxy, type: select, proxies: [DIRECT]}\nrules: ['MATCH,Proxy']\n";
-            Profiles p=new Profiles(context);p.data=new JSONObject().put("mode","config").put("theme","dark");p.importConfig(core.equals("sing-box")?json:yaml,null,null);p.setWorkspace("config");p.activeConfig().put("name","我的配置");p.save();
+            Profiles p=new Profiles(context);p.data=new JSONObject().put("mode","config").put("theme","dark");p.importConfig(core.equals("sing-box")?new JSONObject(json).toString(2):yaml,null,null);p.setWorkspace("config");p.activeConfig().put("name","我的配置");p.save();
             if("seed".equals(action))return;
             if("original".equals(action)){
                 JSONObject compiled=new JSONObject(p.compile("probe"));compiled.getJSONObject("route").put("auto_detect_interface",true);

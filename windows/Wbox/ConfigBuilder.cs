@@ -65,6 +65,7 @@ public static class ConfigBuilder
             var clash = e["clash_api"] as JsonObject ?? new JsonObject(); e["clash_api"] = clash.DeepClone();
             e["clash_api"]!["external_controller"] = $"127.0.0.1:{controllerPort}";
             e["clash_api"]!["secret"] = secret;
+            e["clash_api"]!["default_mode"] = "rule";
             // Keep all user inbounds; add a dedicated loopback inbound only when our port is not occupied by an existing mixed inbound.
             var inbounds = root["inbounds"] as JsonArray ?? new JsonArray(); root["inbounds"] = inbounds.DeepClone();
             var a = root["inbounds"]!.AsArray();
@@ -87,24 +88,47 @@ public static class ConfigBuilder
         }
         return singbox ? root.ToJsonString(Store.JsonOptions) : SerializeYaml(root);
     }
+    // Build only the active node and its explicit chain. An unrelated broken
+    // node in the library must never prevent the selected node from starting.
+    public static Dictionary<int, JsonObject> ActiveNodes(Preferences p)
+    {
+        var built = new Dictionary<int, JsonObject>(); var visiting = new HashSet<int>();
+        bool sb = p.Core == "sing-box";
+        void Add(int index) {
+            if (visiting.Contains(index)) throw new InvalidOperationException("当前节点的前置代理存在循环依赖。");
+            if (built.ContainsKey(index)) return;
+            var node = p.Nodes[index];
+            if (!NodeOptions.Compatible(node, p.Core)) throw new InvalidOperationException($"节点「{node.Name}」不支持此内核，请切换内核。");
+            visiting.Add(index);
+            var value = sb ? SingboxOutbound(node, Tag(node,index)) : MihomoProxy(node, Tag(node,index));
+            string key = sb ? "detour" : "dialer-proxy";
+            var dependency = value[key]?.ToString();
+            if (!string.IsNullOrEmpty(dependency)) {
+                var matches = Enumerable.Range(0,p.Nodes.Count).Where(i => p.Nodes[i].SourceSubscription == node.SourceSubscription &&
+                    (p.Nodes[i].Name == dependency || (sb ? p.Nodes[i].NativeSingbox?["tag"] : p.Nodes[i].NativeMihomo?["name"])?.ToString() == dependency)).ToArray();
+                if (matches.Length != 1) throw new InvalidOperationException($"节点「{node.Name}」的前置代理「{dependency}」{(matches.Length == 0 ? "不存在" : "名称重复")}。请编辑该节点，或重新导入完整节点订阅。");
+                Add(matches[0]); value[key] = Tag(p.Nodes[matches[0]],matches[0]);
+            }
+            visiting.Remove(index); built[index] = value;
+        }
+        Add(Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1)); return built;
+    }
     static JsonObject SingboxNodes(Preferences p)
     {
-        var proxies = new JsonArray(); var names = new JsonArray(); var endpoints = new JsonArray();
-        if (!NodeOptions.Compatible(p.Nodes[Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)], p.Core)) throw new InvalidOperationException("所选节点不支持此内核，请切换内核或节点。");
-        for (int i = 0; i < p.Nodes.Count; i++) { if (!NodeOptions.Compatible(p.Nodes[i], p.Core)) continue; var tag = Tag(p.Nodes[i], i); names.Add(tag); var outbound = SingboxOutbound(p.Nodes[i], tag); if (p.Nodes[i].Protocol == "wireguard") endpoints.Add(outbound); else proxies.Add(outbound); }
-        proxies.Insert(0, new JsonObject { ["type"] = "selector", ["tag"] = "Wbox", ["outbounds"] = names, ["default"] = Tag(p.Nodes[Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)], Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)), ["interrupt_exist_connections"] = true });
+        var proxies = new JsonArray(); var endpoints = new JsonArray();
+        foreach (var (index,outbound) in ActiveNodes(p)) {
+            if (p.Nodes[index].Protocol == "wireguard") endpoints.Add(outbound); else proxies.Add(outbound);
+        }
+        var selected = Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1); var tag=Tag(p.Nodes[selected],selected);
+        proxies.Insert(0,new JsonObject { ["type"]="selector", ["tag"]="Wbox", ["outbounds"]=new JsonArray(tag), ["default"]=tag, ["interrupt_exist_connections"]=true });
         proxies.Add(new JsonObject { ["type"] = "direct", ["tag"] = "DIRECT" });
         return new JsonObject { ["log"] = new JsonObject { ["level"] = "warn", ["timestamp"] = true }, ["dns"] = new JsonObject { ["servers"] = new JsonArray(new JsonObject { ["type"] = "local", ["tag"] = "local" }), ["final"] = "local" }, ["endpoints"] = endpoints, ["outbounds"] = proxies, ["route"] = new JsonObject { ["final"] = "Wbox", ["auto_detect_interface"] = true, ["default_domain_resolver"] = "local" } };
     }
     static JsonObject MihomoNodes(Preferences p)
     {
-        var proxies = new JsonArray(); var names = new JsonArray();
-        if (!NodeOptions.Compatible(p.Nodes[Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1)], p.Core)) throw new InvalidOperationException("所选节点不支持此内核，请切换内核或节点。");
-        for (int i = 0; i < p.Nodes.Count; i++) { if (!NodeOptions.Compatible(p.Nodes[i], p.Core)) continue; var name = Tag(p.Nodes[i], i); names.Add(name); proxies.Add(MihomoProxy(p.Nodes[i], name)); }
-        var selected = Math.Clamp(p.SelectedNode, 0, p.Nodes.Count - 1);
-        var selectedName = Tag(p.Nodes[selected], selected); var idx = names.Select(n => n!.ToString()).ToList().IndexOf(selectedName);
-        if (idx > 0) { names.RemoveAt(idx); names.Insert(0, JsonValue.Create(selectedName)); }
-        return new JsonObject { ["mode"] = "rule", ["log-level"] = "warning", ["ipv6"] = true, ["proxies"] = proxies, ["proxy-groups"] = new JsonArray(new JsonObject { ["name"] = "Wbox", ["type"] = "select", ["proxies"] = names }), ["rules"] = new JsonArray("MATCH,Wbox") };
+        var proxies = new JsonArray(); foreach (var value in ActiveNodes(p).Values) proxies.Add(value);
+        var selected = Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1); var tag=Tag(p.Nodes[selected],selected);
+        return new JsonObject { ["mode"] = "rule", ["log-level"] = "warning", ["ipv6"] = true, ["proxies"] = proxies, ["proxy-groups"] = new JsonArray(new JsonObject { ["name"] = "Wbox", ["type"] = "select", ["proxies"] = new JsonArray(tag) }), ["rules"] = new JsonArray("MATCH,Wbox") };
     }
     public static string Tag(NodeRecord n, int i) => $"{n.Name} · {i + 1}";
     public static JsonObject SingboxOutbound(NodeRecord n, string tag)

@@ -19,6 +19,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalTextToolbar
 import kotlinx.coroutines.*
 import org.json.*
 import java.net.URI
@@ -41,7 +43,7 @@ import java.net.URI
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){TextButton(onClick={testUrl=Profiles.TEST_URL}){Text("恢复默认")};Button(onClick={m.work{val uri=URI(testUrl);require(uri.scheme in listOf("https","http") && uri.host!=null){"请填写 HTTP / HTTPS 地址"};require(m.profiles.engine()!="sing-box" || uri.scheme=="https"){"sing-box 延迟测试需要 HTTPS 地址"};m.setting("test_url",testUrl.trim())}}){Text("保存")}}
             }
         }}
-        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox 0.6.0",style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
+        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox 0.6.1",style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
     }
 }
 @Composable private fun SettingsPanel(title:String,content:@Composable ColumnScope.()->Unit) {Column(verticalArrangement=Arrangement.spacedBy(8.dp)){Text(title,Modifier.padding(start=12.dp),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant);Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(content=content)}}}
@@ -68,6 +70,7 @@ import java.net.URI
 
 @Composable internal fun EditSheet(m:MobileModel,editor:Editor,dismiss:()->Unit) {
     val config=editor.type=="config"
+    if(config) { ConfigEditorScreen(m,editor.profile!!,dismiss);return }
     val rename=editor.type=="rename"
     val node=remember(editor){if(editor.type=="node")m.nodes.getOrNull(editor.index) else null}
     val revision=remember(node){node?.let{NodeEditing.revision(it)} ?: ""}
@@ -144,5 +147,13 @@ import java.net.URI
     }
 }
 @Composable private fun Field(label:String,value:String,changed:(String)->Unit,multiline:Boolean=false,secret:Boolean=false,code:Boolean=false) {
-    OutlinedTextField(value,changed,Modifier.fillMaxWidth(),label={Text(label)},singleLine=!multiline,minLines=if(multiline)4 else 1,maxLines=if(multiline)12 else 1,shape=RoundedCornerShape(12.dp),visualTransformation=if(secret)PasswordVisualTransformation() else VisualTransformation.None,textStyle=LocalTextStyle.current.copy(fontSize=14.sp,fontFamily=if(code)FontFamily.Monospace else FontFamily.Default))
+    var visible by remember { mutableStateOf(false) }
+    val toolbar=remember{SelectionToolbar()}
+    DisposableEffect(toolbar){onDispose{toolbar.hide()}}
+    CompositionLocalProvider(LocalTextToolbar provides toolbar) {
+    OutlinedTextField(value,changed,Modifier.fillMaxWidth(),label={Text(label)},singleLine=!multiline,minLines=if(multiline)4 else 1,maxLines=if(multiline)12 else 1,shape=RoundedCornerShape(12.dp),visualTransformation=if(secret&&!visible)PasswordVisualTransformation() else VisualTransformation.None,
+        trailingIcon=if(secret){{IconButton(onClick={visible=!visible}){Icon(if(visible)Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,if(visible)"隐藏密码" else "显示密码")}}}else null,
+        textStyle=LocalTextStyle.current.copy(fontSize=14.sp,fontFamily=if(code)FontFamily.Monospace else FontFamily.Default))
+        toolbar.Menu()
+    }
 }

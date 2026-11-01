@@ -1,30 +1,32 @@
 # Wbox
 
-Wbox 是 Windows / Android 双内核代理客户端。Windows 0.6.0 直接基于官方 sing-box desktop / dashboard 前端源码改造；Android 0.6.0 改用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与 sing-box 1.14.4，品牌图标为黑底白色 W。
+Wbox 是 Windows / Android 双内核代理客户端。Windows 0.6.1 直接基于官方 sing-box desktop / dashboard 前端源码改造；Android 0.6.1 改用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与 sing-box 1.14.4，品牌图标为黑底白色 W。
 
-Windows 0.6.0 复用官方导航、概览、代理组、连接详情和日志，增加两个独立工作区与双内核适配。通过 WinINet 修复停止后遗留系统代理的问题，支持远程 JSON / YAML、订阅与单节点。见 [发布说明](docs/RELEASE-0.6.0.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
+Windows 0.6.1 复用官方导航、概览、代理组、连接详情和日志，增加两个独立工作区与双内核适配。通过 WinINet 修复停止后遗留系统代理的问题，支持远程 JSON / YAML、订阅与单节点。见 [发布说明](docs/RELEASE-0.6.1.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
 
 ## 安装与使用
 
 交付文件在 `dist/`：
 
-- `Wbox-0.6.0-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录。
-- `Wbox-0.6.0-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
-- `Wbox-0.6.0-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
+- `Wbox-0.6.1-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录。
+- `Wbox-0.6.1-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
+- `Wbox-0.6.1-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
 - `SHA256SUMS.txt`：以上文件的校验值。
+
+默认以 `clash.meta/1.19.33`（mihomo）UA 下载配置与节点订阅，根据返回内容识别内核。
 
 先在顶部选择工作区。配置工作区直接添加远程 URL 或导入本地 JSON / YAML，保存完整代理组、DNS 和路由，支持多份配置、切换、更新和移除。节点工作区单独管理订阅地址与节点链接，按来源分组、搜索、选择节点；两端均可在未连接时临时启动内核测速，也可在连接后测试。两工作区分别保留配置选择和节点选择；切换前需要断开连接。
 
 
-Windows 0.6.0 在配置／节点卡片内使用 `+` 添加。节点工作区可直接 `Ctrl+V` 导入，自动识别订阅地址与节点链接；单击选中，双击或 Enter 启用，右键或 `Ctrl+D` 编辑节点。右键还可克隆为手动节点、移除。连接期间修改节点会重启节点内核，失败时恢复原数据和连接。订阅更新会覆盖该来源的编辑，长期保留请先克隆。
+Windows 0.6.1 在配置／节点卡片内使用 `+` 添加。节点工作区可直接 `Ctrl+V` 导入，自动识别订阅地址与节点链接；单击选中，双击或 Enter 启用，右键或 `Ctrl+D` 编辑节点。右键还可克隆为手动节点、移除。连接期间修改节点会重启节点内核，失败时恢复原数据和连接。订阅更新会覆盖该来源的编辑，长期保留请先克隆。
 
-Android 0.6.0 同步卡片内添加、统一订阅地址／节点链接入口、剪贴板导入、节点编辑及测试地址恢复默认；修改节点时仍保持原生界面与列表复用。两端保持同一功能方向，触屏使用长按菜单对应鼠标右键。
+Android 0.6.1 同步卡片内添加、统一订阅地址／节点链接入口、剪贴板导入、节点编辑及测试地址恢复默认；修改节点时仍保持原生界面与列表复用。两端保持同一功能方向，触屏使用长按菜单对应鼠标右键。
 
 Windows 支持开机自启、静默启动、自动连接和托盘菜单；开关在“设置”中保存。关闭主窗口收起到托盘，退出请使用托盘菜单。托盘直接复用官方级联菜单，支持连接开关、代理组与节点选择、配置切换、测速及关闭所有连接。
 
 Windows 默认使用系统代理，只接管遵循 Windows 系统代理设置的应用。默认在运行副本中用 Wbox 受管 mixed 入站替换原配置入站，保留首个 mixed 标签。需要原生入站或全流量接管时，在设置中启用“保留配置中的原生入站”，再以管理员身份运行 Wbox；配置本身需要包含 TUN 入站。受管端口冲突时自动改用空闲端口，原生入站冲突会说明具体端口。停止连接会根据持久备份恢复系统代理；若其它软件已经修改这些设置，Wbox 不覆盖它们。
 
-Android 第一次连接需要授权系统 VPN。设置页可选择全部应用、只代理所选应用或绕过所选应用；Wbox 自身始终绕过 VPN，避免内核上游连接回环。IPv6 默认开启。Android 的系统 VPN 由 Wbox 管理，导入配置中的 TUN 入站会在运行副本中移除，并增加本地 mixed 入站。原配置规则若按入站标签匹配，需要使用 `wbox-in` 标签。JSON/YAML 内的本地外部资源应放到应用可访问的位置；只导入文本文件不会自动导入旁边的规则资源。
+Android 第一次连接需要授权系统 VPN。设置页可选择全部应用、只代理所选应用或绕过所选应用；Wbox 自身始终绕过 VPN，避免内核上游连接回环。IPv6 默认开启。Android 的系统 VPN 由 Wbox 管理，导入配置中的 TUN 入站会在运行副本中移除，并增加本地 mixed 入站。原配置中的 TUN 入站匹配会映射到 `wbox-in`。JSON/YAML 内的本地外部资源应放到应用可访问的位置；只导入文本文件不会自动导入旁边的规则资源。
 
 ## 已实现的功能
 
@@ -32,7 +34,7 @@ Android 第一次连接需要授权系统 VPN。设置页可选择全部应用�
 
 已支持 ALPN、SS obfs-local/simple-obfs/v2ray-plugin、Hysteria2 salamander 混淆、TUIC congestion_control/udp_relay_mode，以及 WS/gRPC/HTTP2 传输。代理组与节点切换、内核 HTTP 延迟测试、有界日志、活动连接明细、入站/出站逻辑连接数、本次流量、60 秒波形、内存显示和 Android 分应用 VPN 均保留。
 
-两端支持配置重命名，更新远程配置后保留名称。代理组默认仅展开第一组，其余收起并以色块显示延迟；日志按级别与连接编号着色。测速按实际节点去重，最多 8 个并发，单次内核超时 4 秒。
+两端支持配置重命名，更新远程配置后保留名称。代理组默认仅展开第一组，其余收起并以色块显示延迟；日志按级别与连接编号着色。代理组测速按实际节点去重，Windows 最多 8 个并发；独立节点测速和 Android 最多 4 个并发，单次内核请求超时 4 秒。
 
 默认延迟测试 URL 为 `https://www.apple.com/library/test/success.html`。sing-box 1.14.4 上游 API 会替换 HTTP 测试地址，因此 Wbox 要求该内核自定义测速使用 HTTPS；mihomo 支持 HTTP 与 HTTPS。Android 配置工作区的代理组需要连接后测速；节点工作区支持离线测速。Android 节点列表支持单击选中、双击启用、长按编辑／克隆／移除，外接键盘可用 Ctrl+V、Ctrl+D 和 Enter。
 
@@ -52,9 +54,9 @@ Android 由 VpnService 管理路由并排除自身 UID；sing-box 运行副本�
 
 ## 验证范围
 
-Windows 打包版交互回归记录见 `docs/verification/0.6.0-desktop.json`，包含托盘首次主题、启动按钮自然宽度、窗口释放、远程配置、节点编辑、代理切换与测速取消。此前核心与系统代理恢复回归保留在 0.5.2 验证记录中。
+Windows 打包版交互回归记录见 `docs/verification/0.6.1-desktop.json`，包含托盘首次主题、启动按钮自然宽度、窗口释放、远程配置、节点编辑、代理切换与测速取消。此前核心与系统代理恢复回归保留在 0.5.2 验证记录中。
 
-Android 配置、节点编辑、Compose 交互与数据处理的单元测试和 Lint 记录见 `docs/verification/0.6.0-android.json`。实际 Android 15 模拟器回归见 `docs/verification/0.6.0-android-runtime.json`：以普通应用 UID 复现原 netlink 启动失败，并检查两内核的 VPN TCP/UDP 转发、断开后的网络恢复与重连。模拟器使用启用 R8 的 x86_64 调试构建，发布 APK 仍为 ARM64；这不替代实体手机、耗电和 16 KiB 页设备测试。
+Android 配置、节点编辑、Compose 交互与数据处理的单元测试和 Lint 记录见 `docs/verification/0.6.1-android.json`。实际 Android 15 模拟器回归见 `docs/verification/0.6.1-android-runtime.json`：以普通应用 UID 复现原 netlink 启动失败，并检查两内核的 VPN TCP/UDP 转发、断开后的网络恢复与重连。模拟器使用启用 R8 的 x86_64 调试构建，发布 APK 仍为 ARM64；这不替代实体手机、耗电和 16 KiB 页设备测试。
 
 ## 构建
 

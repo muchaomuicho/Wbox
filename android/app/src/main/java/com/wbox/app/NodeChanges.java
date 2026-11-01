@@ -14,7 +14,7 @@ final class NodeChanges {
         JSONObject previous=profiles.data;
         boolean restart=connection.running()&&profiles.mode().equals("nodes");
         Profiles staged=profiles.copy();staged.data=next;
-        if(restart&&!staged.nodes().isEmpty())staged.compile("validation");
+        if(restart&&!staged.nodes().isEmpty())restart=!staged.compile("validation").equals(profiles.compile("validation"));
         if(restart)connection.stop();
         try {
             profiles.data=next;profiles.save();

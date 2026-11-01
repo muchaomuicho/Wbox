@@ -39,6 +39,7 @@ public sealed class CoreManager : IDisposable
     string? runtimePath;
     string? transientDirectory;
     string activeCore = "";
+    string? globalTarget;
     long cachedAppMemory, cachedCoreMemory;
     DateTime memorySample;
     public bool Running => process is { HasExited: false };
@@ -47,6 +48,7 @@ public sealed class CoreManager : IDisposable
     public async Task StartAsync(Preferences p, bool transient = false)
     {
         if (Running) return;
+        var startupWatch=Stopwatch.StartNew();
         stopping = false; starting = true; startupLog.Clear();
         sessionCancellation.Dispose(); sessionCancellation = new();
         activeCore = p.Core;
@@ -56,6 +58,7 @@ public sealed class CoreManager : IDisposable
         ProxyPort = StartupPolicy.AvailablePort(ConfigBuilder.MixedPort);
         ApiPort = StartupPolicy.AvailablePort(ConfigBuilder.ControllerPort, ProxyPort);
         var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort, transient);
+        globalTarget = p.Core == "mihomo" ? GlobalTarget(ConfigBuilder.ParseYaml(config)) : null;
         StartupPolicy.Check(config, p.Core);
         // Resolve relative providers, certificates, rule sets and included files against the imported config directory.
         var working = p.Mode == "config" ? Path.GetDirectoryName(Path.GetFullPath(p.ConfigPath))! : Path.Combine(Store.DirectoryPath, p.Core);
@@ -65,18 +68,8 @@ public sealed class CoreManager : IDisposable
         File.WriteAllText(runtimePath, config);
         try
         {
-            var validation = new ProcessStartInfo(executable) { WorkingDirectory = working, CreateNoWindow = true, UseShellExecute = false, RedirectStandardError = true, RedirectStandardOutput = true };
-            if (p.Core == "sing-box") { validation.ArgumentList.Add("check"); validation.ArgumentList.Add("-c"); validation.ArgumentList.Add(runtimePath); }
-            else { validation.ArgumentList.Add("-t"); validation.ArgumentList.Add("-d"); validation.ArgumentList.Add(working); validation.ArgumentList.Add("-f"); validation.ArgumentList.Add(runtimePath); }
-            using (var check = Process.Start(validation)!)
-            {
-                var stdout = check.StandardOutput.ReadToEndAsync(); var stderr = check.StandardError.ReadToEndAsync();
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(25));
-                try { await check.WaitForExitAsync(timeout.Token); }
-                catch { check.Kill(true); throw new InvalidOperationException("配置检查超时，请检查配置中的远程资源。"); }
-                var output = await stdout + await stderr;
-                if (check.ExitCode != 0) throw new InvalidOperationException("配置检查未通过：\n" + output);
-            }
+            // run performs the same validation and reports startup errors. Avoid
+            // spawning a second core and loading remote resources twice.
             var host = Path.Combine(AppContext.BaseDirectory, "cores", "wbox-core-host.exe");
             if (!File.Exists(host)) throw new FileNotFoundException("安装包缺少内核进程管理器。", host);
             var start = new ProcessStartInfo(host) { WorkingDirectory = working, CreateNoWindow = true, UseShellExecute = false, RedirectStandardError = true, RedirectStandardOutput = true, RedirectStandardInput = true };
@@ -106,11 +99,15 @@ public sealed class CoreManager : IDisposable
                 var reason = process.HasExited ? $"内核退出（代码 {process.ExitCode}）" : $"控制接口 127.0.0.1:{ApiPort} 等待超过 30 秒";
                 throw new InvalidOperationException(reason + "。\n" + string.Join("\n", startupLog.TakeLast(8)));
             }
+            if (!transient) {
+                if (p.Core == "sing-box") await RequestAsync("PATCH", "/configs", new JsonObject { ["mode"] = "rule" });
+                else if ((await RequestAsync("GET", "/configs"))?["mode"]?.ToString() == "global") await SetModeAsync("global");
+            }
             initialUpload = initialDownload = lastUpload = lastDownload = 0; lastSample = DateTime.UtcNow;
             if (p.SystemProxy) SystemProxy.Install(ProxyPort);
             StartedAt = DateTime.UtcNow; previousConnections.Clear(); connectionSample = DateTime.UtcNow;
             starting = false;
-            Log?.Invoke($"Wbox · {p.Core} 已启动 · 本地代理 127.0.0.1:{ProxyPort}");
+            Log?.Invoke($"Wbox · {p.Core} 已启动（{startupWatch.ElapsedMilliseconds} ms） · 本地代理 127.0.0.1:{ProxyPort}");
         }
         catch { Stop(); throw; }
     }
@@ -160,13 +157,29 @@ public sealed class CoreManager : IDisposable
     {
         var root = JsonNode.Parse(await api!.GetStringAsync("/proxies"))!["proxies"]!.AsObject();
         return root.Where(kv => kv.Value?["all"] is JsonArray && kv.Value?["type"]?.ToString() is "Selector" or "URLTest" or "Fallback" or "LoadBalance")
-            .Where(kv => !(activeCore == "sing-box" && kv.Key == "GLOBAL"))
+            .Where(kv => kv.Key != "GLOBAL")
             .Select(kv => new GroupItem(kv.Key, kv.Value!["now"]?.ToString() ?? "", kv.Value["all"]!.AsArray().Select(n => n!.ToString()).ToList(), kv.Value["type"]!.ToString() == "Selector") { Type = kv.Value["type"]!.ToString(), Details = kv.Value["all"]!.AsArray().Select(n => { var name = n!.ToString(); var detail = root[name]; var delay = (detail?["history"] as JsonArray)?.LastOrDefault()?["delay"]?.GetValue<int>(); return new ProxyNode(name, detail?["type"]?.ToString() ?? "—", delay); }).ToList() }).ToList();
     }
     public async Task SelectAsync(string group, string node)
     {
         using var content = new StringContent(new JsonObject { ["name"] = node }.ToJsonString(), Encoding.UTF8, "application/json");
         using var response = await api!.PutAsync("/proxies/" + Uri.EscapeDataString(group), content); response.EnsureSuccessStatusCode();
+    }
+    public async Task SetModeAsync(string mode) {
+        if (activeCore != "mihomo" || mode is not ("rule" or "global" or "direct")) throw new ArgumentException("此内核不支持指定的代理模式。");
+        if (mode == "global") {
+            var root = (await RequestAsync("GET", "/proxies"))?["proxies"]?.AsObject();
+            if (root?["GLOBAL"] is JsonObject global && global["now"]?.ToString() is null or "DIRECT" or "REJECT") {
+                var target = globalTarget != null && root.ContainsKey(globalTarget) ? globalTarget : root.FirstOrDefault(kv => kv.Key != "GLOBAL" && kv.Value?["all"] is JsonArray).Key;
+                target ??= (global["all"] as JsonArray)?.Select(n => n?.ToString()).FirstOrDefault(n => n is not (null or "GLOBAL" or "DIRECT" or "REJECT" or "COMPATIBLE"));
+                if (target != null) await SelectAsync("GLOBAL", target);
+            }
+        }
+        await RequestAsync("PATCH", "/configs", new JsonObject { ["mode"] = mode });
+    }
+    public static string? GlobalTarget(JsonObject config) {
+        var final = (config["rules"] as JsonArray)?.Select(n => n?.ToString().Split(',')).LastOrDefault(r => r is { Length: >= 2 } && r[0].Trim() == "MATCH")?[1].Trim();
+        return final is not (null or "DIRECT" or "REJECT") ? final : (config["proxy-groups"] as JsonArray)?.FirstOrDefault()?["name"]?.ToString();
     }
     public async Task<JsonNode?> RequestAsync(string method, string path, JsonNode? body = null) {
         using var request = new HttpRequestMessage(new HttpMethod(method), path);

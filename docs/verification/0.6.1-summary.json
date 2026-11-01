@@ -1,0 +1,50 @@
+{
+  "version": "0.6.1",
+  "androidSuites": [
+    {
+      "name": "com.wbox.app.ComposeUiTest",
+      "tests": "7",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.wbox.app.IsolationTest",
+      "tests": "1",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.wbox.app.NodeEditingTest",
+      "tests": "6",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    },
+    {
+      "name": "com.wbox.app.ProfilesTest",
+      "tests": "24",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "1"
+    },
+    {
+      "name": "com.wbox.app.RuntimeDataTest",
+      "tests": "4",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0"
+    }
+  ],
+  "androidLint": "No errors; existing warnings retained",
+  "windowsChecks": 76,
+  "windowsForwardingChecks": 14,
+  "subscription": {
+    "userAgent": "clash.meta/1.19.33",
+    "httpStatus": 200,
+    "nodeCount": 31,
+    "fullMihomoNativeCheck": "passed after downloading required GeoIP and GeoSite data"
+  },
+  "androidMenu": "Screenshot and actual select-all/cut/paste actions verified; API 35 accessibility dump omits floating menus"
+}

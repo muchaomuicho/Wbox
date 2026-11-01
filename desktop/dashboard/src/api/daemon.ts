@@ -418,7 +418,8 @@ export class DaemonApi {
   }
 
   async urlTest(outboundTag: string): Promise<void> {
-    await this.client.uRLTest({ outboundTag });
+    try { await this.client.uRLTest({ outboundTag }); }
+    finally { await this.groups.refresh(); }
   }
 
   async selectOutbound(groupTag: string, outboundTag: string): Promise<void> {

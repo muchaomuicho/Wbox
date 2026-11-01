@@ -1074,6 +1074,11 @@ button.settings-row:focus-visible {
   background: var(--scrim);
 }
 
+/* Electron's native caption buttons sit above the web top layer. */
+body[data-platform="win32"] .drawer {
+  inset-block-start: env(titlebar-area-height, 38px);
+}
+
 [dir="rtl"] .drawer {
   animation-name: slide-in-rtl;
 }
@@ -1337,3 +1342,19 @@ button.settings-row:focus-visible {
       font-size: var(--text-lg);
     }
 }
+
+.wbox-config-dialog {
+  width: calc(100vw - 48px);
+  max-width: 1400px;
+  height: calc(100dvh - 76px);
+  max-height: calc(100dvh - 76px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+.wbox-config-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.wbox-config-header h3 { margin: 0; font-size: 20px; }
+.wbox-config-code { flex: 1; min-height: 0; overflow: hidden; }
+.wbox-config-code .cm-scroller { overflow: auto; }

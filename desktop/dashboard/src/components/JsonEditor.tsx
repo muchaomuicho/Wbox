@@ -29,6 +29,7 @@ import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { json5Language } from "codemirror-json5";
+import { yaml } from "@codemirror/lang-yaml";
 import { useLatestRef } from "../app/useLatest";
 import {
   jsonSchemaCompletionSource,
@@ -141,6 +142,7 @@ export function JsonEditor(props: {
   ref?: Ref<JsonEditorHandle>;
   className?: string;
   initialValue: string;
+  language?: 'json' | 'yaml';
   readOnly?: boolean;
   schema?: JsonEditorSchema | null;
   onChange?: (value: string, canUndo: boolean, canRedo: boolean) => void;
@@ -167,11 +169,11 @@ export function JsonEditor(props: {
           history(),
           bracketMatching(),
           json5Language.data.of({ closeBrackets: { brackets: ["[", "{", '"'] } }),
-          new LanguageSupport(json5Language),
+          props.language === 'yaml' ? yaml() : new LanguageSupport(json5Language),
           syntaxHighlighting(jsonHighlight),
           autocompletion(),
           closeBrackets(),
-          jsonTypingAssist,
+          props.language === 'yaml' ? [] : jsonTypingAssist,
           json5Language.data.of({
             autocomplete: completionSource,
           }),

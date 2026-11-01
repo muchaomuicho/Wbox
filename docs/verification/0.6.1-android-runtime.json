@@ -1,0 +1,72 @@
+{
+  "android": "15",
+  "abi": "x86_64",
+  "shellUid": "uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid),3012(readtracefs) context=u:r:shell:s0",
+  "engines": [
+    {
+      "engine": "sing-box",
+      "tcp": true,
+      "udp": true,
+      "restart": true,
+      "networkAfterStop": true,
+      "uploaded": 1176,
+      "downloaded": 8881,
+      "memoryDebugBuild": "Applications Memory Usage (in Kilobytes):\r\nUptime: 177844 Realtime: 177844\r\n\r\n** MEMINFO in pid 3304 [com.wbox.app] **\r\n                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap\r\n                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free\r\n                ------   ------   ------   ------   ------   ------   ------   ------\r\n  Native Heap    13035    12980       40       45    14036    27276    21006     1805\r\n  Dalvik Heap     6138     6104        4      101     7872     9783     4892     4891\r\n Dalvik Other     8768     3124        4        2    14708                           \r\n        Stack     1400     1400        0        0     1408                           \r\n       Ashmem       11        0        0        0      572                           \r\n    Other dev       26        4       16        0      332                           \r\n     .so mmap     4408      184     1040        6    33492                           \r\n    .jar mmap     3322        0     1136        0    44100                           \r\n    .apk mmap      181        0       60        0     1460                           \r\n    .ttf mmap      768        0      512        0     1136                           \r\n    .dex mmap       11        0        0        0      864                           \r\n    .oat mmap       30        0        0        0     1792                           \r\n    .art mmap     9726     7988     1312       63    25620                           \r\n   Other mmap     5488        4     1412        0    10568                           \r\n      Unknown     7649     7636        8        2     8096                           \r\n        TOTAL    61180    39424     5544      219   166056    37059    25898     6696\r\n \r\n App Summary\r\n                       Pss(KB)                        Rss(KB)\r\n                        ------                         ------\r\n           Java Heap:    15404                          33492\r\n         Native Heap:    12980                          14036\r\n                Code:     3084                          94272\r\n               Stack:     1400                           1408\r\n            Graphics:        0                              0\r\n       Private Other:    12100\r\n              System:    16212\r\n             Unknown:                                   22848\r\n \r\n           TOTAL PSS:    61180            TOTAL RSS:   166056       TOTAL SWAP PSS:      219\r\n \r\n Objects\r\n               Views:        8         ViewRootImpl:        1\r\n         AppContexts:        7           Activities:        1\r\n              Assets:       21        AssetManagers:        0\r\n       Local Binders:       18        Proxy Binders:       62\r\n       Parcel memory:        5         Parcel count:       22\r\n    Death Recipients:        0             WebViews:        0\r\n \r\n SQL\r\n         MEMORY_USED:        0\r\n  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0\r\n \r\n",
+      "logs": [
+        "05:38:18  WARN[0000] network: initialize package manager: read packages list: open /data/system/packages.xml: permission denied",
+        "05:38:18  INFO[0000] inbound/mixed[wbox-in]: tcp server started at 127.0.0.1:10808",
+        "05:38:18  INFO[0000] clash-api: restful api listening at 127.0.0.1:19090",
+        "05:38:18  INFO[0000] sing-box started (0.11s)",
+        "05:38:19  sing-box 已连接（442 ms） · IPv6 开启",
+        "05:38:19  INFO[0000] [3880901062 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:34066",
+        "05:38:19  INFO[0000] [3031633438 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:34072",
+        "05:38:19  INFO[0000] [2553299271 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:34078",
+        "05:38:19  INFO[0000] [3880901062 207ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "05:38:19  INFO[0000] [3880901062 207ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "05:38:19  INFO[0000] [3031633438 206ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "05:38:19  INFO[0000] [3031633438 206ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "05:38:19  INFO[0000] [2553299271 208ms] inbound/mixed[wbox-in]: inbound packet connection to 1.1.1.1:53",
+        "05:38:19  INFO[0000] [2553299271 208ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection",
+        "05:38:19  INFO[0000] [185919244 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:34084",
+        "05:38:19  INFO[0001] [185919244 206ms] inbound/mixed[wbox-in]: inbound connection to 198.18.0.8:5228",
+        "05:38:19  INFO[0001] [185919244 206ms] outbound/direct[🇯🇵 Tokyo]: outbound connection to 198.18.0.8:5228",
+        "05:38:20  INFO[0001] [4120098569 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:34088",
+        "05:38:20  INFO[0001] [4120098569 207ms] inbound/mixed[wbox-in]: inbound connection to 10.0.2.2:19281",
+        "05:38:20  INFO[0001] [4120098569 207ms] outbound/direct[🇯🇵 Tokyo]: outbound connection to 10.0.2.2:19281",
+        "05:38:20  INFO[0001] [2351912356 0ms] inbound/mixed[wbox-in]: inbound connection from 127.0.0.1:34102",
+        "05:38:20  INFO[0002] [2351912356 210ms] inbound/mixed[wbox-in]: inbound packet connection to 10.0.2.2:19282",
+        "05:38:20  INFO[0002] [2351912356 210ms] outbound/direct[🇯🇵 Tokyo]: outbound packet connection"
+      ]
+    },
+    {
+      "engine": "mihomo",
+      "tcp": true,
+      "udp": true,
+      "restart": true,
+      "networkAfterStop": true,
+      "uploaded": 1698,
+      "downloaded": 5380,
+      "memoryDebugBuild": "Applications Memory Usage (in Kilobytes):\r\nUptime: 192310 Realtime: 192310\r\n\r\n** MEMINFO in pid 3591 [com.wbox.app] **\r\n                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap\r\n                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free\r\n                ------   ------   ------   ------   ------   ------   ------   ------\r\n  Native Heap    13650    13588       40       49    14648    27788    21521     1778\r\n  Dalvik Heap     6697     6656        8      133     8428    10339     5170     5169\r\n Dalvik Other     9186     3496        4        2    15172                           \r\n        Stack     1464     1464        0        0     1472                           \r\n       Ashmem       11        0        0        0      572                           \r\n    Other dev       26        4       16        0      332                           \r\n     .so mmap     4637      184     1180        6    33744                           \r\n    .jar mmap     3318        0     1128        0    44040                           \r\n    .apk mmap      233        0       60        0     1460                           \r\n    .ttf mmap      768        0      512        0     1136                           \r\n    .dex mmap       11        0        0        0      864                           \r\n    .oat mmap       28        0        0        0     1648                           \r\n    .art mmap     9769     8032     1312       63    25624                           \r\n   Other mmap     5677        4     1516        0    11020                           \r\n      Unknown     7645     7632        8        2     8088                           \r\n        TOTAL    63375    41060     5784      255   168248    38127    26691     6947\r\n \r\n App Summary\r\n                       Pss(KB)                        Rss(KB)\r\n                        ------                         ------\r\n           Java Heap:    16000                          34052\r\n         Native Heap:    13588                          14648\r\n                Code:     3348                          94544\r\n               Stack:     1464                           1472\r\n            Graphics:        0                              0\r\n       Private Other:    12444\r\n              System:    16531\r\n             Unknown:                                   23532\r\n \r\n           TOTAL PSS:    63375            TOTAL RSS:   168248       TOTAL SWAP PSS:      255\r\n \r\n Objects\r\n               Views:        8         ViewRootImpl:        1\r\n         AppContexts:        7           Activities:        1\r\n              Assets:       21        AssetManagers:        0\r\n       Local Binders:       18        Proxy Binders:       61\r\n       Parcel memory:        6         Parcel count:       24\r\n    Death Recipients:        0             WebViews:        0\r\n \r\n SQL\r\n         MEMORY_USED:        0\r\n  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0\r\n \r\n",
+      "logs": [
+        "time=\"2026-11-01T05:38:33.277486306Z\" level=info msg=\"Start initial configuration in progress\"",
+        "time=\"2026-11-01T05:38:33.278294761Z\" level=info msg=\"Geodata Loader mode: memconservative\"",
+        "time=\"2026-11-01T05:38:33.278311803Z\" level=info msg=\"Geosite Matcher implementation: succinct\"",
+        "time=\"2026-11-01T05:38:33.278532521Z\" level=info msg=\"Initial configuration complete, total time: 0ms\"",
+        "time=\"2026-11-01T05:38:33.298368788Z\" level=info msg=\"RESTful API listening at: 127.0.0.1:19090\"",
+        "time=\"2026-11-01T05:38:33.326212816Z\" level=info msg=\"Sniffer is closed\"",
+        "time=\"2026-11-01T05:38:33.330966806Z\" level=info msg=\"Mixed(http+socks) proxy listening at: 127.0.0.1:10808\"",
+        "time=\"2026-11-01T05:38:33.331429001Z\" level=info msg=\"Start initial compatible provider default\"",
+        "time=\"2026-11-01T05:38:33.331506100Z\" level=info msg=\"Start initial compatible provider Proxy\"",
+        "05:38:33  mihomo 已连接（432 ms） · IPv6 开启",
+        "time=\"2026-11-01T05:38:33.701071112Z\" level=info msg=\"[UDP] 127.0.0.1:52959 --> 1.1.1.1:53 match Match using Proxy[DIRECT]\"",
+        "time=\"2026-11-01T05:38:33.784523081Z\" level=info msg=\"[UDP] 127.0.0.1:47921 --> 1.1.1.1:53 match Match using Proxy[DIRECT]\"",
+        "time=\"2026-11-01T05:38:33.786422961Z\" level=info msg=\"[UDP] 127.0.0.1:46125 --> 1.1.1.1:53 match Match using Proxy[DIRECT]\"",
+        "time=\"2026-11-01T05:38:34.464829827Z\" level=info msg=\"[TCP] 127.0.0.1:36664 --> 198.18.0.8:5228 match Match using Proxy[DIRECT]\"",
+        "time=\"2026-11-01T05:38:34.928317301Z\" level=info msg=\"[TCP] 127.0.0.1:36670 --> 10.0.2.2:19281 match Match using Proxy[DIRECT]\"",
+        "time=\"2026-11-01T05:38:35.716265318Z\" level=info msg=\"[UDP] 127.0.0.1:46770 --> 10.0.2.2:19282 match Match using Proxy[DIRECT]\""
+      ]
+    }
+  ],
+  "minifiedDebugBuild": true,
+  "originalFailureReproduced": true
+}

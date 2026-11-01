@@ -19,13 +19,13 @@ public class RuntimeDataTest {
         WboxVpnService.clearTraffic();assertTrue(WboxVpnService.trafficSnapshot().isEmpty());
     }
     @Test public void streamingStatsCountsConnectionsWithoutKeepingDetails()throws Exception{
-        try(java.net.ServerSocket server=new java.net.ServerSocket(19090,1,java.net.InetAddress.getLoopbackAddress())){
+        try(java.net.ServerSocket server=new java.net.ServerSocket(0,1,java.net.InetAddress.getLoopbackAddress())){
             Thread response=new Thread(()->{try(java.net.Socket socket=server.accept()){
                 BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));String line;while((line=input.readLine())!=null&&!line.isEmpty()){}
                 StringBuilder body=new StringBuilder("{\"uploadTotal\":123456789,\"downloadTotal\":987654321,\"connections\":[");for(int i=0;i<2000;i++){if(i>0)body.append(',');body.append("{\"metadata\":{\"host\":\"example.org\"},\"chains\":[\"A\",\"B\"]}");}body.append("]}");byte[] bytes=body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
                 socket.getOutputStream().write(("HTTP/1.1 200 OK\r\nContent-Length: "+bytes.length+"\r\nConnection: close\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.US_ASCII));socket.getOutputStream().write(bytes);
             }catch(Exception e){throw new RuntimeException(e);}});response.start();
-            CoreApi.Stats stats=new CoreApi("test").stats();assertEquals(123456789,stats.upload);assertEquals(987654321,stats.download);assertEquals(2000,stats.connections);response.join(3000);
+            CoreApi.Stats stats=new CoreApi("test",server.getLocalPort()).stats();assertEquals(123456789,stats.upload);assertEquals(987654321,stats.download);assertEquals(2000,stats.connections);response.join(3000);
         }
     }
     @Test public void connectionReaderRetainsMetadataAndSkipsUnknownFields()throws Exception {
@@ -33,11 +33,11 @@ public class RuntimeDataTest {
         try(android.util.JsonReader reader=new android.util.JsonReader(new StringReader(json))){ConnectionRecord row=ConnectionRecord.read(reader);assertEquals("example.org:443",row.destination);assertEquals("tun/0",row.inbound);assertEquals("JP → Proxy",row.outbound);assertEquals(456,row.download);assertTrue(row.matches("PROXY"));}
     }
     @Test public void connectionCloseUsesAuthenticatedDelete()throws Exception {
-        try(java.net.ServerSocket server=new java.net.ServerSocket(19090,2,java.net.InetAddress.getLoopbackAddress())){
+        try(java.net.ServerSocket server=new java.net.ServerSocket(0,2,java.net.InetAddress.getLoopbackAddress())){
             java.util.concurrent.CompletableFuture<List<String>> received=java.util.concurrent.CompletableFuture.supplyAsync(()->{java.util.ArrayList<String> paths=new java.util.ArrayList<>();try{for(int i=0;i<2;i++)try(java.net.Socket socket=server.accept()){
                 BufferedReader input=new BufferedReader(new InputStreamReader(socket.getInputStream()));paths.add(input.readLine());String line;boolean auth=false;while((line=input.readLine())!=null&&!line.isEmpty())if(line.equals("Authorization: Bearer close-test"))auth=true;if(!auth)throw new AssertionError("Missing authorization");socket.getOutputStream().write("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n".getBytes(java.nio.charset.StandardCharsets.US_ASCII));
             }}catch(Exception error){throw new RuntimeException(error);}return paths;});
-            CoreApi api=new CoreApi("close-test");api.closeConnection("id with space");api.closeAllConnections();
+            CoreApi api=new CoreApi("close-test",server.getLocalPort());api.closeConnection("id with space");api.closeAllConnections();
             assertEquals(List.of("DELETE /connections/id%20with%20space HTTP/1.1","DELETE /connections HTTP/1.1"),received.get(5,java.util.concurrent.TimeUnit.SECONDS));
         }
     }

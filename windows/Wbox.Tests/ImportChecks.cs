@@ -39,8 +39,11 @@ static class ImportChecks
         check(rejected&&File.ReadAllText(config.Path)==before,"Bad remote update retains saved config");
         foreach (var core in new[]{"sing-box","mihomo"}) {
             preferences.Core=core;
-            var path=Path.Combine(Store.DirectoryPath,"expanded-"+core+".json");File.WriteAllText(path,ConfigBuilder.Build(preferences,"test"));
-            await Validate(core,path,check);
+            var path=Path.Combine(Store.DirectoryPath,"expanded-"+core+".json");for(int index=0;index<nodes.Count;index++) {
+                if(!NodeOptions.Compatible(nodes[index],core))continue;
+                preferences.SelectedNode=index;File.WriteAllText(path,ConfigBuilder.Build(preferences,"test"));
+                await Validate(core,path,check);
+            }
         }
         var naive=NodeParser.Parse("naive+https://user:password@127.0.0.1:443#Naive");
         check(NodeOptions.Compatible(naive,"sing-box")&&!NodeOptions.Compatible(naive,"mihomo"),"NaiveProxy core capability explicit");

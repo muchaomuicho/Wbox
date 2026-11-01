@@ -1,0 +1,15 @@
+PASS sing-box allocates real FakeIP record
+PASS sing-box exits through signal without forced termination
+PASS FakeIP traffic survives stop/restart before metadata timer fires
+PASS sing-box forwards through selected SOCKS upstream
+PASS sing-box hides the internal GLOBAL group
+PASS Sing-box starts in rule mode
+PASS sing-box normal stop flushes cache without killing the core
+PASS mihomo forwards through selected SOCKS upstream
+PASS mihomo hides the internal GLOBAL group
+PASS Mihomo global mode uses the selected proxy group
+PASS Mihomo global mode forwards successfully
+PASS Mihomo switches to direct
+PASS Mihomo switches to rule
+PASS mihomo normal stop flushes cache without killing the core
+14 forwarding checks passed.

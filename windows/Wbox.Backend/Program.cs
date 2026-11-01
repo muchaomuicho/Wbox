@@ -29,9 +29,10 @@ Preferences CopyPreferences() {
     return copy;
 }
 async Task CommitNodes(Preferences next) {
+    if (delayTesting) { nodeTestCancellation.Cancel(); await nodeTests; }
     var previous = prefs;
     bool restart = core.Running && prefs.Mode == "nodes";
-    if (restart && next.Nodes.Count > 0) ConfigBuilder.Build(next, "validation");
+    if (restart && next.Nodes.Count > 0) restart = ConfigBuilder.Build(next, "validation") != ConfigBuilder.Build(previous, "validation");
     if (restart) { core.Stop(); coreGeneration++; }
     try {
         if (restart && next.Nodes.Count > 0) await core.StartAsync(next);
@@ -56,21 +57,28 @@ object State() => new {
     prefs.Subscriptions, running = core.Running, startedAt = core.Running ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
 };
 async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation) {
-    CoreManager? temporary = null;
+    using var starts = new SemaphoreSlim(1);
     try {
-        var tester = core;
-        if (!core.Running) { temporary = new CoreManager(() => true); tester = temporary; await tester.StartAsync(test, transient: true); }
-        await Parallel.ForEachAsync(Enumerable.Range(0, records.Length), new ParallelOptions { MaxDegreeOfParallelism = 8, CancellationToken = cancellation }, async (i, token) => {
+        await Parallel.ForEachAsync(Enumerable.Range(0, records.Length), new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = cancellation }, async (i, token) => {
             string result;
-            if (!NodeOptions.Compatible(records[i], test.Core)) result = "不兼容";
-            else try { result = (await tester.DelayAsync(ConfigBuilder.Tag(records[i], i), test.DelayUrl, token)) + " ms"; }
-            catch (OperationCanceledException) when (token.IsCancellationRequested) { return; }
-            catch { result = "失败"; }
-            if (generation == coreGeneration && prefs.Nodes.Contains(records[i])) { records[i].DelayText = result; Write(new { changed = true }); }
+            using var tester = new CoreManager(() => true);
+            try {
+                var single = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(test))!; single.SelectedNode=i;
+                if (!NodeOptions.Compatible(records[i],test.Core)) result="不兼容";
+                else {
+                    // Serialize process startup/port allocation, then measure concurrently.
+                    await starts.WaitAsync(token);
+                    try { token.ThrowIfCancellationRequested(); await tester.StartAsync(single,transient:true); }
+                    finally { starts.Release(); }
+                    result=(await tester.DelayAsync(ConfigBuilder.Tag(records[i],i),test.DelayUrl,token))+" ms";
+                }
+            } catch (OperationCanceledException) when (token.IsCancellationRequested) { return; }
+            catch { result="失败"; }
+            if(generation==coreGeneration && prefs.Nodes.Contains(records[i])) {records[i].DelayText=result;Write(new {changed=true});}
         });
-    } catch (OperationCanceledException) { }
-    catch (Exception e) { Log("ERROR Wbox: 测速失败：" + e.Message); }
-    finally { temporary?.Dispose(); foreach (var n in records) if (n.DelayText == "测试中") n.DelayText = "—"; delayTesting = false; Write(new { changed = true }); }
+    } catch(OperationCanceledException) { }
+    catch(Exception error) {Log("ERROR Wbox: 测速失败："+error.Message);}
+    finally {foreach(var node in records)if(node.DelayText=="测试中")node.DelayText="未测试";delayTesting=false;Write(new {changed=true});}
 }
 async Task<object?> Handle(string method, JsonElement a) {
     string S(string name, string fallback = "") => a.TryGetProperty(name, out var v) ? v.GetString() ?? fallback : fallback;
@@ -86,8 +94,8 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "stats": return core.Running ? await core.StatsAsync(false) : null;
         case "groups": return core.Running ? await core.GroupsAsync() : [];
         case "connections": return core.Running ? await core.RequestAsync("GET", "/connections") : null;
-        case "mode": return core.Running ? await core.RequestAsync("GET", "/configs") : null;
-        case "setMode": if (S("mode") is not ("rule" or "global" or "direct")) throw new ArgumentException("模式无效。"); await core.RequestAsync("PATCH", "/configs", new JsonObject { ["mode"] = S("mode") }); return null;
+        case "mode": return core.Running && prefs.Core=="mihomo" ? await core.RequestAsync("GET", "/configs") : null;
+        case "setMode": await core.SetModeAsync(S("mode")); return null;
         case "select":
             await core.SelectAsync(S("group"), S("node"));
             if (prefs.Mode == "nodes" && S("group") == "Wbox") { var idx = prefs.Nodes.FindIndex(n => ConfigBuilder.Tag(n, prefs.Nodes.IndexOf(n)) == S("node")); if (idx >= 0) { prefs.SelectedNode = idx; Save(); } }
@@ -116,7 +124,7 @@ async Task<object?> Handle(string method, JsonElement a) {
             if (a.TryGetProperty("systemProxy", out var proxy)) { Idle(); prefs.SystemProxy = proxy.GetBoolean(); }
             if (a.TryGetProperty("nativeInbounds", out var native)) { Idle(); prefs.NativeInbounds = native.GetBoolean(); }
             Save(); return null;
-        case "selectNode": { var index = I("index"); if (index < 0 || index >= prefs.Nodes.Count) throw new ArgumentException("节点不存在。"); if (core.Running) { if (prefs.Mode != "nodes") throw new InvalidOperationException("请先切换到节点工作区。"); await core.SelectAsync("Wbox", ConfigBuilder.Tag(prefs.Nodes[index], index)); } prefs.SelectedNode = index; Save(); return null; }
+        case "selectNode": { var index = I("index"); if (index < 0 || index >= prefs.Nodes.Count) throw new ArgumentException("节点不存在。"); if (prefs.Mode != "nodes") throw new InvalidOperationException("请先切换到节点工作区。"); var next=CopyPreferences(); next.SelectedNode=index; await CommitNodes(next); return null; }
         case "removeNode": {
             var next = CopyPreferences(); int index = I("index"); next.Nodes.RemoveAt(index);
             if (index < next.SelectedNode) next.SelectedNode--;
@@ -153,7 +161,7 @@ async Task<object?> Handle(string method, JsonElement a) {
         }
         case "importNodes": {
             var text = S("text").Trim(); var url = S("url").Trim();
-            if (url.Length > 0) text = await ProfileImport.FetchAsync(url, prefs.Core == "sing-box" ? "sing-box" : "clash.meta");
+            if (url.Length > 0) text = await ProfileImport.FetchAsync(url, "clash.meta/1.19.33");
             var nodes = NodeParser.ParseSubscription(text); if (nodes.Count == 0) throw new FormatException("未识别到节点。完整 JSON / YAML 请导入配置工作区。");
             var next = CopyPreferences();
             if (url.Length > 0) {

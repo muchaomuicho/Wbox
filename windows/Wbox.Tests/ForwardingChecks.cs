@@ -44,6 +44,13 @@ static class ForwardingChecks {
                 await downstream.StartAsync(new Preferences{Core=engine,SystemProxy=false,Nodes=[NodeParser.Parse($"socks5://127.0.0.1:{core.ProxyPort}#upstream")]});
                 using var proxy=new HttpClient(new SocketsHttpHandler{Proxy=new WebProxy($"http://127.0.0.1:{downstream.ProxyPort}"),UseProxy=true}){Timeout=TimeSpan.FromSeconds(5)};
                 check(await proxy.GetStringAsync($"http://127.0.0.1:{port}/")=="Wbox",engine+" forwards through selected SOCKS upstream");
+                check((await downstream.GroupsAsync()).All(g=>g.Name!="GLOBAL"),engine+" hides the internal GLOBAL group");
+                if(engine=="mihomo") {
+                    await downstream.SetModeAsync("global");
+                    check((await downstream.RequestAsync("GET","/proxies"))?["proxies"]?["GLOBAL"]?["now"]?.ToString()=="Wbox","Mihomo global mode uses the selected proxy group");
+                    check(await proxy.GetStringAsync($"http://127.0.0.1:{port}/")=="Wbox","Mihomo global mode forwards successfully");
+                    foreach(var mode in new[]{"direct","rule"}){await downstream.SetModeAsync(mode);check((await downstream.RequestAsync("GET","/configs"))?["mode"]?.ToString()==mode,"Mihomo switches to "+mode);}
+                } else check(string.Equals((await downstream.RequestAsync("GET","/configs"))?["mode"]?.ToString(),"rule",StringComparison.OrdinalIgnoreCase),"Sing-box starts in rule mode");
                 downstream.Stop();
                 check(!downstreamLogs.Any(l=>l.Contains("timed out")||l.Contains("attach failed")||l.Contains("强制")),engine+" normal stop flushes cache without killing the core");
             }
