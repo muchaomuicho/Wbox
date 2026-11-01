@@ -55,7 +55,8 @@ public final class Profiles {
         else if(Collections.disjoint(root.keySet(),List.of("proxies","proxy-providers","proxy-groups","rules","mixed-port")))throw new IllegalArgumentException("需要完整 JSON / YAML 配置；节点订阅请在节点工作区导入");
         JSONArray a=configs();JSONObject profile=null;for(int i=0;i<a.length();i++)if(a.getJSONObject(i).optString("id").equals(id)){profile=a.getJSONObject(i);break;}
         if(profile==null){profile=new JSONObject().put("id",UUID.randomUUID().toString());a.put(profile);}
-        profile.put("name",source==null?core+" 配置 "+a.length():new URL(source).getHost()).put("core",core).put("content",text).put("url",source==null?"":source).put("updated",System.currentTimeMillis());
+        if(!profile.has("name"))profile.put("name",source==null?core+" 配置 "+a.length():new URL(source).getHost());
+        profile.put("core",core).put("content",text).put("url",source==null?"":source).put("updated",System.currentTimeMillis());
         data.put("configs",a);activateConfig(profile.getString("id"));save();return "已保存 "+core+" 配置";
     }
     public String importNodes(String body,String source)throws Exception {
@@ -96,6 +97,9 @@ public final class Profiles {
             JSONArray in=j.optJSONArray("inbounds"),kept=new JSONArray();if(in!=null)for(int i=0;i<in.length();i++){JSONObject v=in.getJSONObject(i);if(!v.optString("type").equals("tun")&&v.optInt("listen_port")!=10808)kept.put(v);}
             kept.put(new JSONObject().put("type","mixed").put("tag","wbox-in").put("listen","127.0.0.1").put("listen_port",10808));j.put("inbounds",kept);
             JSONObject ex=j.optJSONObject("experimental");if(ex==null)ex=new JSONObject();ex.put("clash_api",new JSONObject().put("external_controller","127.0.0.1:19090").put("secret",secret));j.put("experimental",ex);
+            JSONObject cache=ex.optJSONObject("cache_file");if(cache==null)cache=new JSONObject();cache.put("enabled",true).put("store_fakeip",true);
+            String cacheId=mode().equals("config")&&activeConfig()!=null?activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";
+            cache.put("path",new File(file.getParentFile(),"cache-"+cacheId+".db").getAbsolutePath());ex.put("cache_file",cache);
             return j.toString(2);
         }
         Map<String,Object> m;

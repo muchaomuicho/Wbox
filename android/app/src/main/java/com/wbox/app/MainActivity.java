@@ -25,6 +25,10 @@ public final class MainActivity extends Activity {
     private LinearLayout root,body,nav;
     private TextView status,upload,download,inbound,outbound,memory,rate,logText;
     private Button power;
+    private ProgressBar powerProgress;
+    private int powerState=-1;
+    private boolean latencyTesting;
+    private Future<?> latencyTask;
     private WaveView wave,downloadWave;
     private TextView uploadSpeed,downloadSpeed;
     private ConnectionAdapter connectionAdapter;
@@ -34,6 +38,7 @@ public final class MainActivity extends Activity {
     private String exportContent;
     private final Set<String> expandedGroups=new HashSet<>();
     private boolean groupsInitialized;
+    private String groupsContext="";
     private int page=0,tick;
     private long idleMemory;
     private boolean displayedRunning, importing;
@@ -43,7 +48,7 @@ public final class MainActivity extends Activity {
     private long lastTapTime;
     private AlertDialog activeForm;
     interface NodeMutation {void apply(Profiles staged)throws Exception;}
-    private boolean nodesEditable(){if(importing||WboxVpnService.starting||WboxVpnService.stopping){message("正在处理，请稍候");return false;}return true;}
+    private boolean nodesEditable(){if(importing||latencyTesting||WboxVpnService.starting||WboxVpnService.stopping){message("正在处理，请稍候");return false;}return true;}
     private void mutateNodes(NodeMutation mutation,Runnable done,java.util.function.Consumer<Throwable> failed){
         if(!nodesEditable())return;importing=true;
         io.execute(()->{try{Profiles staged=new Profiles(this).copy();mutation.apply(staged);WboxVpnService.commitNodes(this,staged.data).get();runOnUiThread(()->{importing=false;profiles.load();done.run();build();});}catch(Exception error){Throwable cause=error instanceof ExecutionException&&error.getCause()!=null?error.getCause():error;runOnUiThread(()->{importing=false;failed.accept(cause);});}});
@@ -83,7 +88,7 @@ public final class MainActivity extends Activity {
         LinearLayout workspace=row();workspace.setPadding(dp(20),dp(12),dp(20),dp(4));
         for(String key:List.of("config","nodes")){Button b=button(key.equals("config")?"配置工作区":"节点工作区",profiles.mode().equals(key)?SELECTED:BG,profiles.mode().equals(key)?INK:MUTED);workspace.addView(b,new LinearLayout.LayoutParams(0,dp(38),1));b.setOnClickListener(v->{if(!editable())return;try{profiles.setWorkspace(key);save();nodeSource="";build();}catch(Exception e){failure(e);}});}
         LinearLayout header=row();header.setPadding(dp(20),dp(16),dp(20),dp(12));header.setBackgroundColor(SURFACE);workspace.setBackgroundColor(SURFACE);
-        power=button("▶",SURFACE,INK);power.setTypeface(Typeface.MONOSPACE);power.setTextSize(12);power.setOnClickListener(v->toggle());header.addView(power,new LinearLayout.LayoutParams(dp(96),dp(44)));
+        power=button("▶",SURFACE,INK);power.setTypeface(Typeface.MONOSPACE);power.setTextSize(12);power.setOnClickListener(v->toggle());FrameLayout powerFrame=new FrameLayout(this);powerFrame.addView(power,new FrameLayout.LayoutParams(-1,-1));powerProgress=new ProgressBar(this);powerProgress.setIndeterminateTintList(ColorStateList.valueOf(MUTED));FrameLayout.LayoutParams progressLayout=new FrameLayout.LayoutParams(dp(18),dp(18),Gravity.CENTER);powerFrame.addView(powerProgress,progressLayout);powerProgress.setVisibility(View.GONE);powerState=-1;header.addView(powerFrame,new LinearLayout.LayoutParams(dp(96),dp(44)));
         String[] titles={"概览",profiles.mode().equals("config")?"代理组":"节点",profiles.mode().equals("config")?"配置":"订阅","日志","设置","连接"};
         TextView title=text(titles[page],18,INK);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);title.setPadding(dp(16),0,0,0);header.addView(title,new LinearLayout.LayoutParams(0,-2,1));
         TextView logo=text("Wbox",22,INK);logo.setTypeface(Typeface.create("serif",Typeface.BOLD));header.addView(logo);root.addView(header);root.addView(workspace);
@@ -150,12 +155,12 @@ public final class MainActivity extends Activity {
     }
     private TextView total(LinearLayout parent,String label){LinearLayout c=card();c.addView(text(label,11,MUTED));TextView value=text("0 B",28,INK);value.setPadding(0,dp(14),0,0);c.addView(value);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1);if(parent.getChildCount()==0)lp.rightMargin=dp(12);parent.addView(c,lp);return value;}
     private TextView stat(LinearLayout parent,String label,String value){LinearLayout c=column();c.addView(text(label,11,MUTED));TextView big=text(value,20,INK);big.setMaxLines(1);big.setAutoSizeTextTypeUniformWithConfiguration(12,20,1,android.util.TypedValue.COMPLEX_UNIT_SP);big.setPadding(0,dp(10),0,0);c.addView(big,new LinearLayout.LayoutParams(-1,dp(36)));parent.addView(c,new LinearLayout.LayoutParams(0,-2,1));return big;}
-    private void toggle(){if(importing){message("请等待导入完成");return;}if(WboxVpnService.stopping){message("隧道正在关闭，请稍候");return;}if(WboxVpnService.running||WboxVpnService.starting){startService(new Intent(this,WboxVpnService.class).setAction(WboxVpnService.STOP));return;}try{profiles.compile("check");Intent permission=VpnService.prepare(this);if(permission!=null)startActivityForResult(permission,10);else startVpn();}catch(Exception e){failure(e);}}
-    private void startVpn(){startForegroundService(new Intent(this,WboxVpnService.class));handler.postDelayed(this::update,100);}
+    private void toggle(){if(importing){message("请等待导入完成");return;}if(latencyTesting&&latencyTask!=null){latencyTask.cancel(true);if(!WboxVpnService.running){message("测速已取消");return;}}if(WboxVpnService.stopping){message("隧道正在关闭，请稍候");return;}if(WboxVpnService.running||WboxVpnService.starting){power.setText("");powerProgress.setVisibility(View.VISIBLE);startService(new Intent(this,WboxVpnService.class).setAction(WboxVpnService.STOP));return;}try{profiles.compile("check");Intent permission=VpnService.prepare(this);if(permission!=null)startActivityForResult(permission,10);else startVpn();}catch(Exception e){failure(e);}}
+    private void startVpn(){power.setText("");powerProgress.setVisibility(View.VISIBLE);startForegroundService(new Intent(this,WboxVpnService.class));handler.postDelayed(this::update,100);}
     @Override protected void onActivityResult(int req,int result,Intent intent){super.onActivityResult(req,result,intent);if(req==10){if(result==RESULT_OK)startVpn();else message("需要 VPN 权限才能接管流量");}if(req==12&&result==RESULT_OK&&intent!=null&&exportContent!=null){String content=exportContent;exportContent=null;Uri target=intent.getData();io.execute(()->{try(OutputStream out=getContentResolver().openOutputStream(target)){out.write(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));runOnUiThread(()->message("配置已导出"));}catch(Exception e){failure(e);}});}if(req==11&&result==RESULT_OK&&intent!=null){if(profiles.mode().equals("config")?!editable():!nodesEditable())return;Uri uri=intent.getData();io.execute(()->{try(InputStream in=getContentResolver().openInputStream(uri)){String s=Profiles.readLimited(in);runOnUiThread(()->importValue(s,null));}catch(Exception e){failure(e);}});}}
     private void update(){
         tick++;
-        if(power!=null){long seconds=Math.max(0,(SystemClock.elapsedRealtime()-WboxVpnService.startedAt)/1000);power.setText(WboxVpnService.running?String.format(Locale.ROOT,"%d:%02d:%02d ■",seconds/3600,seconds/60%60,seconds%60):WboxVpnService.starting?"取消":"▶");power.setEnabled(!WboxVpnService.stopping);power.setContentDescription(WboxVpnService.running?"断开代理连接":"连接代理");}
+        if(power!=null){int next=WboxVpnService.stopping?3:WboxVpnService.starting?1:WboxVpnService.running?2:0;long seconds=Math.max(0,(SystemClock.elapsedRealtime()-WboxVpnService.startedAt)/1000);boolean transition=next==1||next==3;power.setText(transition?"":next==2?String.format(Locale.ROOT,"%d:%02d:%02d ■",seconds/3600,seconds/60%60,seconds%60):"▶");power.setEnabled(next!=3);power.setContentDescription(next==3?"正在停止":next==1?"正在启动，点击取消":next==2?"断开代理连接":"连接代理");powerProgress.setVisibility(transition?View.VISIBLE:View.GONE);if(powerState!=next){powerState=next;power.animate().cancel();power.setAlpha(.55f);power.animate().alpha(1f).setDuration(160).start();}}
         if(page==5&&connectionAdapter!=null&&displayedConnections!=WboxVpnService.connectionRows){displayedConnections=WboxVpnService.connectionRows;connectionAdapter.load();}
 
         if(page==1&&displayedRunning!=WboxVpnService.running){build();return;}
@@ -169,7 +174,7 @@ public final class MainActivity extends Activity {
             uploadSpeed.setText(bytes(WboxVpnService.upRate)+"/s");downloadSpeed.setText(bytes(WboxVpnService.downRate)+"/s");
             if(wave!=null){List<WboxVpnService.TrafficSample> history=WboxVpnService.trafficSnapshot();wave.setSamples(history);downloadWave.setSamples(history);}
         }
-        if(logText!=null&&!logsPaused&&tick%2==0){String value=filteredLogs();if(value.isEmpty())value="连接后，运行日志会显示在这里。";if(!value.contentEquals(logText.getText()))logText.setText(value);}
+        if(logText!=null&&!logsPaused&&tick%2==0){String value=filteredLogs();if(value.isEmpty())value="连接后，运行日志会显示在这里。";if(!value.contentEquals(logText.getText()))logText.setText(LogStyle.color(value,palette.dark));}
     }
     
     public static String bytes(long n){if(n<1024)return n+" B";double x=n;String[] units={"B","KB","MB","GB","TB"};int i=0;while(x>=1024&&i<4){x/=1024;i++;}return String.format(Locale.ROOT,x>=100?"%.0f %s":"%.1f %s",x,units[i]);}
@@ -197,8 +202,9 @@ public final class MainActivity extends Activity {
         NodeAdapter(){load();}
         void load(){
             entries.clear();displayedGroups=WboxVpnService.proxies;
+            String context=profiles.data.optString("active_config")+":"+WboxVpnService.startedAt;if(!context.equals(groupsContext)){groupsContext=context;expandedGroups.clear();groupsInitialized=false;delays.clear();}
             if(profiles.mode().equals("config")){JSONObject groups=WboxVpnService.proxies;Iterator<String> keys=groups.keys();while(keys.hasNext()){String name=keys.next();JSONObject g=groups.optJSONObject(name);if(g==null||g.optJSONArray("all")==null)continue;JSONArray all=g.optJSONArray("all");if(profiles.engine().equals("sing-box")&&name.equals("GLOBAL"))continue;if(!groupsInitialized){expandedGroups.add(name);groupsInitialized=true;}
-                entries.add(new NodeEntry(name,name,g.optString("type")+"  ·  "+all.length(),false,false,true));if(expandedGroups.contains(name))for(int i=0;i<all.length();i++){String n=all.optString(i);JSONObject info=groups.optJSONObject(n);entries.add(new NodeEntry(n,name,info==null?"—":info.optString("type"),g.optString("now").equals(n),g.optString("type").equalsIgnoreCase("Selector"),false));if(info!=null){JSONArray history=info.optJSONArray("history");if(history!=null&&history.length()>0){long latency=history.optJSONObject(history.length()-1).optLong("delay");delays.put(name+"/"+n,latency>0?latency+" ms":"超时");}}}}}
+                entries.add(new NodeEntry(name,name,g.optString("type")+"  ·  "+all.length(),false,false,true));if(expandedGroups.contains(name))for(int i=0;i<all.length();i++){String n=all.optString(i);JSONObject info=groups.optJSONObject(n);entries.add(new NodeEntry(n,name,info==null?"—":info.optString("type"),g.optString("now").equals(n),g.optString("type").equalsIgnoreCase("Selector"),false));}}}
             else try{for(Node n:profiles.nodes()){
                 if(nodeSource.equals("manual")&&!n.source.isEmpty()||!nodeSource.isEmpty()&&!nodeSource.equals("manual")&&!nodeSource.equals(n.source))continue;
                 if(!(n.name+" "+n.server+" "+n.protocol).toLowerCase(Locale.ROOT).contains(nodeSearch.toLowerCase(Locale.ROOT)))continue;
@@ -208,12 +214,14 @@ public final class MainActivity extends Activity {
         public int getCount(){return entries.size();}public Object getItem(int p){return entries.get(p);}public long getItemId(int p){return p;}public int getViewTypeCount(){return 2;}public int getItemViewType(int p){return entries.get(p).header?1:0;}
         public View getView(int p,View recycled,ViewGroup parent){
             NodeEntry n=entries.get(p);
-            if(n.header){LinearLayout wrap=recycled instanceof LinearLayout?(LinearLayout)recycled:column();wrap.removeAllViews();wrap.setPadding(0,dp(10),0,dp(10));LinearLayout c=card();TextView title=text(n.name+"   "+(expandedGroups.contains(n.name)?"⌃":"⌄"),16,INK);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);c.addView(title);TextView detail=text(n.detail+(expandedGroups.contains(n.name)?"":"\n"+"● ".repeat(Math.min(24,Integer.parseInt(n.detail.substring(n.detail.lastIndexOf("  ·  ")+5))))),12,MUTED);detail.setPadding(0,dp(10),0,0);c.addView(detail);c.setOnClickListener(v->{if(!expandedGroups.remove(n.name))expandedGroups.add(n.name);load();notifyDataSetChanged();});c.setContentDescription(n.name+"，展开或折叠");c.setFocusable(true);wrap.addView(c);return wrap;}
+            if(n.header){LinearLayout wrap=recycled instanceof LinearLayout?(LinearLayout)recycled:column();wrap.removeAllViews();wrap.setPadding(0,dp(10),0,dp(10));LinearLayout c=card(),head=row();TextView title=text("",15,INK);title.setText(FlagLabels.text(MainActivity.this,n.name,21));title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);head.addView(title,new LinearLayout.LayoutParams(0,-2,1));Button test=button("测速",WHITE,MUTED);test.setPadding(dp(4),0,dp(4),0);test.setMaxLines(1);test.setEnabled(!latencyTesting);test.setContentDescription("测试代理组 "+n.name);test.setOnClickListener(v->testGroup(n.name));head.addView(test,new LinearLayout.LayoutParams(dp(64),dp(44)));head.addView(text(expandedGroups.contains(n.name)?"⌃":"⌄",18,MUTED));c.addView(head);TextView detail=text(n.detail,12,MUTED);detail.setPadding(0,dp(8),0,dp(12));c.addView(detail);
+                if(!expandedGroups.contains(n.name)){JSONObject group=WboxVpnService.proxies.optJSONObject(n.name);JSONArray all=group==null?new JSONArray():group.optJSONArray("all");List<String> values=new ArrayList<>();StringBuilder description=new StringBuilder("节点延迟：");int selected=-1;if(all!=null)for(int i=0;i<all.length();i++){String name=all.optString(i),delay=groupDelay(n.name,name);values.add(delay);if(name.equals(group.optString("now")))selected=i;description.append(name).append(' ').append(delay).append("；");}c.addView(new GroupDelayView(MainActivity.this,values,selected,palette,description.toString()),new LinearLayout.LayoutParams(-1,-2));}
+                c.setOnClickListener(v->{if(!expandedGroups.remove(n.name))expandedGroups.add(n.name);load();notifyDataSetChanged();});c.setContentDescription(n.name+"，展开或折叠");c.setFocusable(true);wrap.addView(c);return wrap;}
             NodeRow holder;
             if(recycled==null){holder=new NodeRow();recycled=holder.outer;recycled.setTag(holder);}else holder=(NodeRow)recycled.getTag();
             holder.title.setText(FlagLabels.text(MainActivity.this,n.name,21));holder.detail.setText(n.detail);holder.check.setText("✓");holder.check.setVisibility(n.selected?View.VISIBLE:View.GONE);
             GradientDrawable background=outlined(n.selected||selectedRow.equals(n.name)?SELECTED:WHITE,16);if(n.selected)background.setStroke(dp(1),INK);holder.inner.setBackground(background);
-            holder.delay.setText(delays.getOrDefault(n.key(),"测速"));holder.delay.setVisibility(View.VISIBLE);
+            String delay=profiles.mode().equals("config")?groupDelay(n.group,n.name):delays.getOrDefault(n.key(),"测速");holder.delay.setText(delay);holder.delay.setTextColor(delay.endsWith(" ms")||delay.equals("失败")||delay.equals("超时")?GroupDelayView.tone(delay,palette):MUTED);holder.delay.setVisibility(View.VISIBLE);
             holder.delay.setEnabled(!"测试中".equals(delays.get(n.key())));holder.delay.setOnClickListener(v->testDelay(n));
             holder.inner.setOnClickListener(v->{if(profiles.mode().equals("config")){if(n.selectable)selectNode(n);else message("此代理组由内核自动选择节点");return;}long now=SystemClock.uptimeMillis();selectedRow=n.name;boolean twice=lastTapped.equals(n.name)&&now-lastTapTime<500;lastTapped=twice?"":n.name;lastTapTime=now;notifyDataSetChanged();if(twice)selectNode(n);});
             holder.inner.setOnKeyListener((v,key,event)->{if(event.getAction()==KeyEvent.ACTION_DOWN&&(key==KeyEvent.KEYCODE_ENTER||key==KeyEvent.KEYCODE_DPAD_CENTER)){if(n.selectable)selectNode(n);return true;}return false;});
@@ -280,17 +288,19 @@ public final class MainActivity extends Activity {
     private void testDelay(NodeEntry n){
         runLatency(List.of(n));
     }
+    private String groupDelay(String group,String name){String local=delays.get(group+"/"+name);if(local!=null)return local;JSONObject info=WboxVpnService.proxies.optJSONObject(name);JSONArray history=info==null?null:info.optJSONArray("history");if(history!=null&&history.length()>0){long delay=history.optJSONObject(history.length()-1).optLong("delay");return delay>0?delay+" ms":"失败";}return "未测试";}
+    private void testGroup(String name){JSONObject group=WboxVpnService.proxies.optJSONObject(name);JSONArray all=group==null?null:group.optJSONArray("all");List<NodeEntry> entries=new ArrayList<>();if(all!=null)for(int i=0;i<all.length();i++)entries.add(new NodeEntry(all.optString(i),name,"",false,false,false));runLatency(entries);}
     private void testAllNodes(){
         if(nodeAdapter==null)return;
         List<NodeEntry> entries=new ArrayList<>();for(NodeEntry n:nodeAdapter.entries)if(!n.header)entries.add(n);
         runLatency(entries);
     }
     private void runLatency(List<NodeEntry> entries){
-        if(importing||WboxVpnService.starting||WboxVpnService.stopping||entries.isEmpty())return;
+        if(importing||latencyTesting||WboxVpnService.starting||WboxVpnService.stopping||entries.isEmpty())return;
         String url=profiles.data.optString("test_url",Profiles.TEST_URL);
         if(profiles.engine().equals("sing-box")&&!url.startsWith("https://")){message("sing-box 测速需要 HTTPS 地址，请在设置中修改。");return;}
-        importing=true;for(NodeEntry n:entries)delays.put(n.key(),"测试中");if(nodeAdapter!=null)nodeAdapter.notifyDataSetChanged();
-        io.execute(()->{try{List<String> names=new ArrayList<>();for(NodeEntry n:entries)if(!names.contains(n.name))names.add(n.name);NodeLatencyTester.run(this,profiles,names,(name,value)->runOnUiThread(()->{for(NodeEntry n:entries)if(n.name.equals(name))delays.put(n.key(),value);if(nodeAdapter!=null)nodeAdapter.notifyDataSetChanged();}));}catch(Exception e){failure(e);}finally{runOnUiThread(()->{importing=false;for(NodeEntry n:entries)if("测试中".equals(delays.get(n.key())))delays.put(n.key(),"失败");if(nodeAdapter!=null)nodeAdapter.notifyDataSetChanged();});}});
+        latencyTesting=true;for(NodeEntry n:entries)delays.put(n.key(),"测试中");if(nodeAdapter!=null)nodeAdapter.notifyDataSetChanged();
+        latencyTask=io.submit(()->{try{List<String> names=new ArrayList<>();for(NodeEntry n:entries)if(!names.contains(n.name))names.add(n.name);NodeLatencyTester.run(this,profiles,names,(name,value)->runOnUiThread(()->{for(NodeEntry n:entries)if(n.name.equals(name))delays.put(n.key(),value);if(nodeAdapter!=null)nodeAdapter.notifyDataSetChanged();}));}catch(InterruptedException ignored){Thread.currentThread().interrupt();}catch(Exception e){failure(e);}finally{runOnUiThread(()->{latencyTesting=false;for(NodeEntry n:entries)if("测试中".equals(delays.get(n.key())))delays.put(n.key(),"未测试");if(nodeAdapter!=null)nodeAdapter.notifyDataSetChanged();});}});
     }
     private void importDialog(){
         boolean config=profiles.mode().equals("config");if(config?!editable():!nodesEditable())return;
@@ -330,7 +340,8 @@ public final class MainActivity extends Activity {
         Iterator<String> keys=subs.keys();while(keys.hasNext()){String url=keys.next();LinearLayout c=card();String title=url;try{title=new java.net.URL(url).getHost();}catch(Exception ignored){}item(c,title,"点击更新节点",()->beginImport(url,true,false,null));Button remove=button("移除此订阅",WHITE,MUTED);c.addView(remove);remove.setOnClickListener(v->mutateNodes(staged->{JSONArray keep=new JSONArray();for(Node n:staged.nodes())if(!n.source.equals(url))keep.put(n.storage());staged.data.put("nodes",keep);staged.data.getJSONObject("subscriptions").remove(url);},()->{},this::failure));addCard(c);}
     }
     private void profileActions(JSONObject profile){
-        new AlertDialog.Builder(this).setTitle(profile.optString("name")).setItems(new String[]{"编辑配置","导出文件","移除配置"},(dialog,which)->{
+        new AlertDialog.Builder(this).setTitle(profile.optString("name")).setItems(new String[]{"编辑配置","导出文件","移除配置","重命名"},(dialog,which)->{
+            if(which==3){LinearLayout form=column();EditText name=formInput(form,"名称",profile.optString("name"),false);name.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(100)});TextView error=text("",12,0xffbd2945);form.addView(error);AlertDialog editor=formDialog("重命名配置",form,"保存");editor.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(v->{try{String value=name.getText().toString().trim();if(value.isEmpty())throw new IllegalArgumentException("请填写配置名称。");profile.put("name",value);profiles.save();editor.dismiss();build();}catch(Exception e){error.setText(e.getMessage());}});return;}
             if(which==1){exportContent=profile.optString("content");startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("text/plain").addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE,profile.optString("core").equals("sing-box")?"config.json":"config.yaml"),12);return;}
             if(!editable())return;
             if(which==0){LinearLayout form=column();EditText edit=formInput(form,"配置内容",profile.optString("content"),true);edit.setTypeface(Typeface.MONOSPACE);TextView error=text("",12,0xffbd2945);form.addView(error);AlertDialog editor=formDialog("编辑配置",form,"保存");editor.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(v->{try{profiles.importConfig(edit.getText().toString(),profile.optString("url").isEmpty()?null:profile.optString("url"),profile.optString("id"));editor.dismiss();build();}catch(Exception e){error.setText(e.getMessage());}});return;}
@@ -338,14 +349,14 @@ public final class MainActivity extends Activity {
         }).show();
     }
     private void logsPage(){
-        EditText search=searchBox("搜索日志",logSearch,value->{logSearch=value;if(logText!=null)logText.setText(filteredLogs());});body.addView(search);gap(12);
+        EditText search=searchBox("搜索日志",logSearch,value->{logSearch=value;if(logText!=null)logText.setText(LogStyle.color(filteredLogs(),palette.dark));});body.addView(search);gap(12);
         Button pause=button(logsPaused?"继续":"暂停",SURFACE,INK);pause.setOnClickListener(v->{logsPaused=!logsPaused;pause.setText(logsPaused?"继续":"暂停");});body.addView(pause,new LinearLayout.LayoutParams(-1,dp(40)));gap(12);
         toolbar("复制日志",()->{android.content.ClipboardManager clipboard=(android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);clipboard.setPrimaryClip(ClipData.newPlainText("Wbox logs",String.join("\n",WboxVpnService.logSnapshot())));message("日志已复制");},"清空日志",()->{synchronized(WboxVpnService.logs){WboxVpnService.logs.clear();}build();});
-        LinearLayout c=card();TextView label=text("最近 350 条",11,MUTED);label.setPadding(0,0,0,dp(18));c.addView(label);String value=filteredLogs();logText=text(value.isEmpty()?"连接后，运行日志会显示在这里。":value,11,MUTED);logText.setTypeface(Typeface.MONOSPACE);logText.setTextIsSelectable(true);logText.setMinHeight(dp(240));c.addView(logText);addCard(c);
+        LinearLayout c=card();TextView label=text("最近 350 条",11,MUTED);label.setPadding(0,0,0,dp(18));c.addView(label);String value=filteredLogs();logText=text("",11,INK);logText.setText(LogStyle.color(value.isEmpty()?"连接后，运行日志会显示在这里。":value,palette.dark));logText.setTypeface(Typeface.MONOSPACE);logText.setTextIsSelectable(true);logText.setMinHeight(dp(240));c.addView(logText);addCard(c);
     }
     private void settingsPage(){
         if(settingsSection.isEmpty()){
-            for(String name:List.of("外观","应用","内核","延迟测试")){LinearLayout c=card();item(c,name,null,()->{settingsSection=name;build();});addCard(c);}TextView about=text("Wbox 0.5.1\nsing-box 1.14.4 / mihomo 1.19.33\n\n国旗：Twemoji · CC-BY-4.0",12,MUTED);about.setPadding(0,dp(16),0,0);body.addView(about);return;
+            for(String name:List.of("外观","应用","内核","延迟测试")){LinearLayout c=card();item(c,name,null,()->{settingsSection=name;build();});addCard(c);}TextView about=text("Wbox 0.5.2\nsing-box 1.14.4 / mihomo 1.19.33\n\n国旗：Twemoji · CC-BY-4.0",12,MUTED);about.setPadding(0,dp(16),0,0);body.addView(about);return;
         }
         action("‹  返回设置",()->{settingsSection="";build();});
         if(settingsSection.equals("外观")){LinearLayout c=card();item(c,"主题",profiles.data.optString("theme","auto").equals("auto")?"跟随系统":palette.dark?"深色":"浅色",()->new AlertDialog.Builder(this).setTitle("主题").setItems(new String[]{"跟随系统","浅色","深色"},(d,which)->{try{profiles.data.put("theme",new String[]{"auto","light","dark"}[which]);save();recreate();}catch(Exception e){failure(e);}}).show());addCard(c);return;}
@@ -356,7 +367,7 @@ public final class MainActivity extends Activity {
         LinearLayout testCard=card();TextView title=text("延迟测试",14,INK);title.setTypeface(Typeface.DEFAULT,Typeface.BOLD);testCard.addView(title);TextView help=text("默认使用 Apple 测试页，sing-box 需要 HTTPS。",11,MUTED);help.setPadding(0,dp(8),0,dp(14));testCard.addView(help);
         EditText test=formInput(testCard,"测试地址",profiles.data.optString("test_url",Profiles.TEST_URL),false);test.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_URI);
         LinearLayout actions=row();actions.setGravity(Gravity.END);actions.setPadding(0,dp(12),0,0);Button reset=button("恢复默认",SURFACE,INK),saveTest=button("保存",INK,WHITE);LinearLayout.LayoutParams resetLayout=new LinearLayout.LayoutParams(0,dp(44),1);resetLayout.rightMargin=dp(8);actions.addView(reset,resetLayout);actions.addView(saveTest,new LinearLayout.LayoutParams(0,dp(44),1));testCard.addView(actions);reset.setOnClickListener(v->test.setText(Profiles.TEST_URL));saveTest.setOnClickListener(v->{try{String url=test.getText().toString().trim();java.net.URI uri=new java.net.URI(url);if(!List.of("https","http").contains(uri.getScheme())||uri.getHost()==null)throw new IllegalArgumentException("请填写 HTTP / HTTPS 测试地址");profiles.data.put("test_url",url);save();message("已保存");}catch(Exception e){failure(e);}});addCard(testCard);
-        LinearLayout about=card();about.addView(text("Wbox 0.5.1",17,INK));TextView info=text("mihomo 1.19.33 / sing-box 1.14.4\n\n原生界面 · 单内核运行 · 后台低频采样\nGPL-3.0 · Android ARM64",12,MUTED);info.setPadding(0,dp(10),0,0);about.addView(info);addCard(about);
+        LinearLayout about=card();about.addView(text("Wbox 0.5.2",17,INK));TextView info=text("mihomo 1.19.33 / sing-box 1.14.4\n\n原生界面 · 单内核运行 · 后台低频采样\nGPL-3.0 · Android ARM64",12,MUTED);info.setPadding(0,dp(10),0,0);about.addView(info);addCard(about);
     }
     private void appsDialog(){String[] modes={"全部应用","只代理所选应用","绕过所选应用"};String[] keys={"all","include","exclude"};String current=profiles.data.optString("app_mode","all");int index=Arrays.asList(keys).indexOf(current);new AlertDialog.Builder(this).setTitle("分应用模式").setSingleChoiceItems(modes,Math.max(0,index),(dialog,which)->{dialog.dismiss();try{profiles.data.put("app_mode",keys[which]);save();if(which==0){build();return;}chooseApps();}catch(Exception e){failure(e);}}).setNegativeButton("取消",null).show();}
     private void chooseApps(){List<ApplicationInfo> apps=new ArrayList<>(getPackageManager().getInstalledApplications(0));apps.removeIf(a->a.packageName.equals(getPackageName()));apps.sort(Comparator.comparing(a->getPackageManager().getApplicationLabel(a).toString(),String.CASE_INSENSITIVE_ORDER));String[] titles=new String[apps.size()];boolean[] selected=new boolean[apps.size()];Set<String> chosen=new HashSet<>();JSONArray prev=profiles.data.optJSONArray("apps");if(prev!=null)for(int i=0;i<prev.length();i++)chosen.add(prev.optString(i));for(int i=0;i<apps.size();i++){ApplicationInfo a=apps.get(i);titles[i]=getPackageManager().getApplicationLabel(a)+"\n"+a.packageName;selected[i]=chosen.contains(a.packageName);}new AlertDialog.Builder(this).setTitle("选择应用").setMultiChoiceItems(titles,selected,(d,which,checked)->selected[which]=checked).setPositiveButton("保存",(d,w)->{try{JSONArray a=new JSONArray();for(int i=0;i<apps.size();i++)if(selected[i])a.put(apps.get(i).packageName);profiles.data.put("apps",a);save();message("已保存，下次连接生效");build();}catch(Exception e){failure(e);}}).setNegativeButton("取消",null).show();}

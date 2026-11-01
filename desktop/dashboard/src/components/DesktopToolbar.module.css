@@ -102,11 +102,12 @@
   display: flex;
   gap: var(--space-8);
   align-items: center;
+  min-width: 96px;
 }
 
 .toolbar-service .toolbar-service-button {
   gap: var(--space-6);
-  width: auto;
+  width: 96px;
   min-width: var(--control-height);
   padding: 0 var(--space-10);
 }
@@ -115,7 +116,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--control-height);
+  width: 96px;
   height: var(--control-height);
   background: var(--hover);
   border-radius: var(--radius-md);
@@ -124,6 +125,8 @@
 .toolbar-spinner :global(.spinner) {
   border-top-color: var(--text-secondary);
 }
+
+.toolbar-service > :global(button) { width: 96px; transition: background-color 160ms ease, color 160ms ease; }
 
 .toolbar-uptime {
   composes: text-mono-caption from global;

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { serverDisplayName, type ServersState } from "../api/config";
 import { formatUptime } from "../api/format";
@@ -73,26 +73,28 @@ export function DesktopServiceControls(props: { host: DesktopHost }) {
   const serviceStatus = useStream(api.serviceStatus);
   const { profiles } = useDesktopProfiles(host);
   const [busy, setBusy] = useState(false);
+  const [waitingFor,setWaitingFor]=useState<ServiceStatus_Type|null>(null);
 
   const statusType = serviceStatus.data.status?.status ?? ServiceStatus_Type.IDLE;
   const started = statusType === ServiceStatus_Type.STARTED;
   const transitioning =
     statusType === ServiceStatus_Type.STARTING || statusType === ServiceStatus_Type.STOPPING;
+  useEffect(()=>{if(waitingFor!==null&&statusType===waitingFor){setWaitingFor(null);setBusy(false);}},[statusType,waitingFor]);
 
   const run = (action: () => Promise<void>) => {
     setBusy(true);
     action()
-      .catch(showError)
-      .finally(() => {
+      .then(() => {
+        setWaitingFor(started?ServiceStatus_Type.IDLE:ServiceStatus_Type.STARTED);
         api.serviceStatus.reconnectNow();
-        setBusy(false);
-      });
+      })
+      .catch(error=>{setBusy(false);setWaitingFor(null);showError(error);api.serviceStatus.reconnectNow();});
   };
 
   return (
     <div className={styles.toolbarService}>
-      {transitioning ? (
-        <span className={styles.toolbarSpinner}>
+      {transitioning || busy ? (
+        <span className={styles.toolbarSpinner} role="status" aria-label={started ? "正在停止" : "正在启动"}>
           <Spinner />
         </span>
       ) : started ? (

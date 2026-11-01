@@ -62,7 +62,7 @@ public final class WboxVpnService extends VpnService {
     private long corePid,previousUp,previousDown,lastPoll;
     private int pollTicks;
     private static final int NOTIFY=42;
-    static void log(String text){synchronized(logs){if(logs.size()>=350)logs.removeFirst();if(text.length()>4096)text=text.substring(0,4096);logs.addLast(new java.text.SimpleDateFormat("HH:mm:ss",Locale.ROOT).format(new Date())+"  "+text);}}
+    static void log(String text){text=LogStyle.plain(text);synchronized(logs){if(logs.size()>=350)logs.removeFirst();if(text.length()>4096)text=text.substring(0,4096);logs.addLast(LogStyle.timestamped(text)?text:new java.text.SimpleDateFormat("HH:mm:ss",Locale.ROOT).format(new Date())+"  "+text);}}
     public static List<String> logSnapshot(){synchronized(logs){return new ArrayList<>(logs);}}
     public static CoreApi api(){return new CoreApi(secret);}
     @Override public void onCreate(){super.onCreate();NotificationManager m=getSystemService(NotificationManager.class);NotificationChannel ch=new NotificationChannel("vpn","代理连接",NotificationManager.IMPORTANCE_LOW);ch.setShowBadge(false);m.createNotificationChannel(ch);}
@@ -76,7 +76,7 @@ public final class WboxVpnService extends VpnService {
     }
     private void startCore()throws Exception{
         NativeTunnel.prepare();if(shuttingDown)return;
-        Profiles p=new Profiles(this);secret=UUID.randomUUID().toString();File dir=new File(getFilesDir(),"runtime");dir.mkdirs();File config=new File(dir,p.engine().equals("sing-box")?"config.json":"config.yaml");Files.write(config.toPath(),p.compile(secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        Profiles p=new Profiles(this);secret=UUID.randomUUID().toString();String profile=p.mode().equals("config")&&p.activeConfig()!=null?p.activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";File dir=new File(getFilesDir(),"runtime/"+p.engine()+"/"+profile);dir.mkdirs();File config=new File(dir,p.engine().equals("sing-box")?"config.json":"config.yaml");Files.write(config.toPath(),p.compile(secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         File binary=new File(getApplicationInfo().nativeLibraryDir,p.engine().equals("sing-box")?"libsingbox.so":"libmihomo.so");if(!binary.isFile())throw new IOException("安装包缺少内核 "+binary.getName());
         List<String> cmd=new ArrayList<>(List.of("/system/bin/sh","-c","echo $$; exec \"$@\"","wbox",binary.getAbsolutePath()));
         if(p.engine().equals("sing-box"))cmd.addAll(List.of("run","-c",config.getAbsolutePath(),"-D",dir.getAbsolutePath()));else cmd.addAll(List.of("-f",config.getAbsolutePath(),"-d",dir.getAbsolutePath()));

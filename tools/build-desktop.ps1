@@ -3,6 +3,8 @@ $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 Push-Location $repo
 try {
+    & gcc -Os -s -municode -static native/core-host.c -o resources/cores/windows/wbox-core-host.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Core host build failed (MinGW-w64 gcc required)' }
     & dotnet publish windows/Wbox.Backend -c Release -r win-x64 --self-contained true -o windows/backend-publish
     if ($LASTEXITCODE -ne 0) { throw 'Backend publish failed' }
     Push-Location desktop

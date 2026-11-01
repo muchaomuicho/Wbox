@@ -17,7 +17,7 @@ public static class StartupPolicy
     public static void Check(string config, string core) {
         var root = JsonNode.Parse(config)!;
         var tun = core == "sing-box" ? (root["inbounds"] as JsonArray)?.Any(i => i?["type"]?.ToString() == "tun") == true : root["tun"]?["enable"]?.GetValue<bool>() == true;
-        if (tun && !Elevated) throw new InvalidOperationException("配置包含 TUN，需要管理员权限。请在设置中以管理员身份重启，或在概览选择「系统代理」后连接。");
+        if (tun && !Elevated) throw new InvalidOperationException("配置包含 TUN，需要管理员权限。请退出 Wbox 后右键选择「以管理员身份运行」；或关闭设置中的「保留配置中的原生入站」，使用系统代理。");
         var listeners = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
         if (core == "sing-box" && root["inbounds"] is JsonArray inbounds) foreach (var inbound in inbounds) {
             if (int.TryParse(inbound?["listen_port"]?.ToString(), out var port) && listeners.Any(l => l.Port == port))

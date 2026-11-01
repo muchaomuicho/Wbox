@@ -32,7 +32,7 @@ public static class ConfigBuilder
         }
         return output.ToString();
     }
-    public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort)
+    public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort, bool transient = false)
     {
         JsonObject root;
         bool singbox = preferences.Core == "sing-box";
@@ -57,6 +57,11 @@ public static class ConfigBuilder
             }
             var experimental = root["experimental"] as JsonObject ?? new JsonObject(); root["experimental"] = experimental.DeepClone();
             var e = root["experimental"]!.AsObject();
+            var cache = e["cache_file"] as JsonObject;
+            if (cache == null) { cache = new JsonObject(); e["cache_file"] = cache; }
+            cache["enabled"] = !transient;
+            cache["store_fakeip"] = true;
+            if(preferences.Mode=="nodes") cache["path"] = Path.Combine(Store.DirectoryPath,"nodes-cache.db");
             var clash = e["clash_api"] as JsonObject ?? new JsonObject(); e["clash_api"] = clash.DeepClone();
             e["clash_api"]!["external_controller"] = $"127.0.0.1:{controllerPort}";
             e["clash_api"]!["secret"] = secret;

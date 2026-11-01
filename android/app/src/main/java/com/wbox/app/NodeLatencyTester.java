@@ -14,7 +14,7 @@ final class NodeLatencyTester {
     static void run(Context context, Profiles source, List<String> names, BiConsumer<String,String> result)throws Exception {
         java.lang.Process process=null;
         File config=null;
-        ExecutorService tests=Executors.newFixedThreadPool(3);
+        ExecutorService tests=Executors.newFixedThreadPool(8);
         try {
             String secret=WboxVpnService.secret;
             if(!WboxVpnService.running) {
@@ -32,8 +32,10 @@ final class NodeLatencyTester {
                 if(!ready)throw new IOException("测速内核启动超时。");
             }
             CoreApi api=new CoreApi(secret);String url=source.data.optString("test_url",Profiles.TEST_URL);
+            JSONObject groups=api.proxies();Map<String,List<String>> targets=new LinkedHashMap<>();
+            for(String name:names){String target=resolve(groups,name,new HashSet<>());targets.computeIfAbsent(target,k->new ArrayList<>()).add(name);}
             List<Future<?>> futures=new ArrayList<>();
-            for(String name:names)futures.add(tests.submit(()->{try{result.accept(name,api.delay(name,url)+" ms");}catch(Exception e){result.accept(name,"超时");}}));
+            for(Map.Entry<String,List<String>> entry:targets.entrySet())futures.add(tests.submit(()->{String value;try{value=api.delay(entry.getKey(),url)+" ms";}catch(Exception e){value="失败";}for(String name:entry.getValue())result.accept(name,value);}));
             for(Future<?> future:futures)future.get();
         } finally {
             tests.shutdownNow();
@@ -41,4 +43,5 @@ final class NodeLatencyTester {
             if(config!=null)Files.deleteIfExists(config.toPath());
         }
     }
+    static String resolve(JSONObject groups,String name,Set<String> seen){if(!seen.add(name))return name;JSONObject group=groups.optJSONObject(name);String selected=group==null?"":group.optString("now");return selected.isEmpty()?name:resolve(groups,selected,seen);}
 }

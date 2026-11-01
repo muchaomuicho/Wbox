@@ -9,6 +9,14 @@ export const call = async (method: string, args: unknown = {}) => {
   }
 };
 const expanded = new Map<string, boolean>();
+const tests = new Map<string, Promise<any>>();
+const results = new Map<string, {delay:number;time:number}>();
+let serviceKey = 0;
+function testNode(tag: string) {
+  const existing = tests.get(tag); if (existing) return existing;
+  const request = call('delay', {tag}).then(delay => {results.set(tag,{delay,time:Date.now()});return delay;}, error => {results.set(tag,{delay:0,time:Date.now()});throw error;}).finally(() => tests.delete(tag));
+  tests.set(tag, request); return request;
+}
 export function pause(ms: number, signal?: AbortSignal) { return new Promise<void>(resolve => { if (signal?.aborted) return resolve(); const done = () => { clearTimeout(timer); signal?.removeEventListener('abort', done); resolve(); }; const timer = setTimeout(done, ms); signal?.addEventListener('abort', done, { once: true }); }); }
 function connection(c: any) {
   const m = c.metadata || {};
@@ -17,7 +25,7 @@ function connection(c: any) {
 }
 async function unary(name: string, input: any): Promise<any> {
   switch (name) {
-    case 'GetVersion': return { version: '0.5.1', apiVersion: 1 };
+    case 'GetVersion': return { version: '0.5.2', apiVersion: 1 };
     case 'GetStartedAt': return { startedAt: (await call('service')).startedAt };
     case 'GetDefaultLogLevel': return { level: 4 };
     case 'GetDeprecatedWarnings': return { warnings: [] };
@@ -30,9 +38,10 @@ async function unary(name: string, input: any): Promise<any> {
     case 'ClearLogs': await call('clearLogs'); break;
     case 'URLTest': {
       const groups = await call('groups'); const group = groups.find((g: any) => g.name === input.outboundTag);
-      const names: string[] = group?.nodes || [input.outboundTag];
+      const resolve = (tag:string, seen=new Set<string>()):string => {if(seen.has(tag))return tag;seen.add(tag);const item=groups.find((g:any)=>g.name===tag);return item?.selected?resolve(item.selected,seen):tag;};
+      const names = [...new Set<string>((group?.nodes || [input.outboundTag]).map((tag:string)=>resolve(tag)))];
       let cursor = 0; let failures = 0;
-      await Promise.all(Array.from({length: Math.min(4, names.length)}, async () => { while (cursor < names.length) { const tag = names[cursor++]; try { await call('delay', {tag}); } catch { failures++; } } }));
+      await Promise.all(Array.from({length: Math.min(8, names.length)}, async () => { while (cursor < names.length) { const tag = names[cursor++]; try { await testNode(tag); } catch { failures++; } } }));
       if (failures === names.length && names.length > 0) throw new Error('节点延迟测试失败，请检查测试链接和节点配置。');
       break;
     }
@@ -46,9 +55,9 @@ async function* stream(name: string, signal?: AbortSignal): AsyncGenerator<any> 
   while (!signal?.aborted) {
     if (document.hidden) { await pause(500, signal); continue; }
     switch (name) {
-      case 'SubscribeServiceStatus': { const s = await call('service'); yield { status: s.running ? 2 : 0 }; break; }
+      case 'SubscribeServiceStatus': { const s = await call('service'); if(s.startedAt!==serviceKey){serviceKey=s.startedAt;results.clear();expanded.clear();} yield { status: s.running ? 2 : 0 }; break; }
       case 'SubscribeStatus': { const s = await call('stats'); yield s ? { memory: s.coreMemory, connectionsIn: s.inbound, connectionsOut: s.outbound, trafficAvailable: true, uplink: s.uploadRate, downlink: s.downloadRate, uplinkTotal: s.uploaded, downlinkTotal: s.downloaded } : {}; break; }
-      case 'SubscribeGroups': { const groups = await call('groups'); yield { group: groups.map((g: any) => ({ tag: g.name, type: g.type.toLowerCase() === 'selector' ? 'selector' : g.type.toLowerCase(), selected: g.selected, selectable: g.selectable, isExpand: expanded.get(g.name) ?? true, items: g.details.map((n: any) => ({tag: n.name, type: n.type.toLowerCase(), urlTestDelay: n.delay || 0, urlTestTime: n.delay ? Date.now() : 0})) })) }; break; }
+      case 'SubscribeGroups': { const groups = await call('groups'); const resultFor=(name:string,seen=new Set<string>()):{delay:number;time:number}|undefined=>{if(seen.has(name))return;seen.add(name);const g=groups.find((g:any)=>g.name===name);return g?.selected?resultFor(g.selected,seen):results.get(name);}; yield { group: groups.map((g: any,index:number) => ({ tag: g.name, type: g.type.toLowerCase() === 'selector' ? 'selector' : g.type.toLowerCase(), selected: g.selected, selectable: g.selectable, isExpand: expanded.get(g.name) ?? index===0, items: g.details.map((n: any) => {const result=resultFor(n.name);return {tag: n.name, type: n.type.toLowerCase(), urlTestDelay: result?.delay ?? n.delay ?? 0, urlTestTime: result?.time ?? (n.delay!=null?1:0)};}) })) }; break; }
       case 'SubscribeClashMode': { const s = await call('mode'); yield {mode: s?.mode || 'rule'}; break; }
       case 'SubscribeLog': { const logs = await call('logs'); if (!logs.length && logCursor >= 0) { resetLogs = true; logCursor = -1; } const fresh = logs.filter((l: any) => l.id > logCursor); if (fresh.length || resetLogs) { yield { reset: resetLogs, messages: fresh.map((l: any) => ({level: l.level, message: l.message})) }; resetLogs = false; if (fresh.length) logCursor = fresh[fresh.length-1].id; } break; }
       case 'SubscribeConnections': {
@@ -64,7 +73,7 @@ async function* stream(name: string, signal?: AbortSignal): AsyncGenerator<any> 
       case 'SubscribeOutbounds': { const groups = await call('groups'); yield { outbounds: groups.flatMap((g: any) => g.details.map((n: any) => ({ tag: n.name, type: n.type }))) }; break; }
       default: throw new ConnectError('此扩展接口不可用。', Code.Unimplemented);
     }
-    await pause(name === 'SubscribeGroups' || name === 'SubscribeClashMode' ? 3000 : 1000, signal);
+    await pause(name === 'SubscribeClashMode' || name === 'SubscribeGroups' && tests.size===0 ? 3000 : 1000, signal);
   }
 }
 export const transport: Transport = {

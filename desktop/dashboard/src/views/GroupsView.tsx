@@ -109,12 +109,12 @@ function GroupCard(props: { group: Group }) {
         ) : (
           <div className={styles.groupDots}>
             {group.items.map((item) => {
-              const tone = item.urlTestDelay > 0 ? urlTestDelayTone(item.urlTestDelay) : "";
+              const tone = item.urlTestDelay > 0 ? urlTestDelayTone(item.urlTestDelay) : item.urlTestTime > 0 ? "bad" : "";
               return (
                 <span
                   key={item.tag}
                   className={cx(styles.groupDot, styles[tone], item.tag === selected && styles.selected)}
-                  title={`${item.tag}${item.urlTestDelay > 0 ? ` (${item.urlTestDelay}ms)` : ""}`}
+                  title={`${item.tag} · ${item.urlTestDelay > 0 ? `${item.urlTestDelay} ms` : item.urlTestTime > 0 ? "测试失败" : "未测试"}`}
                 />
               );
             })}
@@ -151,6 +151,7 @@ function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: ()
               {item.urlTestDelay}ms
             </span>
           )}
+          {item.urlTestDelay === 0 && item.urlTestTime > 0 && <span className={cx(styles.delayText,styles.bad)}>失败</span>}
         </span>
       </button>
       {menu.element}

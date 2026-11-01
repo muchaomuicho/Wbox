@@ -10,9 +10,12 @@ void Write(object value) { lock (outputLock) Console.WriteLine(JsonSerializer.Se
 var core = new CoreManager();
 var prefs = Store.Load();
 long coreGeneration = 0;
+bool delayTesting = false;
+CancellationTokenSource nodeTestCancellation = new();
+Task nodeTests = Task.CompletedTask;
 var logs = new ConcurrentQueue<object>();
 long logId = 0;
-void Log(string text) { logs.Enqueue(new { id = Interlocked.Increment(ref logId), message = text, level = text.Contains("error", StringComparison.OrdinalIgnoreCase) ? 2 : 4 }); while (logs.Count > 1000) logs.TryDequeue(out _); }
+void Log(string text) { var entry = LogFormatting.Format(text); logs.Enqueue(new { id = Interlocked.Increment(ref logId), message = entry.Message, level = entry.Level }); while (logs.Count > 1000) logs.TryDequeue(out _); }
 core.Log += Log;
 core.Exited += () => Write(new { changed = true });
 try { SystemProxy.Restore(); } catch (Exception ex) { Log(ex.Message); }
@@ -46,11 +49,29 @@ async Task CommitNodes(Preferences next) {
 void Idle() { if (core.Running) throw new InvalidOperationException("请先停止连接，再切换工作区、内核或运行配置。"); }
 ConfigProfile Profile(string id) => prefs.Configs.FirstOrDefault(p => p.Id == id) ?? throw new ArgumentException("配置不存在。");
 object State() => new {
+    delayTesting,
     prefs.Core, prefs.Mode, prefs.ConfigPath, prefs.DelayUrl, prefs.Silent, prefs.AutoStart, prefs.AutoConnect, prefs.SystemProxy, prefs.NativeInbounds, prefs.SelectedNode,
     configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
     prefs.Subscriptions, running = core.Running, startedAt = core.Running ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
 };
+async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation) {
+    CoreManager? temporary = null;
+    try {
+        var tester = core;
+        if (!core.Running) { temporary = new CoreManager(() => true); tester = temporary; await tester.StartAsync(test, transient: true); }
+        await Parallel.ForEachAsync(Enumerable.Range(0, records.Length), new ParallelOptions { MaxDegreeOfParallelism = 8, CancellationToken = cancellation }, async (i, token) => {
+            string result;
+            if (!NodeOptions.Compatible(records[i], test.Core)) result = "不兼容";
+            else try { result = (await tester.DelayAsync(ConfigBuilder.Tag(records[i], i), test.DelayUrl, token)) + " ms"; }
+            catch (OperationCanceledException) when (token.IsCancellationRequested) { return; }
+            catch { result = "失败"; }
+            if (generation == coreGeneration && prefs.Nodes.Contains(records[i])) { records[i].DelayText = result; Write(new { changed = true }); }
+        });
+    } catch (OperationCanceledException) { }
+    catch (Exception e) { Log("ERROR Wbox: 测速失败：" + e.Message); }
+    finally { temporary?.Dispose(); foreach (var n in records) if (n.DelayText == "测试中") n.DelayText = "—"; delayTesting = false; Write(new { changed = true }); }
+}
 async Task<object?> Handle(string method, JsonElement a) {
     string S(string name, string fallback = "") => a.TryGetProperty(name, out var v) ? v.GetString() ?? fallback : fallback;
     int I(string name) => a.GetProperty(name).GetInt32();
@@ -59,7 +80,7 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "service": return new { running = core.Running, startedAt = core.Running ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
         case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.WorkingSet64;
         case "start": coreGeneration++; await core.StartAsync(prefs); Save(); return null;
-        case "stop": core.Stop(); coreGeneration++; Save(); return null;
+        case "stop": nodeTestCancellation.Cancel(); core.Stop(); coreGeneration++; Save(); return null;
         case "logs": return logs.ToArray();
         case "clearLogs": logs.Clear(); return null;
         case "stats": return core.Running ? await core.StatsAsync(false) : null;
@@ -74,14 +95,13 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "close": await core.RequestAsync("DELETE", "/connections" + (S("id").Length > 0 ? "/" + Uri.EscapeDataString(S("id")) : "")); return null;
         case "delay": return await core.DelayAsync(S("tag"), prefs.DelayUrl);
         case "delayNodes": {
-            bool temporary = !core.Running;
-            if (!temporary && prefs.Mode != "nodes") throw new InvalidOperationException("请先停止配置工作区的连接。");
-            if (temporary) {
-                var test = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(prefs))!; test.Mode = "nodes"; test.Core = prefs.NodeCore.Length > 0 ? prefs.NodeCore : prefs.Core; test.SystemProxy = false;
-                await core.StartAsync(test);
-            }
-            try { await Parallel.ForEachAsync(Enumerable.Range(0, prefs.Nodes.Count), new ParallelOptions { MaxDegreeOfParallelism = 4 }, async (i, _) => { try { prefs.Nodes[i].DelayText = (await core.DelayAsync(ConfigBuilder.Tag(prefs.Nodes[i], i), prefs.DelayUrl)) + " ms"; } catch { prefs.Nodes[i].DelayText = "超时"; } }); }
-            finally { if (temporary) core.Stop(); Save(); }
+            if (delayTesting) return null;
+            if (core.Running && prefs.Mode != "nodes") throw new InvalidOperationException("请先停止配置工作区的连接。");
+            var test = CopyPreferences(); test.Mode = "nodes"; test.Core = prefs.NodeCore.Length > 0 ? prefs.NodeCore : prefs.Core; test.SystemProxy = false;
+            if (test.Core == "sing-box" && !test.DelayUrl.StartsWith("https://")) throw new ArgumentException("sing-box 测速需要 HTTPS 地址。");
+            nodeTestCancellation.Dispose(); nodeTestCancellation = new(); delayTesting = true;
+            var records = prefs.Nodes.ToArray(); foreach (var n in records) n.DelayText = "测试中";
+            nodeTests = TestNodes(test, records, coreGeneration, nodeTestCancellation.Token); Write(new { changed = true });
             return null;
         }
         case "proxyStatus": return new { available = core.Running, enabled = core.Running && SystemProxy.Enabled };
@@ -169,12 +189,13 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "removeProfile": Idle(); prefs.Configs.Remove(Profile(S("id"))); if (!prefs.Configs.Any(p => p.Path == prefs.ConfigPath)) { prefs.ConfigPath = prefs.Configs.FirstOrDefault()?.Path ?? ""; prefs.Core = prefs.Configs.FirstOrDefault()?.Core ?? "mihomo"; } Save(); return null;
         case "updateProfile": { Idle(); var p = Profile(S("id")); if (p.Url.Length == 0) throw new ArgumentException("这是本地配置。"); ProfileImport.SaveConfig(prefs, await ProfileImport.FetchAsync(p.Url), p.Name, p.Url, p); if (prefs.ConfigPath == p.Path) prefs.Core = p.Core; Save(); return null; }
         case "readProfile": return File.ReadAllText(Profile(S("id")).Path);
+        case "renameProfile": { var name = S("name").Trim(); if (name.Length == 0 || name.Length > 100) throw new ArgumentException("名称需要为 1–100 个字符。"); Profile(S("id")).Name = name; Save(); return null; }
         case "writeProfile": { Idle(); var p = Profile(S("id")); ProfileImport.SaveConfig(prefs, S("content"), p.Name, p.Url, p); Save(); return null; }
         default: throw new ArgumentException("未知操作：" + method);
     }
 }
 string? line;
-var delaySlots = new SemaphoreSlim(4);
+var delaySlots = new SemaphoreSlim(8);
 var delayTasks = new List<Task>();
 async Task ReplyDelay(long id, string tag, long generation, string url) {
     await delaySlots.WaitAsync();
@@ -207,4 +228,6 @@ for (int attempt = 0; ; attempt++) {
     try { core.Stop(); break; } catch (Exception ex) { Log(ex.Message); await Task.Delay(Math.Min(30_000, 1000 * (attempt + 1))); }
 }
 coreGeneration++;
+nodeTestCancellation.Cancel();
+await nodeTests;
 await Task.WhenAll(delayTasks);

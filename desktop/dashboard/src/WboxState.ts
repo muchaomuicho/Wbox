@@ -3,6 +3,7 @@ import { showError } from './app/errorStore';
 import { call } from '../../wbox/transport';
 
 export interface WboxState {
+  delayTesting: boolean;
   mode: string; core: string; configPath: string; running: boolean; selectedNode: number; delayUrl: string;
   silent: boolean; autoStart: boolean; autoConnect: boolean; systemProxy: boolean; nativeInbounds: boolean;
   configs: {id: string; name: string; core: string; path: string; url: string; updated: string}[];

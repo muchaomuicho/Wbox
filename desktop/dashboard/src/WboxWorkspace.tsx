@@ -56,6 +56,7 @@ export function WorkspaceView() {
   const s=useWboxState();
   const [importing,setImporting]=useState(false),[filter,setFilter]=useState(''),[source,setSource]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState(-1);
   const [editing,setEditing]=useState<{id:string;name:string;content:string}|null>(null);
+  const [renaming,setRenaming]=useState<{id:string;name:string}|null>(null),[renameError,setRenameError]=useState('');
   const [nodeEditor,setNodeEditor]=useState<{index:number;initial:any}|null>(null);
   const run=async(method:string,args?:unknown)=>{setBusy(true);try{await call(method,args);}catch(e){showError(e);}finally{setBusy(false);}};
   if(!s)return null;
@@ -67,11 +68,12 @@ export function WorkspaceView() {
       {!s.configs.length&&<EmptyState icon="folder">添加远程配置地址，或导入本地 JSON / YAML。</EmptyState>}
       {s.configs.map(c=><div className="wbox-row" key={c.id}><button className="wbox-row-main" disabled={busy} onClick={()=>void run('selectProfile',{id:c.id})}><Icon name={s.configPath===c.path?'check':'language'} /><span><strong>{c.name}</strong><small>{c.core} · {c.url?'远程配置':'本地配置'} · {new Date(c.updated).toLocaleString()}</small></span></button>
         {c.url&&<IconButton title="更新配置" onClick={()=>void run('updateProfile',{id:c.id})}><Icon name="sync" /></IconButton>}
-        <IconButton title="编辑配置" onClick={()=>void call('readProfile',{id:c.id}).then(content=>setEditing({id:c.id,name:c.name,content})).catch(showError)}><Icon name="edit" /></IconButton>
+        <IconButton title="重命名配置" onClick={()=>{setRenaming({id:c.id,name:c.name});setRenameError('');}}><Icon name="edit" /></IconButton>
+        <IconButton title="编辑配置" onClick={()=>void call('readProfile',{id:c.id}).then(content=>setEditing({id:c.id,name:c.name,content})).catch(showError)}><Icon name="code" /></IconButton>
         <IconButton title="导出配置" onClick={()=>void window.wbox.exportFile(c.id).catch(showError)}><Icon name="save" /></IconButton><IconButton title="移除配置" onClick={()=>void run('removeProfile',{id:c.id})}><Icon name="delete" /></IconButton>
       </div>)}
     </Card>:<>
-      <Card title="节点" icon="language" actions={<><Badge>{s.nodes.length}</Badge><IconButton title="添加节点" onClick={()=>setImporting(true)}><Icon name="add" /></IconButton><IconButton title="测试全部节点" disabled={busy||!s.nodes.length} onClick={()=>void run('delayNodes')}><Icon name="speed" /></IconButton></>}>
+      <Card title="节点" icon="language" actions={<><Badge>{s.nodes.length}</Badge><IconButton title="添加节点" onClick={()=>setImporting(true)}><Icon name="add" /></IconButton><IconButton title="测试全部节点" disabled={busy||s.delayTesting||!s.nodes.length} onClick={()=>void run('delayNodes')}><Icon name="speed" /></IconButton></>}>
         <div className="wbox-controls"><input className="input" aria-label="搜索节点" placeholder="搜索名称、地址或协议" value={filter} onChange={e=>setFilter(e.target.value)} /><Select value={source} options={[{value:'',label:'全部节点'},{value:'manual',label:'手动节点'},...s.subscriptions.map(url=>({value:url,label:new URL(url).hostname}))]} onChange={setSource} /><Select value={s.core} options={[{value:'mihomo',label:'mihomo'},{value:'sing-box',label:'sing-box'}]} onChange={core=>void run('settings',{core})} /></div>
         <p className="wbox-hint">Ctrl+V 导入 · 双击或 Enter 启用 · 右键编辑</p>
         {!nodes.length?<EmptyState icon="language">没有符合条件的节点</EmptyState>:<div className="wbox-table-scroll"><table className="wbox-node-table" aria-label="节点列表"><thead><tr><th aria-label="当前节点" /><th>名称</th><th>协议</th><th>服务器</th><th>端口</th><th>延迟</th></tr></thead><tbody>{nodes.slice(0,500).map(n=><NodeRow key={n.index} node={n} current={s.selectedNode===n.index} selected={selected===n.index} select={()=>setSelected(n.index)} activate={()=>void run('selectNode',{index:n.index})} edit={()=>editNode(n.index)} run={run} />)}</tbody></table></div>}
@@ -82,6 +84,7 @@ export function WorkspaceView() {
     {busy&&<p role="status" className="wbox-hint">正在处理…</p>}
     {importing&&<ImportDialog config={config} onClose={()=>setImporting(false)} />}
     {nodeEditor&&<NodeEditor {...nodeEditor} onClose={()=>setNodeEditor(null)} />}
+    {renaming&&<Dialog onClose={()=>setRenaming(null)}><h3>重命名配置</h3><Field label="名称"><input className="input" autoFocus maxLength={100} value={renaming.name} onChange={e=>setRenaming({...renaming,name:e.target.value})} /></Field>{renameError&&<p role="alert" className="wbox-error">{renameError}</p>}<div className="dialog-actions row-actions"><Button onClick={()=>setRenaming(null)}>取消</Button><Button variant="primary" disabled={busy||!renaming.name.trim()} onClick={async()=>{setBusy(true);try{await call('renameProfile',renaming);setRenaming(null);}catch(e){setRenameError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}}>保存</Button></div></Dialog>}
     {editing&&<Dialog onClose={()=>setEditing(null)}><h3>编辑配置</h3><Field label="配置内容"><textarea className="input wbox-editor" value={editing.content} onChange={e=>setEditing({...editing,content:e.target.value})} spellCheck={false} /></Field><div className="dialog-actions row-actions"><Button onClick={()=>setEditing(null)}>取消</Button><Button variant="primary" disabled={busy} onClick={async()=>{setBusy(true);try{await call('writeProfile',editing);setEditing(null);}catch(e){showError(e);}finally{setBusy(false);}}}>保存</Button></div></Dialog>}
   </div>;
 }

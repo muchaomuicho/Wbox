@@ -22,6 +22,8 @@ public sealed class CoreManager : IDisposable
     readonly Func<bool> restoreProxy;
     public CoreManager(Func<bool>? restoreProxy = null) { this.restoreProxy = restoreProxy ?? SystemProxy.Restore; }
     Process? process;
+    Process? coreProcess;
+    CancellationTokenSource sessionCancellation = new();
     ProcessJob? job;
     HttpClient? api;
     bool stopping;
@@ -35,26 +37,29 @@ public sealed class CoreManager : IDisposable
     long initialUpload = -1, initialDownload = -1, lastUpload, lastDownload;
     DateTime lastSample;
     string? runtimePath;
+    string? transientDirectory;
     string activeCore = "";
     long cachedAppMemory, cachedCoreMemory;
     DateTime memorySample;
     public bool Running => process is { HasExited: false };
     public event Action<string>? Log;
     public event Action? Exited;
-    public async Task StartAsync(Preferences p)
+    public async Task StartAsync(Preferences p, bool transient = false)
     {
         if (Running) return;
         stopping = false; starting = true; startupLog.Clear();
+        sessionCancellation.Dispose(); sessionCancellation = new();
         activeCore = p.Core;
         var executable = Path.Combine(AppContext.BaseDirectory, "cores", p.Core + ".exe");
         if (!File.Exists(executable)) throw new FileNotFoundException("安装包缺少代理内核：" + executable);
         var secret = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
         ProxyPort = StartupPolicy.AvailablePort(ConfigBuilder.MixedPort);
         ApiPort = StartupPolicy.AvailablePort(ConfigBuilder.ControllerPort, ProxyPort);
-        var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort);
+        var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort, transient);
         StartupPolicy.Check(config, p.Core);
         // Resolve relative providers, certificates, rule sets and included files against the imported config directory.
-        var working = p.Mode == "config" ? Path.GetDirectoryName(Path.GetFullPath(p.ConfigPath))! : Store.DirectoryPath;
+        var working = p.Mode == "config" ? Path.GetDirectoryName(Path.GetFullPath(p.ConfigPath))! : Path.Combine(Store.DirectoryPath, p.Core);
+        if (transient) working = transientDirectory = Path.Combine(Store.DirectoryPath, "latency", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(working);
         runtimePath = Path.Combine(working, $".wbox-runtime-{Guid.NewGuid():N}.{(p.Core == "sing-box" ? "json" : "yaml")}");
         File.WriteAllText(runtimePath, config);
@@ -72,7 +77,10 @@ public sealed class CoreManager : IDisposable
                 var output = await stdout + await stderr;
                 if (check.ExitCode != 0) throw new InvalidOperationException("配置检查未通过：\n" + output);
             }
-            var start = new ProcessStartInfo(executable) { WorkingDirectory = working, CreateNoWindow = true, UseShellExecute = false, RedirectStandardError = true, RedirectStandardOutput = true };
+            var host = Path.Combine(AppContext.BaseDirectory, "cores", "wbox-core-host.exe");
+            if (!File.Exists(host)) throw new FileNotFoundException("安装包缺少内核进程管理器。", host);
+            var start = new ProcessStartInfo(host) { WorkingDirectory = working, CreateNoWindow = true, UseShellExecute = false, RedirectStandardError = true, RedirectStandardOutput = true, RedirectStandardInput = true };
+            start.ArgumentList.Add(executable);
             if (p.Core == "sing-box") { start.ArgumentList.Add("run"); start.ArgumentList.Add("-c"); start.ArgumentList.Add(runtimePath); }
             else { start.ArgumentList.Add("-d"); start.ArgumentList.Add(working); start.ArgumentList.Add("-f"); start.ArgumentList.Add(runtimePath); }
             start.Environment["GOMEMLIMIT"] = "96MiB";
@@ -80,7 +88,7 @@ public sealed class CoreManager : IDisposable
             process = new Process { StartInfo = start, EnableRaisingEvents = true };
             process.OutputDataReceived += (_, e) => { if (e.Data != null) CaptureLog(e.Data); };
             process.ErrorDataReceived += (_, e) => { if (e.Data != null) CaptureLog(e.Data); };
-            process.Exited += (_, _) => { if (!stopping && !starting) { try { SystemProxy.Restore(); } catch (Exception ex) { Log?.Invoke(ex.Message); } Exited?.Invoke(); } };
+            process.Exited += (_, _) => { if (!stopping && !starting) { try { restoreProxy(); } catch (Exception ex) { Log?.Invoke(ex.Message); } Exited?.Invoke(); } };
             if (!process.Start()) throw new InvalidOperationException("内核启动失败。");
             job = new ProcessJob(); job.Add(process);
             process.BeginOutputReadLine(); process.BeginErrorReadLine();
@@ -107,6 +115,10 @@ public sealed class CoreManager : IDisposable
         catch { Stop(); throw; }
     }
     void CaptureLog(string line) {
+        if (line.StartsWith("__WBOX_CORE_PID__") && int.TryParse(line[17..], out var pid)) {
+            try { coreProcess = Process.GetProcessById(pid); } catch (ArgumentException) { }
+            return;
+        }
         line = System.Text.RegularExpressions.Regex.Replace(line, "\u001b\\[[0-9;]*m", "");
         if (line.Length > 4096) line = line[..4096];
         if (starting) { startupLog.Enqueue(line); while (startupLog.Count > 40) startupLog.TryDequeue(out _); }
@@ -139,7 +151,7 @@ public sealed class CoreManager : IDisposable
         }
         previousConnections = nextConnections; connectionSample = DateTime.UtcNow;
         if ((DateTime.UtcNow - memorySample).TotalSeconds >= 5) {
-            try { process!.Refresh(); cachedCoreMemory = process.WorkingSet64; } catch { }
+            try { coreProcess?.Refresh(); cachedCoreMemory = coreProcess?.WorkingSet64 ?? 0; } catch { }
             using var self = Process.GetCurrentProcess(); cachedAppMemory = self.WorkingSet64; memorySample = DateTime.UtcNow;
         }
         return new(count, count, Math.Max(0, upload - initialUpload), Math.Max(0, download - initialDownload), upRate, downRate, cachedAppMemory + cachedCoreMemory, connections) { AppMemory = cachedAppMemory, CoreMemory = cachedCoreMemory };
@@ -162,14 +174,15 @@ public sealed class CoreManager : IDisposable
         using var response = await api!.SendAsync(request); response.EnsureSuccessStatusCode();
         var text = await response.Content.ReadAsStringAsync(); return text.Length == 0 ? null : JsonNode.Parse(text);
     }
-    public async Task<int> DelayAsync(string node, string url)
+    public async Task<int> DelayAsync(string node, string url, CancellationToken cancellation = default)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")) throw new ArgumentException("延迟测试地址需要是 HTTP 或 HTTPS URL。");
         if (activeCore == "sing-box" && uri.Scheme != "https") throw new ArgumentException("sing-box 的测速 API 仅接受 HTTPS 链接，请填写 HTTPS 测试地址。");
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(12));
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/proxies/{Uri.EscapeDataString(node)}/delay?timeout=8000&url={Uri.EscapeDataString(url)}");
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation, sessionCancellation.Token);
+        timeout.CancelAfter(TimeSpan.FromSeconds(6));
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/proxies/{Uri.EscapeDataString(node)}/delay?timeout=4000&url={Uri.EscapeDataString(url)}");
         // Delay checks can exceed the normal controller request timeout.
-        using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = api!.BaseAddress, Timeout = TimeSpan.FromSeconds(12) };
+        using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = api!.BaseAddress, Timeout = TimeSpan.FromSeconds(6) };
         client.DefaultRequestHeaders.Authorization = api.DefaultRequestHeaders.Authorization;
         using var response = await client.SendAsync(request, timeout.Token); response.EnsureSuccessStatusCode();
         return JsonNode.Parse(await response.Content.ReadAsStringAsync())!["delay"]!.GetValue<int>();
@@ -179,10 +192,16 @@ public sealed class CoreManager : IDisposable
         // Follow boxdd: reset platform options first. A failed reset must not
         // close the listener which Windows may still be using.
         restoreProxy();
+        sessionCancellation.Cancel();
         stopping = true;
-        try { if (Running) { process!.Kill(true); process.WaitForExit(3000); } } catch { }
+        if (Running) {
+            try { process!.StandardInput.WriteLine("stop"); process.StandardInput.Flush(); } catch (IOException) { }
+            if (!process!.WaitForExit(6500)) { Log?.Invoke("WARN Wbox: 内核未正常退出，已强制结束。"); process.Kill(true); process.WaitForExit(3000); }
+        }
+        coreProcess?.Dispose(); coreProcess = null;
         job?.Dispose(); job = null; process?.Dispose(); process = null; api?.Dispose(); api = null;
         if (runtimePath != null) { try { File.Delete(runtimePath); } catch { } runtimePath = null; }
+        if (transientDirectory != null) { try { Directory.Delete(transientDirectory, true); } catch (IOException) { } transientDirectory = null; }
     }
     public void Dispose() => Stop();
 }

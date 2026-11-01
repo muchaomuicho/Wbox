@@ -5,6 +5,7 @@ using Wbox;
 try
 {
 Environment.SetEnvironmentVariable("WBOX_DATA_DIR", Path.GetFullPath("windows/test-runtime"));
+if(args.Length==2&&args[0]=="--diagnose"){await DiagnosticChecks.Run(args[1]);return;}
 if (args.Length == 2 && args[0] == "--subscription") {
     var imported = NodeParser.ParseSubscription(File.ReadAllText(args[1]));
     Console.WriteLine("Imported " + imported.Count + " nodes: " + string.Join(", ", imported.GroupBy(n => n.Protocol).Select(g => g.Key + "=" + g.Count())));
@@ -24,9 +25,14 @@ if (args.Length == 2 && args[0] == "--subscription") {
 }
 int checks = 0;
 void Check(bool condition, string label) { if (!condition) throw new Exception("FAILED: " + label); checks++; Console.WriteLine("PASS " + label); }
+if(args.Contains("--forwarding")){await ForwardingChecks.Run(Check);Console.WriteLine($"{checks} forwarding checks passed.");return;}
 if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
 await ImportChecks.Run(Check);
 NodeEditingChecks.Run(Check);
+Check(LogFormatting.Format("+0800 2026-11-01 09:54:42 INFO [123 0ms] connection: error.example").Level == 4, "Log content does not override header severity");
+Check(LogFormatting.Format("time=\"2026-11-01\" level=warning msg=\"retry\"").Level == 3, "Mihomo warning level matches official filter");
+var coloredLog=LogFormatting.Format("ERROR[0000] [123 2s] connection: timeout");
+Check(coloredLog.Level == 2 && coloredLog.Message.Contains("\u001b[31mERROR") && coloredLog.Message.Contains("\u001b[32m[123"), "Log severity and connection ID have independent colors");
 var ss = NodeParser.Parse("ss://" + Convert.ToBase64String(Encoding.UTF8.GetBytes("aes-128-gcm:p:a@ss")) + "@[2001:db8::1]:8388#IPv6");
 Check(ss.Password == "p:a@ss" && ss.Server == "2001:db8::1" && ss.Port == 8388, "SS URL credentials and IPv6");
 ss.Name = "🇯🇵 日本 IPv6";
