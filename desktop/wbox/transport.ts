@@ -1,7 +1,13 @@
 import { fromJson } from '@bufbuild/protobuf';
 import { Code, ConnectError, type Transport } from '@connectrpc/connect';
 
-export const call = (method: string, args: unknown = {}) => window.wbox.call(method, args);
+export const call = async (method: string, args: unknown = {}) => {
+  try { return await window.wbox.call(method, args); }
+  catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(message.replace(/^Error invoking remote method '[^']+': (?:Error: )?/, ''));
+  }
+};
 const expanded = new Map<string, boolean>();
 export function pause(ms: number, signal?: AbortSignal) { return new Promise<void>(resolve => { if (signal?.aborted) return resolve(); const done = () => { clearTimeout(timer); signal?.removeEventListener('abort', done); resolve(); }; const timer = setTimeout(done, ms); signal?.addEventListener('abort', done, { once: true }); }); }
 function connection(c: any) {
@@ -11,7 +17,7 @@ function connection(c: any) {
 }
 async function unary(name: string, input: any): Promise<any> {
   switch (name) {
-    case 'GetVersion': return { version: '0.5.0', apiVersion: 1 };
+    case 'GetVersion': return { version: '0.5.1', apiVersion: 1 };
     case 'GetStartedAt': return { startedAt: (await call('service')).startedAt };
     case 'GetDefaultLogLevel': return { level: 4 };
     case 'GetDeprecatedWarnings': return { warnings: [] };

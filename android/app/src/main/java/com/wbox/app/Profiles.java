@@ -16,6 +16,7 @@ public final class Profiles {
     public JSONObject data;
     private JSONArray cachedArray;
     private List<Node> cachedNodes=List.of();
+    private boolean writeThrough=true;
     public Profiles(Context c) { this(c.getFilesDir()); }
     public Profiles(File directory) { file=new File(directory,"profiles.json");load(); }
     public synchronized void load(){try{data=new JSONObject(new String(Files.readAllBytes(file.toPath()),StandardCharsets.UTF_8));}catch(Exception e){data=new JSONObject();}
@@ -25,7 +26,9 @@ public final class Profiles {
             if(!data.optBoolean("source_migrated")){JSONArray old=data.optJSONArray("nodes");JSONObject subs=data.optJSONObject("subscriptions");if(old!=null&&subs!=null){JSONArray rebuilt=new JSONArray();for(int i=0;i<old.length();i++){Object value=old.get(i);String source="";if(value instanceof String){Iterator<String> keys=subs.keys();while(keys.hasNext()){String key=keys.next();JSONArray links=subs.optJSONArray(key);if(links!=null)for(int j=0;j<links.length();j++)if(value.equals(links.optString(j)))source=key;}}rebuilt.put(source.isEmpty()?value:new JSONObject().put("link",value).put("source",source));}data.put("nodes",rebuilt);}data.put("source_migrated",true);}
         } catch(Exception ignored){}
     }
-    public synchronized void save() throws Exception { File tmp=new File(file.getParentFile(),"profiles.tmp");Files.write(tmp.toPath(),data.toString(2).getBytes(StandardCharsets.UTF_8));Files.move(tmp.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING); }
+    public synchronized void save() throws Exception { if(!writeThrough)return;File tmp=new File(file.getParentFile(),"profiles.tmp");Files.write(tmp.toPath(),data.toString(2).getBytes(StandardCharsets.UTF_8));Files.move(tmp.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING); }
+    public Profiles copy()throws Exception {Profiles copy=new Profiles(file.getParentFile());copy.data=new JSONObject(data.toString());copy.writeThrough=false;return copy;}
+    public static boolean subscriptionAddress(String input) {try{URI uri=new URI(input.trim());return List.of("http","https").contains(uri.getScheme())&&uri.getHost()!=null&&uri.getUserInfo()==null&&uri.getFragment()==null&&!input.contains("\n");}catch(Exception e){return false;}}
     public String engine(){return data.optString("engine","sing-box");}
     public String mode(){return data.optString("mode","nodes");}
     public List<Node> nodes() throws Exception {JSONArray a=data.optJSONArray("nodes");if(a!=cachedArray){List<Node> r=new ArrayList<>();if(a!=null)for(int i=0;i<a.length();i++)r.add(Node.stored(a.get(i)));unique(r);cachedNodes=r;cachedArray=a;}return new ArrayList<>(cachedNodes);}

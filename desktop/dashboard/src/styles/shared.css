@@ -741,7 +741,12 @@ button.select:disabled {
 .menu.select-menu {
   max-height: 280px;
   overflow-y: auto;
+  width: max-content;
+  max-width: calc(100vw - 16px);
 }
+
+.select-option-label { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.select-menu .menu-check { flex-shrink: 0; }
 
 .menu.select-menu.grow {
   width: max-content;

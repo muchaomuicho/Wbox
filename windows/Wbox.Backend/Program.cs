@@ -20,6 +20,29 @@ if (prefs.Configs.Count == 0 && File.Exists(prefs.ConfigPath)) {
     prefs.Configs.Add(new() { Path = prefs.ConfigPath, Core = prefs.Core, Name = Path.GetFileNameWithoutExtension(prefs.ConfigPath) }); Store.Save(prefs);
 }
 void Save() { Store.Save(prefs); Write(new { changed = true }); }
+Preferences CopyPreferences() {
+    var copy = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(prefs))!;
+    for (int i = 0; i < copy.Nodes.Count; i++) copy.Nodes[i].DelayText = prefs.Nodes[i].DelayText;
+    return copy;
+}
+async Task CommitNodes(Preferences next) {
+    var previous = prefs;
+    bool restart = core.Running && prefs.Mode == "nodes";
+    if (restart && next.Nodes.Count > 0) ConfigBuilder.Build(next, "validation");
+    if (restart) { core.Stop(); coreGeneration++; }
+    try {
+        if (restart && next.Nodes.Count > 0) await core.StartAsync(next);
+        prefs = next; Save();
+    } catch (Exception changeError) {
+        prefs = previous;
+        if (restart) {
+            core.Stop(); coreGeneration++;
+            try { await core.StartAsync(previous); }
+            catch (Exception restoreError) { Save(); throw new InvalidOperationException("修改未保存，恢复连接失败：" + restoreError.Message, changeError); }
+        }
+        Save(); throw;
+    }
+}
 void Idle() { if (core.Running) throw new InvalidOperationException("请先停止连接，再切换工作区、内核或运行配置。"); }
 ConfigProfile Profile(string id) => prefs.Configs.FirstOrDefault(p => p.Id == id) ?? throw new ArgumentException("配置不存在。");
 object State() => new {
@@ -74,15 +97,54 @@ async Task<object?> Handle(string method, JsonElement a) {
             if (a.TryGetProperty("nativeInbounds", out var native)) { Idle(); prefs.NativeInbounds = native.GetBoolean(); }
             Save(); return null;
         case "selectNode": { var index = I("index"); if (index < 0 || index >= prefs.Nodes.Count) throw new ArgumentException("节点不存在。"); if (core.Running) { if (prefs.Mode != "nodes") throw new InvalidOperationException("请先切换到节点工作区。"); await core.SelectAsync("Wbox", ConfigBuilder.Tag(prefs.Nodes[index], index)); } prefs.SelectedNode = index; Save(); return null; }
-        case "removeNode": Idle(); prefs.Nodes.RemoveAt(I("index")); prefs.SelectedNode = Math.Clamp(prefs.SelectedNode, 0, Math.Max(0, prefs.Nodes.Count - 1)); Save(); return null;
-        case "removeSubscription": Idle(); prefs.Nodes.RemoveAll(n => n.SourceSubscription == S("url")); prefs.Subscriptions.Remove(S("url")); prefs.SelectedNode = 0; Save(); return null;
+        case "removeNode": {
+            var next = CopyPreferences(); int index = I("index"); next.Nodes.RemoveAt(index);
+            if (index < next.SelectedNode) next.SelectedNode--;
+            next.SelectedNode = Math.Clamp(next.SelectedNode, 0, Math.Max(0, next.Nodes.Count - 1));
+            await CommitNodes(next); return null;
+        }
+        case "readNode": { var node = prefs.Nodes.ElementAtOrDefault(I("index")) ?? throw new ArgumentException("节点不存在。"); return new { node, revision = NodeEditing.Revision(node) }; }
+        case "writeNode": {
+            int index = I("index"); var original = prefs.Nodes.ElementAtOrDefault(index) ?? throw new ArgumentException("节点不存在。");
+            if (NodeEditing.Revision(original) != S("revision")) throw new InvalidOperationException("节点已更新，请重新打开编辑窗口。");
+            var edited = JsonSerializer.Deserialize<NodeRecord>(a.GetProperty("node"), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new ArgumentException("节点内容无效。");
+            var next = CopyPreferences(); next.Nodes[index] = NodeEditing.Prepare(original, edited);
+            await CommitNodes(next);
+            return null;
+        }
+        case "cloneNode": {
+            var node = prefs.Nodes.ElementAtOrDefault(I("index")) ?? throw new ArgumentException("节点不存在。");
+            var copy = JsonSerializer.Deserialize<NodeRecord>(JsonSerializer.Serialize(node))!;
+            copy.Name += " 副本"; copy.SourceSubscription = "";
+            if (copy.NativeSingbox != null) copy.NativeSingbox["tag"] = copy.Name;
+            if (copy.NativeMihomo != null) copy.NativeMihomo["name"] = copy.Name;
+            var next = CopyPreferences(); next.Nodes.Add(copy); await CommitNodes(next); return null;
+        }
+        case "removeSubscription": {
+            var next = CopyPreferences(); var selected = next.Nodes.ElementAtOrDefault(next.SelectedNode);
+            next.Nodes.RemoveAll(n => n.SourceSubscription == S("url")); next.Subscriptions.Remove(S("url"));
+            next.SelectedNode = Math.Max(0, selected == null ? 0 : next.Nodes.IndexOf(selected));
+            await CommitNodes(next); return null;
+        }
+        case "importInput": {
+            var input = S("text").Trim();
+            bool remote = !input.Contains('\n') && Uri.TryCreate(input, UriKind.Absolute, out var location) && location.Scheme is "http" or "https" && location.UserInfo.Length == 0 && location.Fragment.Length == 0;
+            return await Handle("importNodes", JsonSerializer.SerializeToElement(remote ? new { url = input, text = "" } : new { url = "", text = input }));
+        }
         case "importNodes": {
-            Idle(); var text = S("text").Trim(); var url = S("url").Trim();
+            var text = S("text").Trim(); var url = S("url").Trim();
             if (url.Length > 0) text = await ProfileImport.FetchAsync(url, prefs.Core == "sing-box" ? "sing-box" : "clash.meta");
             var nodes = NodeParser.ParseSubscription(text); if (nodes.Count == 0) throw new FormatException("未识别到节点。完整 JSON / YAML 请导入配置工作区。");
-            if (url.Length > 0) { var selected = prefs.Nodes.ElementAtOrDefault(prefs.SelectedNode); var name = selected?.Name; prefs.Nodes.RemoveAll(n => n.SourceSubscription == url); foreach (var node in nodes) node.SourceSubscription = url; if (!prefs.Subscriptions.Contains(url)) prefs.Subscriptions.Add(url); prefs.Nodes.AddRange(nodes); var index = prefs.Nodes.FindIndex(n => n.Name == name); prefs.SelectedNode = Math.Max(0, index); }
-            else prefs.Nodes.AddRange(nodes);
-            Save(); return nodes.Count;
+            var next = CopyPreferences();
+            if (url.Length > 0) {
+                var selected = next.Nodes.ElementAtOrDefault(next.SelectedNode);
+                next.Nodes.RemoveAll(n => n.SourceSubscription == url); foreach (var node in nodes) node.SourceSubscription = url;
+                if (!next.Subscriptions.Contains(url)) next.Subscriptions.Add(url); next.Nodes.AddRange(nodes);
+                var index = selected == null ? 0 : next.Nodes.IndexOf(selected);
+                if (index < 0) index = next.Nodes.FindIndex(n => n.SourceSubscription == selected!.SourceSubscription && n.Name == selected.Name);
+                next.SelectedNode = Math.Max(0, index);
+            } else next.Nodes.AddRange(nodes);
+            await CommitNodes(next); return nodes.Count;
         }
         case "profiles": return new { selectedId = prefs.Mode == "nodes" ? (prefs.Nodes.Count > 0 ? "nodes" : null) : prefs.Configs.FirstOrDefault(p => p.Path == prefs.ConfigPath)?.Id, profiles = prefs.Mode == "nodes" ? new[] { new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = 0L } } : prefs.Configs.Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = c.Url.Length > 0 ? "remote" : "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = new DateTimeOffset(c.Updated).ToUnixTimeMilliseconds() }).ToArray() };
         case "createProfile": { Idle(); var url = S("remoteUrl"); var text = url.Length > 0 ? await ProfileImport.FetchAsync(url) : S("content"); var p = ProfileImport.SaveConfig(prefs, text, S("name", "配置"), url); prefs.Mode = "config"; prefs.ConfigPath = p.Path; prefs.Core = p.Core; Save(); return null; }

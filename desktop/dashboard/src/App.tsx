@@ -107,6 +107,7 @@ import { OpenVPNView } from "./views/OpenVPNView";
 import styles from "./App.module.css";
 import { cx } from "./lib/cx";
 import { WorkspacePicker, WorkspaceView, WboxSettingsView } from "./WboxViews";
+import { NodeClipboard } from "./WboxWorkspace";
 
 export type Route =
   | { page: "workspace" }
@@ -938,6 +939,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
 
   return (
     <CapabilitiesContext.Provider value={capabilities}>
+      <NodeClipboard />
       <div className={styles.app}>
         {host === null && (
           <header className={styles.mobileTopbar}>

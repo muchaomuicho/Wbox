@@ -497,7 +497,7 @@ export function Select<T extends string | number>(props: {
   const listRef = useRef<HTMLDivElement>(null);
   useDismiss(ref, open, () => setOpen(false));
   useMenuPopover(ref, listRef, open, () => setOpen(false), {
-    width: props.inline ? "min-anchor" : "anchor",
+    width: "min-anchor",
   });
 
   const selected = props.options.find((option) => option.value === props.value);
@@ -572,7 +572,7 @@ export function Select<T extends string | number>(props: {
               <span className="menu-check">
                 {option.value === props.value && <Icon name="check" size={13} />}
               </span>
-              {option.label}
+              <span className="select-option-label">{option.label}</span>
             </button>
           ))}
         </div>

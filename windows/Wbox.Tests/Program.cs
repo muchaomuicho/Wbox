@@ -26,6 +26,7 @@ int checks = 0;
 void Check(bool condition, string label) { if (!condition) throw new Exception("FAILED: " + label); checks++; Console.WriteLine("PASS " + label); }
 if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
 await ImportChecks.Run(Check);
+NodeEditingChecks.Run(Check);
 var ss = NodeParser.Parse("ss://" + Convert.ToBase64String(Encoding.UTF8.GetBytes("aes-128-gcm:p:a@ss")) + "@[2001:db8::1]:8388#IPv6");
 Check(ss.Password == "p:a@ss" && ss.Server == "2001:db8::1" && ss.Port == 8388, "SS URL credentials and IPv6");
 ss.Name = "🇯🇵 日本 IPv6";

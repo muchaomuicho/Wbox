@@ -56,6 +56,7 @@ public class MainActivityUiTest {
             for(int i=0;i<body.getChildCount();i++)if(body.getChildAt(i) instanceof ListView)list=(ListView)body.getChildAt(i);
             assertNotNull(list);assertEquals(400,list.getAdapter().getCount());assertTrue(list.getChildCount()>0);assertTrue("Only visible rows should exist",list.getChildCount()<20);
             LinearLayout first=(LinearLayout)list.getChildAt(0);first.getChildAt(0).performClick();
+            assertFalse("Single tap only selects a row",new Profiles(activity).data.has("selected"));first.getChildAt(0).performClick();
             assertEquals("Node 0",new Profiles(activity).data.getString("selected"));
         }
     }

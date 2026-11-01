@@ -43,7 +43,7 @@ function contentSecurityPolicy(): Plugin {
 export default defineConfig({
   main: {
     define: {
-      __APP_VERSION__: JSON.stringify("0.5.0"),
+      __APP_VERSION__: JSON.stringify("0.5.1"),
     },
     build: { rollupOptions: { input: { index: resolve(import.meta.dirname, "wbox/main.ts") } } },
     resolve: {

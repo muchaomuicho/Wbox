@@ -11,13 +11,21 @@ public final class Node {
     public String username="", source="";
     public Map<String,String> options=new HashMap<>();
     public JSONObject nativeSingbox, nativeMihomo;
+    private boolean edited;
+    public JSONObject fields() throws Exception {
+        return new JSONObject().put("name",name).put("protocol",protocol).put("server",server).put("port",port).put("password",password).put("uuid",uuid).put("cipher",cipher).put("username",username).put("tls",tls).put("insecure",insecure).put("sni",sni).put("network",network.isEmpty()?"tcp":network).put("path",path).put("host",host).put("flow",flow).put("alterId",alterId).put("realityKey",realityKey).put("shortId",shortId).put("fingerprint",fingerprint).put("options",new JSONObject(options));
+    }
+    static Node fromFields(JSONObject j) throws Exception {
+        Node n=new Node();n.edited=true;n.name=j.optString("name");n.protocol=j.optString("protocol");n.server=j.optString("server");n.port=j.optInt("port");n.password=j.optString("password");n.uuid=j.optString("uuid");n.cipher=j.optString("cipher");n.username=j.optString("username");n.tls=j.optBoolean("tls");n.insecure=j.optBoolean("insecure");n.sni=j.optString("sni");n.network=j.optString("network","tcp");n.path=j.optString("path");n.host=j.optString("host");n.flow=j.optString("flow");n.alterId=j.optInt("alterId");n.realityKey=j.optString("realityKey");n.shortId=j.optString("shortId");n.fingerprint=j.optString("fingerprint");JSONObject options=j.optJSONObject("options");if(options!=null){Iterator<String> keys=options.keys();while(keys.hasNext()){String key=keys.next();n.options.put(key,options.getString(key));}}n.raw=n.fields().toString();return n;
+    }
     public static Node stored(Object value)throws Exception {
         if(value instanceof String)return parse((String)value);
         JSONObject v=(JSONObject)value;
+        if(v.has("edited")){Node n=fromFields(v.getJSONObject("edited"));n.source=v.optString("source");return n;}
         if(v.has("link")){Node n=parse(v.getString("link"));n.source=v.optString("source");return n;}
         boolean sb=v.has("singbox");JSONObject j=v.getJSONObject(sb?"singbox":"mihomo");Node n=new Node();n.nativeSingbox=sb?j:null;n.nativeMihomo=sb?null:j;n.name=j.optString(sb?"tag":"name",j.optString("type"));n.protocol=j.optString("type");n.server=j.optString("server");n.port=j.optInt(sb?"server_port":"port");n.source=v.optString("source");n.raw=v.toString();return n;
     }
-    public Object storage()throws Exception {if(nativeSingbox!=null||nativeMihomo!=null)return new JSONObject().put(nativeSingbox!=null?"singbox":"mihomo",nativeSingbox!=null?nativeSingbox:nativeMihomo).put("source",source);return source.isEmpty()?raw:new JSONObject().put("link",raw).put("source",source);}
+    public Object storage()throws Exception {if(edited)return new JSONObject().put("edited",fields()).put("source",source);if(nativeSingbox!=null||nativeMihomo!=null)return new JSONObject().put(nativeSingbox!=null?"singbox":"mihomo",nativeSingbox!=null?nativeSingbox:nativeMihomo).put("source",source);return source.isEmpty()?raw:new JSONObject().put("link",raw).put("source",source);}
     public boolean compatible(String engine){if(protocol.equals("naive"))return false;return engine.equals("sing-box")?nativeMihomo==null&&!(protocol.equals("socks")&&tls):nativeSingbox==null;}
     public boolean tls, insecure;
     static String dec(String x) { try{return URLDecoder.decode(x.replace("+","%2B"),"UTF-8");}catch(java.io.UnsupportedEncodingException impossible){throw new AssertionError(impossible);} }
