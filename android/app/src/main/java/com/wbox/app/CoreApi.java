@@ -20,6 +20,11 @@ public final class CoreApi {
     private final int port;
     public CoreApi(String secret){this(secret,19090);}
     public CoreApi(String secret,int port){this.secret=secret;this.port=port;}
+    void checkReady(int timeoutMs,int mixedPort)throws Exception {
+        checkReady(timeoutMs);
+        // Mihomo's controller can listen before the mixed inbound is bound.
+        try(Socket socket=new Socket()){socket.connect(new InetSocketAddress("127.0.0.1",mixedPort),timeoutMs);}
+    }
     void checkReady(int timeoutMs)throws Exception {
         HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:"+port+"/version").openConnection(Proxy.NO_PROXY);
         c.setConnectTimeout(timeoutMs);c.setReadTimeout(timeoutMs);c.setRequestProperty("Authorization","Bearer "+secret);

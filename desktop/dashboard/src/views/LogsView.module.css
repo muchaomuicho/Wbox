@@ -21,6 +21,19 @@
   display: block;
 }
 
+.scroll-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: 13px;
+}
+
+.scroll-status {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
 .log-line mark {
   color: inherit;
   background: var(--highlight);

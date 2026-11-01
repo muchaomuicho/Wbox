@@ -13,6 +13,8 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
@@ -21,6 +23,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -309,11 +316,36 @@ private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return
 
 @Composable private fun Logs(m:MobileModel,dark:Boolean) {
     var query by remember{mutableStateOf("")}
+    var autoScroll by remember{mutableStateOf(true)}
+    var following by remember{mutableStateOf(true)}
+    var userScrolling by remember{mutableStateOf(false)}
+    val list=rememberLazyListState()
+    val scope=rememberCoroutineScope()
+    val rows=remember(m.logs,query){m.logs.filter{it.contains(query,true)}}
+    val gestures=remember{object:NestedScrollConnection {
+        override fun onPreScroll(available:Offset,source:NestedScrollSource):Offset {
+            if(source==NestedScrollSource.Drag && available.y!=0f){userScrolling=true;following=false}
+            return Offset.Zero
+        }
+    }}
+    LaunchedEffect(list) {
+        snapshotFlow{list.isScrollInProgress}.collect{scrolling->
+            if(!scrolling && userScrolling){userScrolling=false;following=!list.canScrollForward}
+        }
+    }
+    suspend fun bottom(){if(rows.isNotEmpty()){list.scrollToItem(rows.lastIndex);list.scrollBy((list.layoutInfo.visibleItemsInfo.lastOrNull()?.size?:0).toFloat())}}
+    LaunchedEffect(rows,autoScroll,following){if(autoScroll && following && !userScrolling)bottom()}
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Text("最近 350 条",Modifier.weight(1f).padding(start=8.dp),style=MaterialTheme.typography.labelMedium);IconButton(onClick={m.logsPaused=!m.logsPaused}){Icon(if(m.logsPaused)Icons.Outlined.PlayArrow else Icons.Outlined.Pause,if(m.logsPaused)"继续日志" else "暂停日志")};IconButton(onClick={m.copyLogs()}){Icon(Icons.Outlined.ContentCopy,"复制日志")};IconButton(onClick={m.clearLogs()}){Icon(Icons.Outlined.DeleteOutline,"清空日志")}}
         OutlinedTextField(query,{query=it},Modifier.onFocusChanged{m.textInputFocused=it.isFocused}.fillMaxWidth().padding(horizontal=16.dp),placeholder={Text("搜索日志")},singleLine=true,leadingIcon={Icon(Icons.Outlined.Search,null)},shape=RoundedCornerShape(16.dp))
-        LazyColumn(contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-            val rows=m.logs.filter{it.contains(query,true)}
+        Row(Modifier.fillMaxWidth().padding(horizontal=16.dp),verticalAlignment=Alignment.CenterVertically){
+            Text("自动滚动",style=MaterialTheme.typography.labelMedium)
+            Switch(checked=autoScroll,onCheckedChange={enabled->autoScroll=enabled;if(enabled){userScrolling=false;following=true;scope.launch{bottom()}}},modifier=Modifier.padding(start=8.dp).testTag("log-auto-scroll"))
+            Spacer(Modifier.weight(1f))
+            TextButton(onClick={userScrolling=false;autoScroll=true;following=true;scope.launch{bottom()}}){Icon(Icons.Outlined.VerticalAlignBottom,null,Modifier.size(18.dp));Text("滚动到底部")}
+        }
+        if(autoScroll && !following)Text("正在查看历史日志",Modifier.padding(horizontal=16.dp),color=MaterialTheme.colorScheme.onSurfaceVariant,style=MaterialTheme.typography.labelSmall)
+        LazyColumn(state=list,modifier=Modifier.weight(1f).testTag("log-list").nestedScroll(gestures),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
             if(rows.isEmpty())item{EmptyState("暂无日志","连接后可查看内核运行记录。",Icons.Outlined.Article)}
             items(rows){line->val text=remember(line,dark){val span=LogStyle.color(line,dark) as Spanned;buildAnnotatedString{append(span.toString());span.getSpans(0,span.length,ForegroundColorSpan::class.java).forEach{addStyle(SpanStyle(color=Color(it.foregroundColor)),span.getSpanStart(it),span.getSpanEnd(it))}}};SelectionContainer{Text(text,fontSize=11.sp,fontFamily=FontFamily.Monospace,lineHeight=17.sp)}}
         }

@@ -30,7 +30,7 @@ public final class Profiles {
     public Profiles copy()throws Exception {Profiles copy=new Profiles(file.getParentFile());copy.data=new JSONObject(data.toString());copy.writeThrough=false;return copy;}
     public static boolean subscriptionAddress(String input) {try{URI uri=new URI(input.trim());return List.of("http","https").contains(uri.getScheme())&&uri.getHost()!=null&&uri.getUserInfo()==null&&uri.getFragment()==null&&!input.contains("\n");}catch(Exception e){return false;}}
     public String engine(){return data.optString("engine","sing-box");}
-    public String mode(){return data.optString("mode","nodes");}
+    public String mode(){return data.optString("mode","config");}
     public List<Node> nodes() throws Exception {JSONArray a=data.optJSONArray("nodes");if(a!=cachedArray){List<Node> r=new ArrayList<>();if(a!=null)for(int i=0;i<a.length();i++)r.add(Node.stored(a.get(i)));unique(r);cachedNodes=r;cachedArray=a;}return new ArrayList<>(cachedNodes);}
     static void unique(List<Node> ns){Set<String> used=new HashSet<>();for(Node n:ns){String base=n.name;int i=2;while(!used.add(n.name)||n.name.equals("Wbox")||n.name.equals("DIRECT"))n.name=base+" ("+i+++ ")";}}
     public String importText(String body,String source)throws Exception {

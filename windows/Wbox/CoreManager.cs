@@ -69,6 +69,7 @@ public sealed class CoreManager : IDisposable
         var working = p.Mode == "config" ? Path.GetDirectoryName(Path.GetFullPath(p.ConfigPath))! : Path.Combine(Store.DirectoryPath, p.Core);
         if (transient) working = transientDirectory = Path.Combine(Store.DirectoryPath, "latency", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(working);
+        if(p.Core=="mihomo" && p.Mode=="config")Geodata.Prepare(working,ConfigBuilder.ParseYaml(config),message=>Log?.Invoke(message));
         runtimePath = Path.Combine(working, $".wbox-runtime-{Guid.NewGuid():N}.{(p.Core == "sing-box" ? "json" : "yaml")}");
         File.WriteAllText(runtimePath, config);
             // run performs the same validation and reports startup errors. Avoid
@@ -101,9 +102,13 @@ public sealed class CoreManager : IDisposable
                     try {
                         using var response = await api.GetAsync("/version", deadline.Token);
                         if(response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)throw new InvalidOperationException($"控制接口认证失败（HTTP {(int)response.StatusCode}），请检查端口占用。");
-                        if (response.IsSuccessStatusCode) { ready = true; break; }
+                        if (response.IsSuccessStatusCode) {
+                            using var listener=new System.Net.Sockets.TcpClient();
+                            await listener.ConnectAsync("127.0.0.1",ProxyPort,deadline.Token);
+                            ready = true; break;
+                        }
                         lastProbe=$"控制接口返回 HTTP {(int)response.StatusCode}";
-                    } catch (HttpRequestException ex) { lastProbe=ex.Message; } catch (TaskCanceledException) { }
+                    } catch (HttpRequestException ex) { lastProbe=ex.Message; } catch (System.Net.Sockets.SocketException ex) { lastProbe=ex.Message; } catch (TaskCanceledException) { }
                     await Task.Delay(200,deadline.Token);
                 }
             } catch(OperationCanceledException) when(!sessionCancellation.IsCancellationRequested) { }

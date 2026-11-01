@@ -11,6 +11,9 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class ProfilesTest {
+    @Test public void defaultsToConfigAndRemembersExplicitWorkspace()throws Exception {
+        assertEquals("config",p.mode());p.setWorkspace("nodes");p.save();p.load();assertEquals("nodes",p.mode());
+    }
     @Test public void jsonEscapesUseJsonGrammar()throws Exception {
         String text="{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"a\\/b\"}],\"route\":{\"final\":\"a\\/b\"}}";
         java.util.Map<?,?> route=(java.util.Map<?,?>)Profiles.yamlMap(text).get("route");
@@ -53,6 +56,7 @@ public class ProfilesTest {
     @Test public void tlsAndSniAreNotDowngraded()throws Exception{Node https=Node.parse("https://user:password@127.0.0.1:443?sni=example.org#TLS");assertEquals(true,https.mihomo().get("tls"));assertEquals("example.org",https.mihomo().get("sni"));Node vless=Node.parse("vless://11111111-1111-4111-8111-111111111111@127.0.0.1:443?security=tls&sni=example.org");assertEquals("example.org",vless.mihomo().get("servername"));}
     @Test public void pluginExplicitlyRejected()throws Exception{try{Node.parse(SS.replace("#Test","?plugin=unknown-plugin#Test"));fail("must not silently discard plugin");}catch(IllegalArgumentException expected){assertTrue(expected.getMessage().contains("插件"));}}
     @Test public void workspacesPreserveIndependentSelection()throws Exception{
+        p.setWorkspace("nodes");
         p.importNodes(SS,null);p.data.put("engine","mihomo").put("selected","Test");
         p.importConfig("{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"DIRECT\"}]}","https://example.org/no-extension",null);
         assertEquals("nodes",p.mode());assertEquals("mihomo",p.engine());p.setWorkspace("config");assertEquals("sing-box",p.engine());
@@ -69,6 +73,7 @@ public class ProfilesTest {
         p.importNodes(SS,"https://example.org/nodes");before=p.data.toString();try{p.importNodes(SS+"\ninvalid","https://example.org/nodes");fail();}catch(Exception expected){}assertEquals(before,p.data.toString());
     }
     @Test public void nativeSubscriptionRemainsNodeWorkspace()throws Exception{
+        p.setWorkspace("nodes");
         p.importNodes("proxies:\n - {name: Native, type: ss, server: 127.0.0.1, port: 8388, cipher: aes-128-gcm, password: secret}\n","https://example.org/native");
         assertEquals("nodes",p.mode());p.data.put("engine","mihomo");assertTrue(p.compile("test").contains("secret"));assertNotNull(p.nodes().get(0).nativeMihomo);
     }
@@ -78,6 +83,7 @@ public class ProfilesTest {
         p.setWorkspace("nodes");p.importNodes(content,"https://example.org/no-extension");assertEquals(2,p.nodes().size());assertEquals("sing-box",p.engine());validateExpanded("sing-box");
     }
     @Test public void expandedProtocolsPassActualCores()throws Exception{
+        p.setWorkspace("nodes");
         Assume.assumeTrue("1".equals(System.getenv("WBOX_CORE_TESTS")));
         byte[] bytes=new byte[32];for(int i=0;i<32;i++)bytes[i]=(byte)(i+1);String key=URLEncoder.encode(Base64.getEncoder().encodeToString(bytes),"UTF-8");
         String[] links={"anytls://pw@127.0.0.1:443?alpn=h2#AnyTLS","socks://user:p%2Bass@127.0.0.1:1080#SOCKS","https://user:pw@127.0.0.1:443#HTTPS","hysteria://127.0.0.1:443?auth=pw&upmbps=50&downmbps=100#HY1","hy2://pw@127.0.0.1:443?obfs=salamander&obfs-password=secret&alpn=h3#HY2","tuic://11111111-1111-4111-8111-111111111111:pw@127.0.0.1:443?congestion_control=bbr&udp_relay_mode=quic#TUIC",SS.replace("#Test","?plugin=obfs-local%3Bobfs%3Dhttp%3Bobfs-host%3Dexample.org#Obfs"),"wireguard://"+key+"@127.0.0.1:2408?publickey="+key+"&address=172.16.0.2%2F32%2Cfd00%3A%3A2%2F128&reserved=1,2,3#WG"};
@@ -95,6 +101,7 @@ public class ProfilesTest {
     @Test public void bothCompilersSupportProtocols()throws Exception{String[] links={SS,"vless://b831381d-6324-4d53-ad4f-8cda48b30811@127.0.0.1:443?security=tls&sni=example.com&type=ws&path=%2Fa#VLESS","trojan://pw@127.0.0.1:443#Trojan","hy2://pw@127.0.0.1:443#HY2","tuic://b831381d-6324-4d53-ad4f-8cda48b30811:pw@127.0.0.1:443#TUIC"};p.importText(String.join("\n",links),null);for(String e:List.of("sing-box","mihomo")){p.data.put("engine",e);String config=p.compile("s");assertTrue(config.contains("Wbox"));assertTrue(config.contains("127.0.0.1"));}}
     @Test public void selectedNodeAppliedToBoth()throws Exception{p.importText(SS+"\n"+SS.replace("#Test","#Second"),null);p.data.put("selected","Second");JSONObject sb=new JSONObject(p.compile("s"));JSONArray out=sb.getJSONArray("outbounds");assertEquals("Second",out.getJSONObject(out.length()-1).getString("default"));p.data.put("engine","mihomo");Map<String,Object> yaml=Profiles.yamlMap(p.compile("s"));Map<?,?> group=(Map<?,?>)((List<?>)yaml.get("proxy-groups")).get(0);assertEquals("Second",((List<?>)group.get("proxies")).get(0));}
     @Test public void flagNamesPassBothCoreCompilers()throws Exception{
+        p.setWorkspace("nodes");
         p.importNodes(SS.replace("#Test","#%F0%9F%87%AF%F0%9F%87%B5%20Tokyo"),null);
         p.data.put("selected","🇯🇵 Tokyo");
         for(String engine:List.of("sing-box","mihomo")){
@@ -118,8 +125,9 @@ public class ProfilesTest {
             p.importConfig(engine.equals("sing-box")?"{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"DIRECT\"}],\"route\":{\"final\":\"DIRECT\"}}":"proxies: []\nrules: ['MATCH,DIRECT']\n",null,null);p.setWorkspace("config");int mixed,controller;try(ServerSocket a=new ServerSocket(0);ServerSocket b=new ServerSocket(0)){mixed=a.getLocalPort();controller=b.getLocalPort();}String config=p.compile("integration-secret",mixed,controller,true);File cf=new File(folder,engine.equals("sing-box")?"config.json":"config.yaml");Files.write(cf.toPath(),config.getBytes(StandardCharsets.UTF_8));
             File exe=new File(root,"resources/cores/windows/"+(engine.equals("sing-box")?"sing-box.exe":"mihomo.exe"));List<String> cmd=new ArrayList<>(List.of(exe.getAbsolutePath()));if(engine.equals("sing-box"))cmd.addAll(List.of("run","-c",cf.getAbsolutePath(),"-D",folder.getAbsolutePath()));else cmd.addAll(List.of("-f",cf.getAbsolutePath(),"-d",folder.getAbsolutePath()));
             File log=new File(folder,engine+".log");Process core=new ProcessBuilder(cmd).redirectErrorStream(true).redirectOutput(log).start();
-            try{CoreApi api=new CoreApi("integration-secret",controller);boolean ready=false;for(int i=0;i<100;i++){if(!core.isAlive())fail(engine+" failed: "+new String(Files.readAllBytes(log.toPath()),StandardCharsets.UTF_8));try{api.proxies();ready=true;break;}catch(Exception ignored){Thread.sleep(100);}}assertTrue("core ready",ready);
-                for(String address:List.of("127.0.0.1","::1")){testHttp(address,mixed);testUdp(address,mixed);}
+            try{CoreApi api=new CoreApi("integration-secret",controller);boolean ready=false;for(int i=0;i<100;i++){if(!core.isAlive())fail(engine+" failed: "+new String(Files.readAllBytes(log.toPath()),StandardCharsets.UTF_8));try{api.checkReady(1000,mixed);ready=true;break;}catch(Exception ignored){Thread.sleep(100);}}assertTrue("core ready",ready);
+                try {for(String address:List.of("127.0.0.1","::1")){testHttp(address,mixed);testUdp(address,mixed);}}
+                catch(Exception failure){throw new AssertionError(engine+" forwarding failed: "+new String(Files.readAllBytes(log.toPath()),StandardCharsets.UTF_8),failure);}
                 JSONObject stats=api.connections();assertTrue(engine+" upload",stats.getLong("uploadTotal")>0);assertTrue(engine+" download",stats.getLong("downloadTotal")>0);
                 System.out.println("PASS actual "+engine+" Android-generated config: selector / HTTP+SOCKS5 UDP IPv4+IPv6 / traffic counters");
             }finally{core.destroy();if(!core.waitFor(3,TimeUnit.SECONDS))core.destroyForcibly();}

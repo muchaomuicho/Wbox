@@ -11,7 +11,7 @@ import { useI18n } from "../app/i18n";
 import { Icon } from "../components/Icon";
 import { PageHeader } from "../components/PageHeader";
 import { StreamErrorBanner } from "../components/StreamBanner";
-import { EmptyState, IconButton, MenuItem, OthersMenu, SearchInput, Spinner, SubMenu } from "../components/ui";
+import { EmptyState, IconButton, MenuItem, OthersMenu, SearchInput, Spinner, SubMenu, Switch } from "../components/ui";
 import { LogLevel } from "../gen/daemon/started_service_pb";
 import { ansiColorCss, parseAnsi, parseCssColor, stripAnsi, type Rgb } from "../lib/ansi";
 import { canShare, shareError, shareFile } from "../lib/sharing";
@@ -65,6 +65,9 @@ export function LogsView() {
   const [paused, setPaused] = useState(false);
   const [frozen, setFrozen] = useState<LogEntry[]>([]);
   const [search, setSearch] = useState("");
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [following, setFollowing] = useState(true);
+  const followingRef = useRef(true);
   const viewRef = useRef<HTMLDivElement>(null);
   const background = useLogBackground();
 
@@ -115,20 +118,34 @@ export function LogsView() {
     void shareFile(host, logFileName(), text, "text/plain").catch(onShareError);
   };
 
+  const follow = (value: boolean) => {
+    followingRef.current = value;
+    setFollowing(value);
+  };
+  const scrollToBottom = () => {
+    follow(true);
+    setAutoScroll(true);
+    const view = viewRef.current;
+    if (view) view.scrollTop = view.scrollHeight;
+  };
+
   useLayoutEffect(() => {
-    if (paused) {
-      return;
-    }
+    if (paused || !autoScroll || !followingRef.current) return;
     const view = viewRef.current;
     if (view) {
       view.scrollTop = view.scrollHeight;
     }
-  }, [visible, paused]);
+  }, [visible, paused, autoScroll, following]);
 
   let body: ReactNode;
   if (sourceEntries.length > 0 && outage === null) {
     body = (
-      <div className={styles.logView} ref={viewRef}>
+      <div className={styles.logView} ref={viewRef} tabIndex={0} aria-label="日志内容"
+        onWheel={event => { if (event.deltaY < 0) follow(false); }}
+        onScroll={event => {
+          const view = event.currentTarget;
+          follow(view.scrollHeight - view.clientHeight - view.scrollTop <= 4);
+        }}>
         {visible.map((entry) => (
           <LogLine
             key={entry.id}
@@ -159,7 +176,7 @@ export function LogsView() {
           <>
             <IconButton
               active={paused}
-              title={paused ? t("Resume scrolling") : t("Pause scrolling")}
+              title={paused ? "继续日志更新" : "暂停日志更新"}
               onClick={togglePause}
             >
               <Icon name={paused ? "play_arrow" : "pause"} />
@@ -211,6 +228,15 @@ export function LogsView() {
       />
       <div className="field">
         <SearchInput value={search} onChange={setSearch} />
+      </div>
+      <div className={styles.scrollControls}>
+        <span>自动滚动</span>
+        <Switch label="自动滚动" value={autoScroll} onChange={value => {
+          setAutoScroll(value);
+          if (value) scrollToBottom();
+        }} />
+        <span className={styles.scrollStatus}>{paused ? "日志更新已暂停" : autoScroll && !following ? "正在查看历史日志" : ""}</span>
+        <button type="button" className="button" onClick={scrollToBottom}>滚动到底部</button>
       </div>
       <StreamErrorBanner error={outage} />
       {body}

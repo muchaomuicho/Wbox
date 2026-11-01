@@ -1,4 +1,4 @@
-param([string]$Version = '0.6.2', [string]$AndroidVersion = '0.6.2')
+param([string]$Version = '0.6.3', [string]$AndroidVersion = '0.6.3')
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = Join-Path $repo "dist/Wbox-$Version-source.zip"

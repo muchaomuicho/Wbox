@@ -98,4 +98,28 @@ class ComposeUiTest {
         val text="+0800 2026-11-01 11:15:51 FATAL[0000] netlink socket banned\n11:15:52 INFO [123 0ms] connected"
         for(dark in listOf(false,true)){val styled=LogStyle.color(text,dark) as Spanned;assertEquals(text,styled.toString());assertTrue(styled.getSpans(0,styled.length,ForegroundColorSpan::class.java).size>=3)}
     }
+    @Test fun logsFollowNewRowsUntilUserReadsHistory(){
+        ui.runOnIdle{m.logsPaused=true;m.logs=(1..350).map{"INFO log-row-$it"};m.page="logs"}
+        ui.onNodeWithTag("log-auto-scroll").assertIsOn()
+        ui.onNodeWithText("INFO log-row-350").assertIsDisplayed()
+        ui.onNodeWithTag("log-list").performTouchInput{swipeDown()}
+        ui.onNodeWithText("正在查看历史日志").assertExists()
+        ui.runOnIdle{m.logs=(2..351).map{"INFO log-row-$it"}}
+        ui.onNodeWithText("INFO log-row-351").assertIsNotDisplayed()
+        ui.onNodeWithText("滚动到底部").performClick()
+        ui.onNodeWithText("INFO log-row-351").assertIsDisplayed()
+        ui.runOnIdle{m.logs=(3..352).map{"INFO log-row-$it"}}
+        ui.onNodeWithText("INFO log-row-352").assertIsDisplayed()
+        ui.onNodeWithTag("log-auto-scroll").performClick().assertIsOff()
+        ui.onNodeWithTag("log-list").performTouchInput{swipeDown()}
+        ui.runOnIdle{m.logs=(4..353).map{"INFO log-row-$it"}}
+        ui.onNodeWithText("INFO log-row-353").assertIsNotDisplayed()
+        ui.onNodeWithText("滚动到底部").performClick()
+        ui.onNodeWithTag("log-auto-scroll").assertIsOn()
+        ui.onNodeWithText("INFO log-row-353").assertIsDisplayed()
+        ui.onNodeWithText("搜索日志").performTextInput("log-row-350")
+        ui.onNodeWithText("INFO log-row-350").assertIsDisplayed()
+        ui.onNodeWithContentDescription("清空日志").performClick()
+        ui.onNodeWithText("暂无日志").assertExists()
+    }
 }

@@ -3,7 +3,7 @@ namespace Wbox;
 public sealed class Preferences
 {
     public string Core { get; set; } = "mihomo";
-    public string Mode { get; set; } = "nodes";
+    public string Mode { get; set; } = "config";
     public string ConfigPath { get; set; } = "";
     public string DelayUrl { get; set; } = "https://www.apple.com/library/test/success.html";
     public bool Silent { get; set; }

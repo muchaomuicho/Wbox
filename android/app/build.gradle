@@ -6,8 +6,8 @@ android {
         applicationId 'com.wbox.app'
         minSdk 26
         targetSdk 34
-        versionCode 10
-        versionName '0.6.2'
+        versionCode 11
+        versionName '0.6.3'
         ndk { abiFilters(project.findProperty('wboxTestAbi') ?: 'arm64-v8a') }
     }
     signingConfigs {
@@ -35,7 +35,7 @@ android {
     buildFeatures { compose true }
     composeOptions { kotlinCompilerExtensionVersion '1.5.14' }
     sourceSets {
-        main { jniLibs.srcDirs = ['../../resources/cores/android']; assets.srcDirs = ['../../resources/cores/licenses'] }
+        main { jniLibs.srcDirs = ['../../resources/cores/android']; assets.srcDirs = ['../../resources/cores/licenses','../../resources/geodata'] }
         debug { jniLibs.srcDirs += ['../../.tools/android-test-cores'] }
     }
     packagingOptions { jniLibs { useLegacyPackaging true; keepDebugSymbols += ['**/libmihomo.so', '**/libsingbox.so'] } }

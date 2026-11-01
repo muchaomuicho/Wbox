@@ -7,6 +7,7 @@ Wbox source code is distributed under GPL-3.0. No affiliation with upstream proj
 - HEV SOCKS5 Tunnel — https://github.com/heiher/hev-socks5-tunnel — MIT. Pinned source and its submodules are included under `native/hev-socks5-tunnel/`; revisions and Wbox modifications are documented in `native/README.md`. HEV task system, HEV socks5 core and libyaml use MIT; lwIP uses its BSD license. Full license files are retained in source and copied under `resources/cores/licenses/`.
 - YamlDotNet 16.3.0 — https://github.com/aaubry/YamlDotNet — MIT.
 - SnakeYAML 2.4 — https://bitbucket.org/snakeyaml/snakeyaml — Apache-2.0.
+- MetaCubeX meta-rules-dat — https://github.com/MetaCubeX/meta-rules-dat — GPL-3.0. Unmodified default GeoIP / GeoSite databases from the official release are bundled for offline initialization. Exact URLs, SHA256 values and sizes: `resources/geodata/manifest.json`. License: `resources/cores/licenses/meta-rules-dat-LICENSE`. Upstream sources and data attribution: https://github.com/MetaCubeX/meta-rules-dat/blob/master/README.md .
 - Android desugar JDK libraries 2.1.4 — https://github.com/google/desugar_jdk_libs — GPL-2.0 with Classpath Exception / upstream component licenses.
 - .NET 8 runtime and Windows Desktop runtime — https://github.com/dotnet/runtime — MIT and third-party notices supplied by Microsoft.
 

@@ -1,0 +1,34 @@
+[
+  {
+    "name": "geoip.metadb",
+    "key": "mmdb",
+    "aliases": [
+      "Country.mmdb",
+      "geoip.db",
+      "geoip.metadb"
+    ],
+    "url": "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb",
+    "sha256": "913829cf4776bc45263838699a0a630c2932004a6b3b0b0aca4e4ac76507244c",
+    "size": 8426932
+  },
+  {
+    "name": "GeoSite.dat",
+    "key": "geosite",
+    "aliases": [
+      "GeoSite.dat"
+    ],
+    "url": "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat",
+    "sha256": "c2ec1559aa5de2420f61ced348dd45ef44f07673d3bfc95dfab86174db3fd926",
+    "size": 4354536
+  },
+  {
+    "name": "GeoIP.dat",
+    "key": "geoip",
+    "aliases": [
+      "GeoIP.dat"
+    ],
+    "url": "https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat",
+    "sha256": "fbf747a085be25eb61ecac8c27140b4ab0bf8181af6fdb104caa325bd93cf117",
+    "size": 16549675
+  }
+]

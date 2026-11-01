@@ -41,7 +41,7 @@ static class ForwardingChecks {
             foreach(var engine in new[]{"sing-box","mihomo"}) {
                 using var downstream=new CoreManager(()=>true);
                 var downstreamLogs = new List<string>();downstream.Log+=line=>downstreamLogs.Add(line);
-                await downstream.StartAsync(new Preferences{Core=engine,SystemProxy=false,Nodes=[NodeParser.Parse($"socks5://127.0.0.1:{core.ProxyPort}#upstream")]});
+                await downstream.StartAsync(new Preferences{Mode="nodes",Core=engine,SystemProxy=false,Nodes=[NodeParser.Parse($"socks5://127.0.0.1:{core.ProxyPort}#upstream")]});
                 using var proxy=new HttpClient(new SocketsHttpHandler{Proxy=new WebProxy($"http://127.0.0.1:{downstream.ProxyPort}"),UseProxy=true}){Timeout=TimeSpan.FromSeconds(5)};
                 check(await proxy.GetStringAsync($"http://127.0.0.1:{port}/")=="Wbox",engine+" forwards through selected SOCKS upstream");
                 check((await downstream.GroupsAsync()).All(g=>g.Name!="GLOBAL"),engine+" hides the internal GLOBAL group");
