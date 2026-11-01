@@ -78,6 +78,10 @@ internal data class RuntimeState(
     var runtime by mutableStateOf(RuntimeState())
     var history by mutableStateOf<List<WboxVpnService.TrafficSample>>(emptyList())
     var groups by mutableStateOf(JSONObject())
+    var groupsLoading by mutableStateOf(false)
+    var connectionsLoading by mutableStateOf(false)
+    var groupsError by mutableStateOf("")
+    var connectionsError by mutableStateOf("")
     var proxyMode by mutableStateOf("rule")
     var connections by mutableStateOf<List<ConnectionRecord>>(emptyList())
     var logs by mutableStateOf<List<String>>(WboxVpnService.logSnapshot())
@@ -90,6 +94,17 @@ internal data class RuntimeState(
     val transition get() = runtime.starting || runtime.stopping
     internal fun reload() { profiles=Profiles(activity); nodes=profiles.nodes().toList(); configs=profiles.configs().objects() }
     fun work(action: suspend () -> Unit) { activity.lifecycleScope.launch { try { action() } catch(e: CancellationException){throw e} catch(e: Exception){ message=ErrorMessage.describe(e); WboxVpnService.log("ERROR $message") } } }
+    suspend fun refreshDetails(){
+        val target=sheet
+        WboxVpnService.wantsGroups=target=="groups";WboxVpnService.wantsConnections=target=="connections"
+        if(!runtime.running || target !in listOf("groups","connections"))return
+        if(target=="groups"){groupsLoading=true;groupsError=""}else{connectionsLoading=true;connectionsError=""}
+        try{
+            withContext(Dispatchers.IO){WboxVpnService.refreshDetails(target=="groups").get(5,java.util.concurrent.TimeUnit.SECONDS)}
+            if(target==sheet){groups=WboxVpnService.proxies;connections=WboxVpnService.connectionRows}
+        }catch(e:CancellationException){throw e}catch(e:Exception){if(target=="groups")groupsError=ErrorMessage.describe(e.cause?:e)else connectionsError=ErrorMessage.describe(e.cause?:e)}
+        finally{if(target=="groups")groupsLoading=false else connectionsLoading=false}
+    }
     suspend fun sample() {
         WboxVpnService.wantsGroups = sheet=="groups"
         WboxVpnService.wantsConnections = sheet=="connections"

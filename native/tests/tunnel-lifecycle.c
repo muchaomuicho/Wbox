@@ -14,6 +14,7 @@ static int fd_is_open(int fd, int ignored) { (void)ignored; return _get_osfhandl
 #define fcntl fd_is_open
 #include "../wbox-tun.c"
 #undef fcntl
+void wbox_origin_clear(void) {}
 static pthread_mutex_t stub_mutex=PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t stub_condition=PTHREAD_COND_INITIALIZER;
 static int stub_entered,stub_stopped,test_fd;

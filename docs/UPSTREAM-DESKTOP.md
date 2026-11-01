@@ -19,7 +19,7 @@ Proxy lifecycle references read during implementation:
 
 Runtime core sources remain in `resources/source`; their respective licenses apply.
 
-Android lifecycle/layout reference: https://github.com/SagerNet/sing-box-for-android at `a548a7903e96266a0046018562c73b192edbfc18`, especially `bg/VPNService.kt`, `bg/BoxService.kt`, and the Compose dashboard. Wbox Android retains its Java native views and borrowed-fd JNI tunnel ownership; it shares desktop semantic colors without embedding Electron/WebView.
+Android lifecycle/layout reference: https://github.com/SagerNet/sing-box-for-android at `a548a7903e96266a0046018562c73b192edbfc18`, especially `bg/VPNService.kt`, `bg/BoxService.kt`, and the Compose dashboard. Wbox Android uses Kotlin Compose with Java service code and borrowed-fd JNI tunnel ownership; it shares desktop semantic colors without embedding Electron/WebView. See `UPSTREAM-ANDROID.md` for component references.
 
 ## Build
 

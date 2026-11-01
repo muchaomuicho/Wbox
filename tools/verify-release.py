@@ -2,7 +2,7 @@
 import hashlib, json, pathlib, sys, zipfile
 
 root = pathlib.Path(__file__).resolve().parent.parent
-version = sys.argv[1] if len(sys.argv) > 1 else '0.6.3'
+version = sys.argv[1] if len(sys.argv) > 1 else '0.6.4'
 manifest = json.loads((root/'resources/geodata/manifest.json').read_text())
 checks = []
 with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
@@ -11,7 +11,9 @@ with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
     checks.append('APK includes only ARM64 native libraries')
     for library in ['libmihomo.so', 'libsingbox.so', 'libwboxtun.so']:
         assert f'lib/arm64-v8a/{library}' in names
+        assert hashlib.sha256(apk.read(f'lib/arm64-v8a/{library}')).digest() == hashlib.sha256((root/'resources/cores/android/arm64-v8a'/library).read_bytes()).digest(), library
     checks.append('APK includes both cores and native tunnel')
+    checks.append('Packaged core and JNI tunnel hashes match current build inputs')
     android_manifest = apk.read('AndroidManifest.xml')
     for encoding in ('utf-8', 'utf-16le'):
         assert 'RuntimeProbeReceiver'.encode(encoding) not in android_manifest

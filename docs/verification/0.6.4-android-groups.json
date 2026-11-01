@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "sing-box TCP and UDP retain their real originating app",
+    "mihomo TCP and UDP retain their real originating app",
+    "2,000-node configuration opens groups repeatedly with stable process PID",
+    "Large groups collapse to canvas indicators and expand without a crash"
+  ],
+  "opensMs": [
+    5293,
+    4697,
+    4703,
+    4569,
+    4586,
+    5012
+  ],
+  "timingNote": "opensMs includes UI automation tree dumps and waits; it is not page rendering latency."
+}

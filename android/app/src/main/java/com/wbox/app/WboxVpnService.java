@@ -34,6 +34,16 @@ public final class WboxVpnService extends VpnService {
     private ScheduledExecutorService polling;
     private ScheduledFuture<?> nextPoll;
     private static volatile WboxVpnService instance;
+    static CompletableFuture<Void> refreshDetails(boolean groups){
+        WboxVpnService service=instance;
+        if(service==null||!running||service.polling==null)return CompletableFuture.completedFuture(null);
+        CompletableFuture<Void> result=new CompletableFuture<>();
+        try{service.polling.execute(()->{try{
+            if(running&&!service.shuttingDown){if(groups)proxies=api().proxies();else {List<ConnectionRecord> rows=api().snapshot(true,connectionRows,Math.max(.1,(SystemClock.elapsedRealtime()-service.lastPoll)/1000.0)).rows;ConnectionApps.enrich(service,rows);connectionRows=rows;}}
+            result.complete(null);
+        }catch(Exception e){result.completeExceptionally(e);}});}catch(RejectedExecutionException e){result.completeExceptionally(e);}
+        return result;
+    }
     static void setVisible(boolean value){visible=value;WboxVpnService service=instance;if(value&&service!=null)service.schedulePoll(0);}
     private synchronized void schedulePoll(long delay){
         if(!running||polling==null||polling.isShutdown())return;
@@ -85,6 +95,7 @@ public final class WboxVpnService extends VpnService {
         long startupBegan=SystemClock.elapsedRealtime();
         startStage="加载隧道";
         NativeTunnel.prepare();if(shuttingDown)return;
+        ConnectionApps.clear();
         startStage="生成配置";
         Profiles p=new Profiles(this);secret=UUID.randomUUID().toString();String profile=p.mode().equals("config")&&p.activeConfig()!=null?p.activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";File dir=new File(getFilesDir(),"runtime/"+p.engine()+"/"+profile);dir.mkdirs();File config=new File(dir,p.engine().equals("sing-box")?"config.json":"config.yaml");Files.write(config.toPath(),p.compile(secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         File binary=new File(getApplicationInfo().nativeLibraryDir,p.engine().equals("sing-box")?"libsingbox.so":"libmihomo.so");if(!binary.isFile())throw new IOException("安装包缺少内核 "+binary.getName());
@@ -121,7 +132,7 @@ public final class WboxVpnService extends VpnService {
         File hev=new File(dir,"tunnel.yaml");String y="tunnel:\n  name: wbox\n  mtu: 1500\n  ipv4: 172.19.0.1\n"+(ipv6?"  ipv6: 'fdfe:dcba:9876::1'\n":"")+"socks5:\n  address: 127.0.0.1\n  port: 10808\n  udp: udp\nmisc:\n  task-stack-size: 24576\n  tcp-buffer-size: 32768\n  udp-recv-buffer-size: 131072\n  max-session-count: 1024\n  connect-timeout: 8000\n  tcp-read-write-timeout: 300000\n  udp-read-write-timeout: 60000\n  log-level: warn\n";Files.write(hev.toPath(),y.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         final int fd=ownedTun.detachFd();ownedTun=null;tunnel=new Thread(()->{try{if(shuttingDown)return;int result=NativeTunnel.run(hev.getAbsolutePath(),fd);if(!shuttingDown){log("隧道结束："+result);shuttingDown=true;queueShutdown();}}catch(Throwable ex){log("隧道失败："+ex.getMessage());shuttingDown=true;queueShutdown();}finally{try{ParcelFileDescriptor.adoptFd(fd).close();}catch(IOException ignored){}}},"wbox-tun");tunnel.start();
         upload=download=upRate=downRate=previousUp=previousDown=0;clearTraffic();lastPoll=SystemClock.elapsedRealtime();startedAt=lastPoll;running=true;starting=false;status="已连接";log(p.engine()+" 已连接（"+(SystemClock.elapsedRealtime()-startupBegan)+" ms） · IPv6 "+(ipv6?"开启":"关闭"));
-        monitorNetwork();polling=Executors.newSingleThreadScheduledExecutor();instance=this;schedulePoll(1);
+        monitorNetwork();polling=Executors.newSingleThreadScheduledExecutor();instance=this;schedulePoll(0);
     }
     private void persistFailure(){try{Files.write(new File(getFilesDir(),"last-startup-error.log").toPath(),("Android "+Build.VERSION.RELEASE+" / "+Build.SUPPORTED_ABIS[0]+"\n"+String.join("\n",logSnapshot())).getBytes(java.nio.charset.StandardCharsets.UTF_8));}catch(IOException ignored){}}
     private void monitorNetwork(){
@@ -133,7 +144,7 @@ public final class WboxVpnService extends VpnService {
         // Android handles Wi-Fi/mobile handover; no netlink or fixed device name.
         connectivity.registerNetworkCallback(new NetworkRequest.Builder().addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN).build(),networkCallback);
     }
-    private void poll(){if(!running)return;pollTicks++;try{if(core==null||!core.isAlive()){throw new IOException("内核意外退出");}long now=SystemClock.elapsedRealtime();double seconds=Math.max(.001,(now-lastPoll)/1000.0);CoreApi.Stats j=api().snapshot(visible&&wantsConnections,connectionRows,seconds);connectionRows=j.rows;long u=j.upload,d=j.download;upRate=(long)(Math.max(0,u-previousUp)/seconds);downRate=(long)(Math.max(0,d-previousDown)/seconds);previousUp=u;previousDown=d;upload=u;download=d;lastPoll=now;recordTraffic(now,upRate,downRate);inbound=j.connections;outbound=inbound;if(visible&&(memory==0||pollTicks%5==0)){appMemory=(long)Debug.getPss()*1024;coreMemory=coreRss();memory=appMemory+coreMemory;}if(visible&&wantsGroups&&(proxies.length()==0||pollTicks%5==0))proxies=api().proxies();if(pollTicks%(visible?30:1)==0)getSystemService(NotificationManager.class).notify(NOTIFY,notification());}
+    private void poll(){if(!running)return;pollTicks++;try{if(core==null||!core.isAlive()){throw new IOException("内核意外退出");}long now=SystemClock.elapsedRealtime();double seconds=Math.max(.001,(now-lastPoll)/1000.0);CoreApi.Stats j=api().snapshot(visible&&wantsConnections,connectionRows,seconds);if(visible&&wantsConnections)ConnectionApps.enrich(this,j.rows);connectionRows=j.rows;long u=j.upload,d=j.download;upRate=(long)(Math.max(0,u-previousUp)/seconds);downRate=(long)(Math.max(0,d-previousDown)/seconds);previousUp=u;previousDown=d;upload=u;download=d;lastPoll=now;recordTraffic(now,upRate,downRate);inbound=j.connections;outbound=inbound;if(visible&&(memory==0||pollTicks%5==0)){appMemory=(long)Debug.getPss()*1024;coreMemory=coreRss();memory=appMemory+coreMemory;}if(visible&&wantsGroups&&(proxies.length()==0||pollTicks%5==0))proxies=api().proxies();if(pollTicks%(visible?30:1)==0)getSystemService(NotificationManager.class).notify(NOTIFY,notification());}
         catch(Exception ex){if(core!=null&&!core.isAlive()){log(ex.getMessage());shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});}}
         finally{schedulePoll(visible?1:30);}
     }

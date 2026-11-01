@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { proxyDisplayType, urlTestDelayTone } from "../api/format";
 import { useStream } from "../api/stream";
@@ -95,7 +95,7 @@ function GroupCard(props: { group: Group }) {
           </>
         }
       >
-        {expanded ? (
+        {expanded && group.items.length>200 ? <LargeGroupGrid items={group.items} selected={selected} onSelect={selectItem}/> : expanded ? (
           <div className={styles.groupItems}>
             {group.items.map((item) => (
               <GroupItemCard
@@ -123,6 +123,31 @@ function GroupCard(props: { group: Group }) {
       </Card>
     </div>
   );
+}
+
+function LargeGroupGrid({items,selected,onSelect}:{items:GroupItem[];selected:string;onSelect:(item:GroupItem)=>void}) {
+  const container=useRef<HTMLDivElement>(null);
+  const [view,setView]=useState({columns:1,first:0,rows:12});
+  useEffect(()=>{
+    let frame=0;
+    const measure=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{
+      const box=container.current?.getBoundingClientRect();if(!box)return;
+      const columns=Math.max(1,Math.floor((box.width+10)/180));
+      const first=Math.max(0,Math.floor(-box.top/70)-2);
+      const rows=Math.ceil(innerHeight/70)+4;
+      setView(old=>old.columns===columns&&old.first===first&&old.rows===rows?old:{columns,first,rows});
+    });};
+    const resize=new ResizeObserver(measure);if(container.current)resize.observe(container.current);
+    window.addEventListener('scroll',measure,true);measure();
+    return()=>{cancelAnimationFrame(frame);resize.disconnect();window.removeEventListener('scroll',measure,true);};
+  },[]);
+  const first=Math.min(view.first,Math.max(0,Math.ceil(items.length/view.columns)-view.rows));
+  const start=Math.min(items.length,first*view.columns),end=Math.min(items.length,start+view.rows*view.columns);
+  return <div ref={container} className={styles.largeGrid} style={{height:Math.ceil(items.length/view.columns)*70}}>
+    <div className={styles.groupItems} style={{position:'absolute',top:first*70,left:0,right:0,gridTemplateColumns:`repeat(${view.columns},minmax(0,1fr))`,gridAutoRows:60}}>
+      {items.slice(start,end).map((item,index)=><GroupItemCard key={`${item.tag}:${start+index}`} item={item} selected={item.tag===selected} onSelect={()=>onSelect(item)}/>)}
+    </div>
+  </div>;
 }
 
 function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: () => void }) {

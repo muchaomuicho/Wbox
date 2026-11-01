@@ -18,6 +18,7 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -68,6 +69,7 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
         DisposableEffect(m.page,m.sheet) { onDispose { m.textInputFocused=false } }
         LaunchedEffect(m.message) { if(m.message.isNotEmpty()){val text=m.message;snackbar.showSnackbar(text);if(m.message==text)m.message=""} }
         SideEffect { m.editing=editor!=null }
+        LaunchedEffect(m.sheet,m.runtime.running){m.refreshDetails()}
         val title=when(m.page){"overview"->"概览";"library"->if(m.workspace=="config")"配置" else "节点";"logs"->"日志";else->"设置"}
         Scaffold(
             modifier=Modifier.focusRequester(focus).onPreviewKeyEvent{event ->
@@ -103,7 +105,7 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
                 }
             },
             bottomBar={Column{
-                if(m.runtime.running || m.runtime.stopping) ServiceStatusBar(m)
+                if(m.runtime.running || m.runtime.stopping) ServiceStatusBar(m,dark)
                 NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp){
                     listOf(Triple("overview","概览",Icons.Outlined.Dashboard),Triple("library",if(m.workspace=="config")"配置" else "节点",Icons.Outlined.Folder),Triple("logs","日志",Icons.Outlined.Article),Triple("settings","设置",Icons.Outlined.Settings)).forEach{(key,label,icon)->NavigationBarItem(selected=m.page==key,onClick={m.page=key},icon={Icon(icon,label)},label={Text(label)})}
                 }
@@ -123,26 +125,26 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
     }
 }
 
-@Composable private fun PowerControl(m:MobileModel) {
+@Composable private fun PowerControl(m:MobileModel,dark:Boolean) {
     val r=m.runtime
     // Intrinsic width follows the text. No elapsed-time-dependent sizing.
-    Surface(onClick={m.toggle()},enabled=!r.stopping && !m.busy,shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.surfaceVariant) {
+    Surface(onClick={m.toggle()},enabled=!r.stopping && !m.busy,shape=RoundedCornerShape(12.dp),color=if(dark)Color(0xff355147)else Color(0xffcce8dc),contentColor=if(dark)Color(0xffecf8f2)else Color(0xff163e30)) {
         Row(Modifier.defaultMinSize(minWidth=40.dp,minHeight=40.dp).padding(horizontal=12.dp),horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically){
             if(r.starting || r.stopping) CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp)
-            else {if(r.running)Text(uptime(r.uptime),fontSize=12.sp,fontFamily=FontFamily.Monospace);Icon(if(r.running)Icons.Outlined.Stop else Icons.Outlined.PlayArrow,if(r.running)"断开代理连接" else "连接代理",Modifier.size(20.dp))}
+            else {if(r.running)Text(uptime(r.uptime),fontSize=12.sp,fontFamily=FontFamily.Monospace);Icon(if(r.running)Icons.Filled.Stop else Icons.Outlined.PlayArrow,if(r.running)"断开代理连接" else "连接代理",Modifier.size(20.dp))}
         }
     }
 }
 internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".format(seconds/3600,seconds/60%60,seconds%60) else "%d:%02d".format(seconds/60,seconds%60)
 
-@Composable private fun ServiceStatusBar(m:MobileModel) {
+@Composable private fun ServiceStatusBar(m:MobileModel,dark:Boolean) {
     // SFA ServiceStatusBar: compact status, connections and group shortcuts.
     Surface(color=MaterialTheme.colorScheme.surfaceVariant) {
         Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=4.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(m.runtime.status,Modifier.weight(1f),style=MaterialTheme.typography.labelLarge)
             TextButton(onClick={m.sheet="connections"}){Icon(Icons.Outlined.Cable,null,Modifier.size(18.dp));Spacer(Modifier.width(6.dp));Text(m.runtime.connectionsIn.toString())}
             IconButton(onClick={m.sheet="groups"}){Icon(Icons.Outlined.AccountTree,"代理组",Modifier.size(20.dp))}
-            PowerControl(m)
+            PowerControl(m,dark)
         }
     }
 }
@@ -251,19 +253,37 @@ private fun host(url:String):String=try{URI(url).host ?: "订阅"}catch(_:Except
 
 @Composable private fun ProfilePicker(m:MobileModel) {Column{Text("选择配置",Modifier.padding(20.dp),style=MaterialTheme.typography.titleLarge);LazyColumn{items(m.configs,key={it.optString("id")}){p->ListItem(headlineContent={Text(p.optString("name"))},supportingContent={Muted(p.optString("core"))},trailingContent={if(p.optString("id")==m.profiles.data.optString("active_config"))Icon(Icons.Outlined.Check,null)},modifier=Modifier.clickable{m.selectProfile(p.getString("id"));m.sheet=""})}}} }
 @Composable private fun DelayText(value:String?) {Text(value ?: "未测试",fontFamily=FontFamily.Monospace,fontSize=11.sp,color=delayColor(value))}
+@Composable private fun LoadingPanel(text:String){Row(Modifier.fillMaxWidth().padding(24.dp),horizontalArrangement=Arrangement.Center,verticalAlignment=Alignment.CenterVertically){CircularProgressIndicator(Modifier.size(20.dp),strokeWidth=2.dp);Spacer(Modifier.width(12.dp));Muted(text)}}
+// Like upstream GroupDotsGrid, paint indicators rather than composing one view per node.
+// Split into bounded lazy tiles so even huge groups never create an oversized layout.
+@Composable private fun GroupDots(m:MobileModel,nodes:List<String>,selected:String,last:Boolean,expand:()->Unit){
+    val colors=nodes.map{delayColor(delay(m,it))}
+    Surface(Modifier.fillMaxWidth().padding(bottom=if(last)12.dp else 0.dp),color=MaterialTheme.colorScheme.surfaceVariant,shape=if(last)RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)else RoundedCornerShape(0.dp)){
+        BoxWithConstraints(Modifier.fillMaxWidth().clickable(onClick=expand).padding(horizontal=16.dp,vertical=8.dp)){
+            val columns=maxOf(1,((maxWidth+4.dp)/15.dp).toInt());val rows=(nodes.size+columns-1)/columns
+            Canvas(Modifier.fillMaxWidth().height((maxOf(1,rows)*15-4).dp)){
+                nodes.forEachIndexed{index,node->val point=Offset((index%columns)*15.dp.toPx(),(index/columns)*15.dp.toPx())
+                    drawRoundRect(colors[index],point,androidx.compose.ui.geometry.Size(11.dp.toPx(),11.dp.toPx()),androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
+                    if(node==selected)drawCircle(Color.White,2.dp.toPx(),point+Offset(5.5.dp.toPx(),5.5.dp.toPx()))
+                }
+            }
+        }
+    }
+}
 @Composable private fun delayColor(value:String?):Color {val n=value?.substringBefore(" ")?.toLongOrNull();return when{value=="失败"->MaterialTheme.colorScheme.error;n==null->MaterialTheme.colorScheme.onSurfaceVariant;n<800->Color(0xff539675);n<1500->Color(0xffbd9747);else->Color(0xffce6e63)}}
 private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return it};val values=m.groups.optJSONObject(name)?.optJSONArray("history");val n=values?.optJSONObject(values.length()-1)?.optInt("delay") ?: return null;return if(n>0)"$n ms" else "失败"}
 // Group header, rounded row surfaces and selected latency dots follow SFA GroupsCard.
 @Composable private fun Groups(m:MobileModel) {
-    val groups=m.groups.keys().asSequence().filter{it!="GLOBAL"&&m.groups.optJSONObject(it)?.has("all")==true}.toList()
+    val snapshot=m.groups
+    val groups=remember(snapshot){snapshot.keys().asSequence().filter{it!="GLOBAL"&&snapshot.optJSONObject(it)?.optJSONArray("all")!=null}.toList()}
     val expanded=remember{mutableStateMapOf<String,Boolean>()}
     LaunchedEffect(groups.firstOrNull()){if(expanded.isEmpty())groups.firstOrNull()?.let{expanded[it]=true}}
-    Column {
+    Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=8.dp),verticalAlignment=Alignment.CenterVertically){Text("组",Modifier.weight(1f),style=MaterialTheme.typography.headlineSmall);IconButton(onClick={val open=groups.none{expanded[it]==true};groups.forEach{expanded[it]=open}}){Icon(if(groups.any{expanded[it]==true})Icons.Outlined.UnfoldLess else Icons.Outlined.UnfoldMore,"展开或收起全部")}}
-        LazyColumn(contentPadding=PaddingValues(horizontal=16.dp,vertical=8.dp)){
-            if(groups.isEmpty())item{EmptyState("暂无代理组","连接配置后可选择节点。",Icons.Outlined.AccountTree)}
+        LazyColumn(Modifier.weight(1f).testTag("proxy-groups"),contentPadding=PaddingValues(horizontal=16.dp,vertical=8.dp)){
+            if(groups.isEmpty())item{if(m.groupsLoading)LoadingPanel("正在加载代理组")else EmptyState(if(m.groupsError.isEmpty())"暂无代理组" else "代理组加载失败",m.groupsError.ifEmpty{"连接配置后可选择节点。"},Icons.Outlined.AccountTree)}
             groups.forEach{tag->
-                val group=m.groups.getJSONObject(tag);val all=group.getJSONArray("all").strings();val open=expanded[tag]==true
+                val group=snapshot.getJSONObject(tag);val all=group.getJSONArray("all").strings();val open=expanded[tag]==true
                 val testing=m.testing&&all.any{m.delays[it]=="测试中"}
                 item(key="header:$tag"){
                     Surface(color=MaterialTheme.colorScheme.surfaceVariant,contentColor=MaterialTheme.colorScheme.onSurface,shape=RoundedCornerShape(topStart=20.dp,topEnd=20.dp)) {
@@ -275,13 +295,12 @@ private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return
                         }
                     }
                 }
-                if(!open)item(key="dots:$tag"){
-                    Surface(Modifier.fillMaxWidth().padding(bottom=12.dp),color=MaterialTheme.colorScheme.surfaceVariant,shape=RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)){
-                        FlowRow(Modifier.padding(start=16.dp,end=16.dp,top=6.dp,bottom=16.dp),horizontalArrangement=Arrangement.spacedBy(4.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){all.forEach{node->Box(Modifier.size(11.dp).clip(RoundedCornerShape(4.dp)).background(delayColor(delay(m,node))),contentAlignment=Alignment.Center){if(group.optString("now")==node)Box(Modifier.size(3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White))}}}
-                    }
+                if(!open)items(count=maxOf(1,(all.size+255)/256),key={"dots:$tag:$it"},contentType={"dots"}){index->
+                    val last=(index+1)*256>=all.size
+                    GroupDots(m,all.subList(minOf(index*256,all.size),minOf((index+1)*256,all.size)),group.optString("now"),last){expanded[tag]=true}
                 }
-                else all.chunked(2).forEachIndexed{index,pair->val last=index==(all.size-1)/2
-                    item(key="$tag:$index"){
+                else items(count=(all.size+1)/2,key={"nodes:$tag:$it"},contentType={"nodes"}){index->
+                    val pair=all.subList(index*2,minOf(index*2+2,all.size));val last=index==(all.size-1)/2
                         Surface(Modifier.fillMaxWidth().padding(bottom=if(last)12.dp else 0.dp),color=MaterialTheme.colorScheme.surfaceVariant,shape=if(last)RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)else RoundedCornerShape(0.dp)){
                             Row(Modifier.padding(start=16.dp,end=16.dp,top=8.dp,bottom=if(last)16.dp else 0.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){
                                 pair.forEach{node->val selected=group.optString("now")==node
@@ -294,7 +313,6 @@ private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return
                                 };if(pair.size==1)Spacer(Modifier.weight(1f))
                             }
                         }
-                    }
                 }
             }
         }
@@ -303,15 +321,15 @@ private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return
 
 @Composable private fun Connections(m:MobileModel) {
     var query by remember{mutableStateOf("")};var detail by remember{mutableStateOf<ConnectionRecord?>(null)}
-    Column {Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.CenterVertically){Text("连接",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge);TextButton(onClick={m.closeConnection(null)}){Text("关闭全部")}}
+    Column(Modifier.fillMaxSize()) {Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.CenterVertically){Text("连接",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge);TextButton(onClick={m.closeConnection(null)}){Text("关闭全部")}}
         OutlinedTextField(query,{query=it},Modifier.onFocusChanged{m.textInputFocused=it.isFocused}.fillMaxWidth().padding(16.dp),placeholder={Text("搜索连接")},singleLine=true,leadingIcon={Icon(Icons.Outlined.Search,null)},shape=RoundedCornerShape(16.dp))
-        LazyColumn(contentPadding=PaddingValues(horizontal=16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
+        LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(horizontal=16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
             val rows=m.connections.filter{it.matches(query)}
-            if(rows.isEmpty())item{EmptyState("暂无活动连接","产生网络流量后，连接会显示在这里。",Icons.Outlined.Cable)}
-            items(rows,key={it.id}){row->Surface(onClick={detail=row},shape=RoundedCornerShape(14.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){Row{Muted(row.network);Spacer(Modifier.width(8.dp));Text(row.destination,style=MaterialTheme.typography.bodyMedium,maxLines=1,overflow=TextOverflow.Ellipsis)};Muted(row.inbound+" → "+row.outbound);Row{Muted("↑ ${MainActivity.bytes(row.upRate)}/s",Modifier.weight(1f));Muted("↓ ${MainActivity.bytes(row.downRate)}/s")}}}}
+            if(rows.isEmpty())item{if(m.connectionsLoading)LoadingPanel("正在加载连接")else EmptyState(if(m.connectionsError.isEmpty())"暂无活动连接" else "连接加载失败",m.connectionsError.ifEmpty{"产生网络流量后，连接会显示在这里。"},Icons.Outlined.Cable)}
+            items(rows,key={it.id}){row->Surface(onClick={detail=row},shape=RoundedCornerShape(14.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){Row(verticalAlignment=Alignment.CenterVertically){ConnectionIcon(row.packageName);Spacer(Modifier.width(10.dp));Muted(row.network);Spacer(Modifier.width(8.dp));Text(row.destination,style=MaterialTheme.typography.bodyMedium,maxLines=1,overflow=TextOverflow.Ellipsis)};Muted(row.inbound+" → "+row.outbound);Row{Muted("↑ ${MainActivity.bytes(row.upRate)}/s",Modifier.weight(1f));Muted("↓ ${MainActivity.bytes(row.downRate)}/s")}}}}
         }
     }
-    detail?.let{c->AlertDialog(onDismissRequest={detail=null},title={Text("连接详情")},text={SelectionContainer{Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){listOf("网络" to c.network,"来源" to c.source,"目标" to c.destination,"入站" to c.inbound,"出站" to c.outbound,"规则" to c.rule,"上传" to MainActivity.bytes(c.upload),"下载" to MainActivity.bytes(c.download)).forEach{(k,v)->Muted(k);Text(v.ifEmpty{"—"},style=MaterialTheme.typography.bodyMedium)}}}},confirmButton={TextButton(onClick={m.closeConnection(c.id);detail=null}){Text("关闭连接")}},dismissButton={TextButton(onClick={detail=null}){Text("返回")}})}
+    detail?.let{c->AlertDialog(onDismissRequest={detail=null},title={Text("连接详情")},text={SelectionContainer{Column(Modifier.verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(8.dp)){listOf("应用" to c.packageName,"网络" to c.network,"来源" to c.source,"目标" to c.destination,"入站" to c.inbound,"出站" to c.outbound,"规则" to c.rule,"上传" to MainActivity.bytes(c.upload),"下载" to MainActivity.bytes(c.download)).forEach{(k,v)->Muted(k);Text(v.ifEmpty{"—"},style=MaterialTheme.typography.bodyMedium)}}}},confirmButton={TextButton(onClick={m.closeConnection(c.id);detail=null}){Text("关闭连接")}},dismissButton={TextButton(onClick={detail=null}){Text("返回")}})}
 }
 
 @Composable private fun Logs(m:MobileModel,dark:Boolean) {

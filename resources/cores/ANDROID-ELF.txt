@@ -173,7 +173,7 @@ ELF Header:
   Version:                           0x1
   Entry point address:               0x0
   Start of program headers:          64 (bytes into file)
-  Start of section headers:          235472 (bytes into file)
+  Start of section headers:          239544 (bytes into file)
   Flags:                             0x0
   Size of this header:               64 (bytes)
   Size of program headers:           56 (bytes)
@@ -189,12 +189,12 @@ There are 9 program headers, starting at offset 64
 Program Headers:
   Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
   PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x0001f8 0x0001f8 R   0x8
-  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x038ce0 0x038ce0 R E 0x4000
-  LOAD           0x038ce0 0x000000000003cce0 0x000000000003cce0 0x000678 0x003320 RW  0x4000
-  LOAD           0x039358 0x0000000000041358 0x0000000000041358 0x000208 0x004270 RW  0x4000
-  DYNAMIC        0x038d80 0x000000000003cd80 0x000000000003cd80 0x0001b0 0x0001b0 RW  0x8
-  GNU_RELRO      0x038ce0 0x000000000003cce0 0x000000000003cce0 0x000678 0x003320 R   0x1
-  GNU_EH_FRAME   0x005b10 0x0000000000005b10 0x0000000000005b10 0x00113c 0x00113c R   0x4
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x039cc0 0x039cc0 R E 0x4000
+  LOAD           0x039cc0 0x000000000003dcc0 0x000000000003dcc0 0x000680 0x002340 RW  0x4000
+  LOAD           0x03a340 0x0000000000042340 0x0000000000042340 0x000208 0x022298 RW  0x4000
+  DYNAMIC        0x039d60 0x000000000003dd60 0x000000000003dd60 0x0001b0 0x0001b0 RW  0x8
+  GNU_RELRO      0x039cc0 0x000000000003dcc0 0x000000000003dcc0 0x000680 0x002340 R   0x1
+  GNU_EH_FRAME   0x005bb0 0x0000000000005bb0 0x0000000000005bb0 0x00117c 0x00117c R   0x4
   GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x0
   NOTE           0x000238 0x0000000000000238 0x0000000000000238 0x0000bc 0x0000bc R   0x4
 
@@ -210,7 +210,7 @@ Program Headers:
    07     
    08     .note.android.ident .note.gnu.build-id 
    None   .comment .shstrtab 
-Dynamic section at offset 0x38d80 contains 27 entries:
+Dynamic section at offset 0x39d60 contains 27 entries:
   Tag                Type           Name/Value
   0x0000000000000001 (NEEDED)       Shared library: [libc.so]
   0x0000000000000001 (NEEDED)       Shared library: [libm.so]
@@ -218,24 +218,24 @@ Dynamic section at offset 0x38d80 contains 27 entries:
   0x000000000000000e (SONAME)       Library soname: [libwboxtun.so]
   0x000000000000001e (FLAGS)        BIND_NOW 
   0x000000006ffffffb (FLAGS_1)      NOW 
-  0x0000000000000007 (RELA)         0x1248
+  0x0000000000000007 (RELA)         0x12b8
   0x0000000000000008 (RELASZ)       1296 (bytes)
   0x0000000000000009 (RELAENT)      24 (bytes)
   0x000000006ffffff9 (RELACOUNT)    53
-  0x0000000000000017 (JMPREL)       0x1758
-  0x0000000000000002 (PLTRELSZ)     2400 (bytes)
-  0x0000000000000003 (PLTGOT)       0x3d020
+  0x0000000000000017 (JMPREL)       0x17c8
+  0x0000000000000002 (PLTRELSZ)     2424 (bytes)
+  0x0000000000000003 (PLTGOT)       0x3e000
   0x0000000000000014 (PLTREL)       RELA
   0x0000000000000006 (SYMTAB)       0x2f8
   0x000000000000000b (SYMENT)       24 (bytes)
-  0x0000000000000005 (STRTAB)       0xdf0
-  0x000000000000000a (STRSZ)        1109 (bytes)
-  0x000000006ffffef5 (GNU_HASH)     0xdc8
-  0x0000000000000019 (INIT_ARRAY)   0x3cd70
+  0x0000000000000005 (STRTAB)       0xe24
+  0x000000000000000a (STRSZ)        1170 (bytes)
+  0x000000006ffffef5 (GNU_HASH)     0xdf8
+  0x0000000000000019 (INIT_ARRAY)   0x3dd50
   0x000000000000001b (INIT_ARRAYSZ) 16 (bytes)
-  0x000000000000001a (FINI_ARRAY)   0x3cd60
+  0x000000000000001a (FINI_ARRAY)   0x3dd40
   0x000000000000001c (FINI_ARRAYSZ) 16 (bytes)
-  0x000000006ffffff0 (VERSYM)       0xcd0
-  0x000000006ffffffe (VERNEED)      0xda4
+  0x000000006ffffff0 (VERSYM)       0xd00
+  0x000000006ffffffe (VERNEED)      0xdd8
   0x000000006fffffff (VERNEEDNUM)   1
   0x0000000000000000 (NULL)         0x0

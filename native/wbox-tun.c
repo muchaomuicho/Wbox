@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include "hev-main.h"
+#include "wbox-origin.h"
 
 static pthread_mutex_t state_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int running;
@@ -24,6 +25,7 @@ Java_com_wbox_app_NativeTunnel_prepare(JNIEnv *env, jclass type)
         return;
     }
     cancelled = 0;
+    wbox_origin_clear();
     pthread_mutex_unlock(&state_mutex);
 }
 

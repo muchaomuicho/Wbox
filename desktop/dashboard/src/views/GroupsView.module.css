@@ -25,6 +25,7 @@
   gap: var(--space-10);
   margin-top: 0;
 }
+.large-grid { position: relative; width: 100%; }
 
 .group-item {
   display: flex;

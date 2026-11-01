@@ -12,6 +12,18 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context context,Intent intent){
         PendingResult pending=goAsync();new Thread(()->{try{
             String action=intent.getStringExtra("operation");
+            if("details".equals(action)){
+                WboxVpnService.wantsConnections=true;WboxVpnService.refreshDetails(false).get(10,TimeUnit.SECONDS);
+                JSONArray rows=new JSONArray();for(ConnectionRecord row:WboxVpnService.connectionRows)rows.put(new JSONObject().put("source",row.source).put("destination",row.destination).put("network",row.network).put("package",row.packageName));
+                JSONObject result=new JSONObject().put("origins",new JSONArray(Arrays.asList(NativeTunnel.connectionOrigins()))).put("connections",rows);
+                Files.write(new File(context.getFilesDir(),"probe-details.json").toPath(),result.toString().getBytes());return;
+            }
+            if("details".equals(action)){
+                WboxVpnService.wantsConnections=true;WboxVpnService.refreshDetails(false).get(10,TimeUnit.SECONDS);
+                JSONArray rows=new JSONArray();for(ConnectionRecord row:WboxVpnService.connectionRows)rows.put(new JSONObject().put("source",row.source).put("destination",row.destination).put("network",row.network).put("package",row.packageName));
+                JSONObject result=new JSONObject().put("origins",new JSONArray(Arrays.asList(NativeTunnel.connectionOrigins()))).put("connections",rows);
+                Files.write(new File(context.getFilesDir(),"probe-details.json").toPath(),result.toString().getBytes());return;
+            }
             if("fetch".equals(action)) {
                 JSONObject result=new JSONObject();
                 try {

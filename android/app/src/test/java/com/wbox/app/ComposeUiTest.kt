@@ -98,6 +98,26 @@ class ComposeUiTest {
         val text="+0800 2026-11-01 11:15:51 FATAL[0000] netlink socket banned\n11:15:52 INFO [123 0ms] connected"
         for(dark in listOf(false,true)){val styled=LogStyle.color(text,dark) as Spanned;assertEquals(text,styled.toString());assertTrue(styled.getSpans(0,styled.length,ForegroundColorSpan::class.java).size>=3)}
     }
+    @Test fun largeGroupsStayLazyAndIgnoreNullMembership(){
+        val nodes=JSONArray((0..3999).map{"Node $it"})
+        val root=JSONObject().put("DIRECT",JSONObject().put("all",JSONObject.NULL))
+        for(tag in listOf("0","header","nodes","Large"))root.put(tag,JSONObject().put("all",nodes).put("now","Node 0").put("type","Selector"))
+        ui.runOnIdle{m.groups=root;WboxVpnService.proxies=root;m.sheet="groups"}
+        ui.onNodeWithText("Node 0").assertIsDisplayed()
+        ui.onNodeWithText("Node 3999").assertDoesNotExist()
+        ui.onNodeWithContentDescription("展开或收起全部").performClick()
+        ui.onNodeWithText("Node 0").assertDoesNotExist()
+        ui.onNodeWithContentDescription("展开或收起全部").performClick()
+        ui.onNodeWithText("Node 0").assertIsDisplayed()
+        ui.onNodeWithText("Node 3999").assertDoesNotExist()
+    }
+    @Test fun connectionsRenderApplicationIconAndDetails(){
+        val row=ConnectionRecord().apply{id="app";network="TCP";destination="example.test:443";packageName=ui.activity.packageName}
+        ui.runOnIdle{m.connections=listOf(row);WboxVpnService.connectionRows=listOf(row);m.sheet="connections"}
+        ui.waitUntil(5000){ui.onAllNodesWithContentDescription("Wbox").fetchSemanticsNodes().isNotEmpty()}
+        ui.onNodeWithText("example.test:443").performClick()
+        ui.onNodeWithText(ui.activity.packageName).assertExists()
+    }
     @Test fun logsFollowNewRowsUntilUserReadsHistory(){
         ui.runOnIdle{m.logsPaused=true;m.logs=(1..350).map{"INFO log-row-$it"};m.page="logs"}
         ui.onNodeWithTag("log-auto-scroll").assertIsOn()

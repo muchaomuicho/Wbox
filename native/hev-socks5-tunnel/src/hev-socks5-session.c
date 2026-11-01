@@ -17,6 +17,28 @@
 #include "hev-socks5-tunnel.h"
 
 #include "hev-socks5-session.h"
+#include <hev-task-mutex.h>
+#include "hev-socks5-session-tcp.h"
+#include "hev-socks5-session-udp.h"
+#include <lwip/tcp.h>
+#include <lwip/udp.h>
+#include "wbox-origin.h"
+
+static int wbox_record_origin(HevSocks5Session *base) {
+    HevSocks5 *socks=HEV_SOCKS5(base);char source[48],destination[48];
+    int fd=-1;
+    if(socks->type==HEV_SOCKS5_TYPE_TCP){
+        struct tcp_pcb *pcb=HEV_SOCKS5_SESSION_TCP(base)->pcb;if(!pcb)return -1;
+        ipaddr_ntoa_r(&pcb->remote_ip,source,sizeof(source));ipaddr_ntoa_r(&pcb->local_ip,destination,sizeof(destination));
+        fd=socks->fd;wbox_origin_add(fd,6,source,pcb->remote_port,destination,pcb->local_port);
+    }else{
+        HevSocks5SessionUDP *session=HEV_SOCKS5_SESSION_UDP(base);struct udp_pcb *pcb=session->pcb;if(!pcb)return -1;
+        ipaddr_ntoa_r(&pcb->remote_ip,source,sizeof(source));ipaddr_ntoa_r(&pcb->local_ip,destination,sizeof(destination));
+        fd=socks->type==HEV_SOCKS5_TYPE_UDP_IN_UDP?HEV_SOCKS5_CLIENT_UDP(base)->fd:socks->fd;
+        wbox_origin_add(fd,17,source,pcb->remote_port,destination,pcb->local_port);
+    }
+    return fd;
+}
 
 void
 hev_socks5_session_run (HevSocks5Session *self)
@@ -48,8 +70,10 @@ hev_socks5_session_run (HevSocks5Session *self)
         return;
     }
 
+    int origin_fd=wbox_record_origin(self);
     iface = HEV_OBJECT_GET_IFACE (self, HEV_SOCKS5_SESSION_TYPE);
     iface->splicer (self);
+    if(origin_fd>=0)wbox_origin_remove(origin_fd);
 }
 
 void

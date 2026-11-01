@@ -13,8 +13,9 @@ WBOX_HEV_SOURCE := $(filter-out $(SRCDIR)/hev-jni.c,$(SRCFILES))
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := wboxtun
-LOCAL_SRC_FILES := wbox-tun.c $(patsubst $(LOCAL_PATH)/%,%,$(WBOX_HEV_SOURCE))
+LOCAL_SRC_FILES := wbox-tun.c wbox-origin.c $(patsubst $(LOCAL_PATH)/%,%,$(WBOX_HEV_SOURCE))
 LOCAL_C_INCLUDES := \
+    $(WBOX_NATIVE_PATH) \
     $(WBOX_HEV_PATH)/src \
     $(WBOX_HEV_PATH)/src/misc \
     $(WBOX_HEV_PATH)/src/core/include \

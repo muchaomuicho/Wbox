@@ -61,6 +61,13 @@ async function quit() {
   catch (error) { closing = false; dialog.showErrorBox('系统代理尚未恢复', String(error)); await showWindow(); }
 }
 const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','connections','mode','setMode','select','close','delay','delayNodes','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile']);
+const processIcons=new Map<string,Promise<string|null>>();
+ipcMain.handle('wbox:process-icon', async (event,path:string) => {
+  if(event.sender!==window?.webContents || typeof path!=='string' || !/^[a-z]:[\\/].*\.exe$/i.test(path) || path.length>1024)return null;
+  const key=path.toLowerCase();let icon=processIcons.get(key);
+  if(!icon){icon=app.getFileIcon(path,{size:'small'}).then(value=>value.isEmpty()?null:value.toDataURL(),()=>null);processIcons.set(key,icon);if(processIcons.size>128)processIcons.delete(processIcons.keys().next().value!);}
+  return icon;
+});
 ipcMain.handle('wbox:call', async (event, method: string, args: any = {}) => {
   if (closing || quitting) throw new Error('Wbox 正在退出。');
   if (event.sender === window?.webContents && method === 'memory') return app.getAppMetrics().reduce((sum, p) => sum + (p.memory.privateBytes ?? p.memory.workingSetSize) * 1024, 0) + await rpc('memory');

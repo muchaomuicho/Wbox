@@ -26,7 +26,7 @@ try{
  await page.getByRole('button',{name:'配置与节点',exact:true}).click();
  await page.getByTitle('添加配置',{exact:true}).click();
  check(await page.getByRole('dialog').locator('input:not(.input),textarea:not(.input)').count()===0,'Import dialog uses upstream input controls');
- await page.waitForTimeout(300);await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-import-config.png')});
+ await page.waitForTimeout(300);await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-import-config.png')});
  await page.getByLabel('名称',{exact:true}).fill('远程配置');
  await page.getByLabel('配置地址',{exact:true}).fill(`http://127.0.0.1:${port}/config`);
  await page.getByRole('dialog').getByRole('button',{name:'添加',exact:true}).click();
@@ -39,13 +39,16 @@ try{
  check(editBox.width>viewport.width*.85&&editBox.height>viewport.height*.8,'Config editor fills the available desktop area');
  check(await page.locator('.cm-lineNumbers').count()>0,'Config editor shows line numbers');
  check(await page.locator('.cm-content span').evaluateAll(spans=>new Set(spans.map(s=>getComputedStyle(s).color)).size)>=2,'JSON syntax uses distinct token colors');
- await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-config-editor.png')});await page.getByRole('dialog').getByRole('button',{name:'取消',exact:true}).click();
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-config-editor.png')});await page.getByRole('dialog').getByRole('button',{name:'取消',exact:true}).click();
  await page.getByTitle('重命名配置',{exact:true}).click();await page.getByLabel('名称',{exact:true}).fill('我的远程配置');await page.getByRole('dialog').getByRole('button',{name:'保存',exact:true}).click();
  await page.getByText('我的远程配置',{exact:true}).waitFor();await page.getByTitle('更新配置',{exact:true}).click();await page.waitForTimeout(250);
  check((await page.evaluate(()=>window.wbox.call('state'))).configs[0].name==='我的远程配置','Renaming survives remote config refresh');
- await page.getByTitle('重命名配置',{exact:true}).click();await page.getByLabel('名称',{exact:true}).fill('远程配置');await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-rename.png')});await page.getByRole('dialog').getByRole('button',{name:'保存',exact:true}).click();
+ await page.getByTitle('重命名配置',{exact:true}).click();await page.getByLabel('名称',{exact:true}).fill('远程配置');await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-rename.png')});await page.getByRole('dialog').getByRole('button',{name:'保存',exact:true}).click();
  await page.getByTitle('开始',{exact:true}).click();
  await page.getByRole('button',{name:'连接',exact:true}).waitFor({timeout:30000});
+ await page.getByTitle('停止',{exact:true}).hover();
+ await page.waitForFunction(()=>{const e=document.querySelector('button[title="停止"]');return e&&getComputedStyle(e).backgroundColor===(document.documentElement.dataset.theme==='dark'?'rgb(53, 81, 71)':'rgb(204, 232, 220)');},{},{timeout:2000});
+ check(true,'Connected control keeps the coordinated green accent when hovered');
  check(await page.evaluate(()=>window.wbox.call('mode'))===null,'Sing-box does not expose Clash mode controls');
  check((await page.evaluate(()=>window.wbox.call('groups'))).every(g=>g.name!=='GLOBAL'),'GLOBAL is absent from the group list');
  const stopWidth=await page.getByTitle('停止',{exact:true}).evaluate(button=>{const label=button.querySelector('span');const before=button.getBoundingClientRect().width;const old=label.textContent;label.textContent='12345:59:59';const after=button.getBoundingClientRect().width;label.textContent=old;return {before,after};});
@@ -65,7 +68,7 @@ try{
  check((await page.evaluate(()=>window.wbox.call('state'))).startedAt===liveBefore.startedAt,'Editing and updating saved configs do not restart the active connection');
  await page.getByRole('button',{name:'概述',exact:true}).click();
  await page.getByText('内核内存',{exact:true}).waitFor();
- await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-overview.png')});
+ await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-overview.png')});
  await page.getByRole('button',{name:'组',exact:true}).click();
  await page.getByText('🇯🇵 日本 · Direct',{exact:true}).waitFor();
  check(await page.getByTitle('收起',{exact:true}).count()===1&&await page.getByTitle('展开',{exact:true}).count()===2,'Only first proxy group is expanded by default');
@@ -79,16 +82,18 @@ try{
  check(await page.getByText(/^(\d+ms|失败)$/).count()>=3,'Latency results appear before group test leaves busy state');
  await page.waitForTimeout(1200);
  check((await page.evaluate(()=>window.wbox.call('groups')))[0].selected==='🇭🇰 香港 · Direct','Group node selection');
- await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-groups.png')});
+ await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-groups.png')});
  const localPort=(await page.evaluate(()=>window.wbox.call('logs'))).map(l=>l.message).join('\n').match(/本地代理 127\.0\.0\.1:(\d+)/)?.[1];check(!!localPort,'Read actual allocated proxy port');
  const request=http.request({host:'127.0.0.1',port:Number(localPort),path:`http://127.0.0.1:${port}/stream`,headers:{host:`127.0.0.1:${port}`}},res=>res.resume());request.on('error',()=>{});request.end();
  await page.getByRole('button',{name:'连接',exact:true}).click();
  await page.getByText(`127.0.0.1:${port}`,{exact:false}).first().waitFor();
- await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-connections.png')});
+ await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-connections.png')});
  check((await page.evaluate(()=>window.wbox.call('connections'))).connections.length>0,'Real traffic appears in official connections page');
+ await page.locator('button img[alt$=".exe"]').first().waitFor({timeout:5000});
+ check(true,'Connection row shows the originating Windows executable icon');
  await page.getByText(`127.0.0.1:${port}`,{exact:false}).first().click();await page.locator('.drawer').waitFor();
  check((await page.locator('.drawer').boundingBox()).y>=37,'Connection detail stays below native caption controls');
- await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-connection-detail.png')});await page.keyboard.press('Escape');request.destroy();
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-connection-detail.png')});await page.keyboard.press('Escape');request.destroy();
  await page.getByRole('button',{name:'日志',exact:true}).click();await page.waitForTimeout(1200);
  check(await page.locator('span[style*="color"]').filter({hasText:'INFO'}).count()>0,'Native log severity is rendered in color');
  const logView=page.getByLabel('日志内容',{exact:true});
@@ -110,7 +115,7 @@ try{
  check(await logView.textContent()===frozen,'Pause log updates freezes the displayed snapshot');
  await page.getByTitle('继续日志更新',{exact:true}).click();await page.waitForTimeout(300);
  check(await atBottom(),'Resuming updates follows the latest log');
- await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-colored-logs.png')});
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-colored-logs.png')});
  await page.getByTitle('停止',{exact:true}).click();await page.getByTitle('开始',{exact:true}).waitFor();
  check(!(await page.evaluate(()=>window.wbox.call('service'))).running,'Top stop shuts down the core');
  await page.evaluate(id=>window.wbox.call('removeProfile',{id}),liveAfter.configs[1].id);
@@ -119,7 +124,7 @@ try{
  await page.getByRole('button',{name:'节点工作区',exact:true}).first().click();
  await page.getByRole('option',{name:'配置工作区',exact:true}).waitFor();
  check(await page.locator('.select-option-label').evaluateAll(labels=>labels.every(el=>el.scrollWidth<=el.clientWidth+1)),'Workspace menu labels fit without clipping');
- await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-workspace-menu.png')});
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-workspace-menu.png')});
  await page.getByRole('option',{name:'节点工作区',exact:true}).click();
  check(await page.locator('.card').getByTitle('添加节点',{exact:true}).count()===1,'Add action is inside the node card');
  await app.evaluate(({clipboard})=>clipboard.writeText('ss://YWVzLTI1Ni1nY206dGVzdA@127.0.0.1:19099#%F0%9F%87%AF%F0%9F%87%B5%20Japan\nss://YWVzLTI1Ni1nY206dGVzdA@127.0.0.1:19100#%F0%9F%87%AD%F0%9F%87%B0%20HongKong'));
@@ -143,7 +148,7 @@ try{
  await page.getByLabel('端口',{exact:true}).fill('70000');await page.getByRole('dialog').getByRole('button',{name:'保存',exact:true}).click();
  await page.getByRole('alert').waitFor();check((await page.evaluate(()=>window.wbox.call('state'))).nodes[0].port===19099,'Invalid edited port does not overwrite original');
  await page.getByLabel('端口',{exact:true}).fill('19099');
- await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-node-editor.png')});
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-node-editor.png')});
  await page.getByRole('dialog').getByRole('button',{name:'保存',exact:true}).click();
  await page.getByRole('dialog').waitFor({state:'hidden'});await page.getByText('🇯🇵 Japan edited',{exact:true}).waitFor();
  check(true,'Context menu opens editor and saves node parameters');
@@ -152,7 +157,7 @@ try{
  await jp.press('Enter');await page.waitForFunction(async()=>(await window.wbox.call('state')).selectedNode===0);
  check(true,'Enter activates focused node');
  await page.getByTitle('添加节点',{exact:true}).click();
- await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-import-nodes.png')});
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-import-nodes.png')});
  await page.getByLabel('订阅地址或节点链接').fill(`http://127.0.0.1:${port}/subscription`);
  await page.getByRole('dialog').getByRole('button',{name:'添加',exact:true}).click();
  await page.getByText('Subscription',{exact:true}).waitFor();
@@ -165,19 +170,19 @@ try{
  await page.getByRole('row').filter({hasText:'Subscription 副本'}).click({button:'right'});await page.getByRole('menuitem',{name:'移除节点',exact:true}).click();
  await page.waitForFunction(async()=>(await window.wbox.call('state')).nodes.length===3);
  state=await page.evaluate(()=>window.wbox.call('state'));
- await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-nodes.png')});
+ await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-nodes.png')});
  await page.getByRole('button',{name:'设置',exact:true}).click();
  await page.getByLabel('测试地址').fill('https://example.org/test');await page.getByRole('button',{name:'保存',exact:true}).click();
  await page.waitForFunction(async()=>(await window.wbox.call('state')).delayUrl==='https://example.org/test');
  await page.getByRole('button',{name:'恢复默认',exact:true}).click();await page.getByRole('button',{name:'保存',exact:true}).click();
  await page.waitForFunction(async()=>(await window.wbox.call('state')).delayUrl==='https://www.apple.com/library/test/success.html');
  check(true,'Custom test URL and default are saved');
- await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-settings.png')});
+ await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-settings.png')});
  await page.getByRole('button',{name:/^(跟随系统|浅色|深色)$/}).scrollIntoViewIfNeeded();await page.waitForTimeout(500);await page.getByRole('button',{name:/^(跟随系统|浅色|深色)$/}).click();await page.getByRole('option',{name:'深色',exact:true}).click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');check(true,'Theme control applies dark palette');await page.getByLabel('测试地址').scrollIntoViewIfNeeded();
- await page.waitForTimeout(300);await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-settings-dark.png')});
+ await page.waitForTimeout(300);await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-settings-dark.png')});
  await page.getByRole('button',{name:'配置与节点',exact:true}).click();await page.getByTitle('添加节点',{exact:true}).click();
- await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-import-dark.png')});await page.getByRole('button',{name:'取消',exact:true}).click();
- await page.getByRole('button',{name:'节点工作区',exact:true}).first().click();await page.getByRole('option',{name:'节点工作区',exact:true}).waitFor();await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-workspace-menu-dark.png')});await page.getByRole('option',{name:'节点工作区',exact:true}).click();
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-import-dark.png')});await page.getByRole('button',{name:'取消',exact:true}).click();
+ await page.getByRole('button',{name:'节点工作区',exact:true}).first().click();await page.getByRole('option',{name:'节点工作区',exact:true}).waitFor();await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-workspace-menu-dark.png')});await page.getByRole('option',{name:'节点工作区',exact:true}).click();
  await page.getByTitle('开始',{exact:true}).click();
  await page.getByTitle('停止',{exact:true}).waitFor();
  check((await page.evaluate(()=>window.wbox.call('state'))).core==='mihomo','Second core starts in node workspace');
@@ -210,7 +215,7 @@ try{
  await page.evaluate(()=>window.wbox.application('showTray'));
  popup=await trayWindow; popup.on('pageerror',e=>errors.push(e.message));
  check(await popup.evaluate(()=>document.documentElement.dataset.theme==='dark'&&document.getElementById('root').childElementCount>0),'Tray is themed and rendered when first shown');
- await popup.screenshot({path:join(previews,'0.6.3-tray-first-frame.png'),omitBackground:true});
+ await popup.screenshot({path:join(previews,'0.6.4-tray-first-frame.png'),omitBackground:true});
  await popup.getByRole('switch').waitFor();
  check(await popup.getByRole('switch').isChecked(),'Official tray switch reflects running service');
  await popup.getByRole('button',{name:'组',exact:true}).hover();
@@ -223,7 +228,7 @@ try{
  await popup.getByRole('button',{name:'关闭所有连接',exact:true}).click();
  check(((await popup.evaluate(()=>window.wbox.call('connections'))).connections?.length||0)===0,'Tray closes all connections');
  await popup.evaluate(()=>{localStorage.setItem('wbox.theme',JSON.stringify('dark'));window.dispatchEvent(new StorageEvent('storage',{key:'wbox.theme'}));});
- await popup.waitForTimeout(500);await popup.screenshot({animations:'disabled',path:join(previews,'0.6.3-tray.png'),omitBackground:true});
+ await popup.waitForTimeout(500);await popup.screenshot({animations:'disabled',path:join(previews,'0.6.4-tray.png'),omitBackground:true});
  await popup.getByRole('button',{name:/^配置 /}).hover();
  await popup.getByRole('button',{name:'远程配置 · sing-box',exact:true}).click();
  await page.waitForTimeout(1200);
@@ -237,6 +242,18 @@ try{
  testStarted=Date.now();await page.evaluate(()=>window.wbox.call('stop'));check(Date.now()-testStarted<2000,'Stop remains responsive while latency tests are queued');
  await page.waitForFunction(async()=>!(await window.wbox.call('state')).delayTesting,{},{timeout:10000});
  check(errors.length===0,'No renderer errors: '+errors.join('; '));
- await writeFile(join(root,'docs/verification/0.6.3-desktop.json'),JSON.stringify({checks,errors,startupLogs:(await page.evaluate(()=>window.wbox.call('logs'))).filter(l=>l.message.includes('已启动')).map(l=>l.message),electronWorkingSetKiB:{visible:visibleKiB,tray:trayKiB},packaged:!!process.env.WBOX_EXE},null,2));
-}catch(e){console.log('Renderer errors:',errors);if(popup&&!popup.isClosed()){console.log('Tray:',await popup.locator('body').innerText());await popup.screenshot({animations:'disabled',path:join(previews,'0.6.3-tray-failure.png'),omitBackground:true});}if(page){console.log((await page.locator('body').innerText()).slice(0,3000));await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.3-failure.png')});}throw e;}
+ const massive={outbounds:[{type:'selector',tag:'Large',outbounds:Array.from({length:2000},(_,i)=>`Node ${String(i).padStart(4,'0')}`)},...Array.from({length:2000},(_,i)=>({type:'direct',tag:`Node ${String(i).padStart(4,'0')}`}))],route:{final:'Large'}};
+ await page.evaluate(content=>window.wbox.call('createProfile',{name:'Large group',content}),JSON.stringify(massive));
+ await page.evaluate(()=>window.wbox.call('start'));
+ await page.getByRole('button',{name:'组',exact:true}).click();
+ await page.getByText('Node 0000',{exact:true}).waitFor({timeout:4000});
+ check(await page.locator('button').filter({hasText:/Node \d{4}/}).count()<150,'Large proxy group composes only a visible window of node cards');
+ await page.getByText('Node 0000',{exact:true}).evaluate(el=>{let p=el.parentElement;while(p&&getComputedStyle(p).overflowY!=='auto'&&getComputedStyle(p).overflowY!=='scroll')p=p.parentElement;if(p)p.scrollTop=p.scrollHeight;});
+ await page.getByText('Node 1999',{exact:true}).waitFor({timeout:4000});
+ check(true,'Virtualized proxy group can scroll to the last node');
+ await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-large-group.png')});
+ await page.evaluate(()=>window.wbox.call('stop'));
+ check(errors.length===0,'Large group produces no renderer errors: '+errors.join('; '));
+ await writeFile(join(root,'docs/verification/0.6.4-desktop.json'),JSON.stringify({checks,errors,startupLogs:(await page.evaluate(()=>window.wbox.call('logs'))).filter(l=>l.message.includes('已启动')).map(l=>l.message),electronWorkingSetKiB:{visible:visibleKiB,tray:trayKiB},packaged:!!process.env.WBOX_EXE},null,2));
+}catch(e){console.log('Renderer errors:',errors);if(popup&&!popup.isClosed()){console.log('Tray:',await popup.locator('body').innerText());await popup.screenshot({animations:'disabled',path:join(previews,'0.6.4-tray-failure.png'),omitBackground:true});}if(page){console.log((await page.locator('body').innerText()).slice(0,3000));await page.waitForTimeout(500); await page.screenshot({animations:'disabled',path:join(previews,'0.6.4-failure.png')});}throw e;}
 finally{await app.evaluate(({clipboard})=>{if(globalThis.testClipboard)clipboard.write(globalThis.testClipboard);}).catch(()=>{});await app.close();server.closeAllConnections();server.close();}

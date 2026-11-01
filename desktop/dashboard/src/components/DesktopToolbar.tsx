@@ -87,6 +87,7 @@ export function DesktopServiceControls(props: { host: DesktopHost }) {
       .then(() => {
         setWaitingFor(started?ServiceStatus_Type.IDLE:ServiceStatus_Type.STARTED);
         api.serviceStatus.reconnectNow();
+        api.groups.reconnectNow();api.connections.reconnectNow();
       })
       .catch(error=>{setBusy(false);setWaitingFor(null);showError(error);api.serviceStatus.reconnectNow();});
   };

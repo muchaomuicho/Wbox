@@ -49,6 +49,7 @@ public static class ConfigBuilder
         }
         if (singbox)
         {
+            root["route"] ??= new JsonObject();root["route"]!["find_process"] ??= true;
             if (preferences.Mode == "config" && !preferences.NativeInbounds) {
                 var mixed = (root["inbounds"] as JsonArray)?.OfType<JsonObject>().FirstOrDefault(i => i["type"]?.ToString() == "mixed");
                 var inbound = mixed?.DeepClone().AsObject() ?? new JsonObject { ["type"] = "mixed", ["tag"] = "wbox-mixed" };
@@ -77,6 +78,7 @@ public static class ConfigBuilder
         else
         {
             root["external-controller"] = $"127.0.0.1:{controllerPort}"; root["secret"] = secret;
+            root["find-process-mode"] ??= "always";
             root.Remove("external-controller-tls"); root.Remove("external-controller-unix"); root.Remove("external-controller-pipe");
             if (preferences.Mode == "config" && !preferences.NativeInbounds) {
                 root.Remove("tun"); root.Remove("listeners");

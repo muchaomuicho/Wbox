@@ -105,12 +105,17 @@
   flex-shrink: 0;
 }
 
-.toolbar-service .toolbar-service-button {
+.toolbar .toolbar-service .toolbar-service-button {
   gap: var(--space-6);
   width: auto;
   min-width: var(--control-height);
   padding: 0 var(--space-10);
+  background: #cce8dc;
+  color: #163e30;
 }
+
+:global([data-theme="dark"]) .toolbar .toolbar-service .toolbar-service-button { background: #355147; color: #ecf8f2; }
+.toolbar .toolbar-service .toolbar-service-button:hover { filter: brightness(.96); }
 
 .toolbar-spinner {
   display: inline-flex;
@@ -130,5 +135,5 @@
 
 .toolbar-uptime {
   composes: text-mono-caption from global;
-  color: var(--text-secondary);
+  color: inherit;
 }

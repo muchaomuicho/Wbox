@@ -25,7 +25,7 @@ function connection(c: any) {
 }
 async function unary(name: string, input: any): Promise<any> {
   switch (name) {
-    case 'GetVersion': return { version: '0.6.3', apiVersion: 1 };
+    case 'GetVersion': return { version: '0.6.4', apiVersion: 1 };
     case 'GetStartedAt': return { startedAt: (await call('service')).startedAt };
     case 'GetDefaultLogLevel': return { level: 4 };
     case 'GetDeprecatedWarnings': return { warnings: [] };
@@ -54,6 +54,10 @@ async function* stream(name: string, signal?: AbortSignal): AsyncGenerator<any> 
   let previous = new Map<string, any>(); let firstConnections = true;
   while (!signal?.aborted) {
     if (document.hidden) { await pause(500, signal); continue; }
+    if(name==='SubscribeGroups'||name==='SubscribeConnections') {
+      const state=await call('service');
+      if(state.starting){await pause(150,signal);continue;}
+    }
     switch (name) {
       case 'SubscribeServiceStatus': { const s = await call('service'); if(s.startedAt!==serviceKey){serviceKey=s.startedAt;results.clear();expanded.clear();} yield { status: s.starting ? 1 : s.running ? 2 : 0 }; break; }
       case 'SubscribeStatus': { const s = await call('stats'); yield s ? { memory: s.coreMemory, connectionsIn: s.inbound, connectionsOut: s.outbound, trafficAvailable: true, uplink: s.uploadRate, downlink: s.downloadRate, uplinkTotal: s.uploaded, downlinkTotal: s.downloaded } : {}; break; }

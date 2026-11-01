@@ -6,6 +6,6 @@
   "abi": "arm64-v8a",
   "pageSizeAlignment": 16384,
   "file": "android/arm64-v8a/libwboxtun.so",
-  "size": 237136,
-  "sha256": "fa40cd5a9b0535e455897825a740e6547014fe3adbaffb9229e4d6e24f3e6a1a"
+  "size": 241208,
+  "sha256": "d01495a76f9f8bf368854e72d22d29ef2bcee3d2c4482cbb1725adb5391d1641"
 }

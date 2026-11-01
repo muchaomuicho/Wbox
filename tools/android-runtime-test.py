@@ -61,7 +61,7 @@ try:
         assert payload in response,repr(response)
         sampled=until(lambda s:s['upload']>0 and s['download']>0)
         assert any('wbox-in' in l or '10.0.2.2:19281' in l for l in sampled['logs']),sampled
-        (ROOT/f'docs/previews/0.6.2-android-{engine}.png').write_bytes(adb('exec-out','screencap','-p'))
+        (ROOT/f'docs/previews/0.6.4-android-{engine}.png').write_bytes(adb('exec-out','screencap','-p'))
         mem=adb('shell','dumpsys','meminfo','com.wbox.app').decode()
         probe('stop');stopped=until(lambda s:not s['running'] and s['status']=='未连接')
         assert b'WBOX_TCP_OK' in tcp(),'Network not restored after stop'
@@ -75,4 +75,4 @@ finally:
     try:probe('stop')
     except Exception:pass
     server.shutdown();server.server_close();udp.close()
-    (ROOT/'docs/verification/0.6.2-android-runtime.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
+    (ROOT/'docs/verification/0.6.4-android-runtime.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')

@@ -4,7 +4,7 @@ import android.util.JsonReader;
 import java.util.*;
 
 final class ConnectionRecord {
-    String id="",network="",source="",destination="",inbound="",outbound="",rule="";
+    String id="",network="",source="",destination="",inbound="",outbound="",rule="",packageName="";
     long upload,download,upRate,downRate;
     boolean matches(String query){return (network+" "+source+" "+destination+" "+inbound+" "+outbound+" "+rule).toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT));}
     static ConnectionRecord read(JsonReader reader)throws Exception {
