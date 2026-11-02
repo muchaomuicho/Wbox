@@ -32,7 +32,7 @@ public static class ConfigBuilder
         }
         return output.ToString();
     }
-    public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort, bool transient = false)
+    public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort, bool transient = false, string? workingDirectory = null)
     {
         JsonObject root;
         bool singbox = preferences.Core == "sing-box";
@@ -88,6 +88,8 @@ public static class ConfigBuilder
             root.Remove("authentication");
             root["ipv6"] ??= true;
         }
+        workingDirectory ??= preferences.Mode=="config" ? Path.GetDirectoryName(Path.GetFullPath(preferences.ConfigPath))! : Path.Combine(Store.DirectoryPath,preferences.Core);
+        BundledRules.Apply(root,singbox,workingDirectory);
         return singbox ? root.ToJsonString(Store.JsonOptions) : SerializeYaml(root);
     }
     // Build only the active node and its explicit chain. An unrelated broken
@@ -122,15 +124,16 @@ public static class ConfigBuilder
             if (p.Nodes[index].Protocol == "wireguard") endpoints.Add(outbound); else proxies.Add(outbound);
         }
         var selected = Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1); var tag=Tag(p.Nodes[selected],selected);
-        proxies.Insert(0,new JsonObject { ["type"]="selector", ["tag"]="Wbox", ["outbounds"]=new JsonArray(tag), ["default"]=tag, ["interrupt_exist_connections"]=true });
-        proxies.Add(new JsonObject { ["type"] = "direct", ["tag"] = "DIRECT" });
-        return new JsonObject { ["log"] = new JsonObject { ["level"] = "warn", ["timestamp"] = true }, ["dns"] = new JsonObject { ["servers"] = new JsonArray(new JsonObject { ["type"] = "local", ["tag"] = "local" }), ["final"] = "local" }, ["endpoints"] = endpoints, ["outbounds"] = proxies, ["route"] = new JsonObject { ["final"] = "Wbox", ["auto_detect_interface"] = true, ["default_domain_resolver"] = "local" } };
+        var root=NodeTemplate.Load(true,tag);
+        foreach(var outbound in proxies)root["outbounds"]!.AsArray().Add(outbound!.DeepClone());
+        root["endpoints"]=endpoints;
+        return root;
     }
     static JsonObject MihomoNodes(Preferences p)
     {
         var proxies = new JsonArray(); foreach (var value in ActiveNodes(p).Values) proxies.Add(value);
         var selected = Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1); var tag=Tag(p.Nodes[selected],selected);
-        return new JsonObject { ["mode"] = "rule", ["log-level"] = "warning", ["ipv6"] = true, ["proxies"] = proxies, ["proxy-groups"] = new JsonArray(new JsonObject { ["name"] = "Wbox", ["type"] = "select", ["proxies"] = new JsonArray(tag) }), ["rules"] = new JsonArray("MATCH,Wbox") };
+        var root=NodeTemplate.Load(false,tag);root["proxies"]=proxies;return root;
     }
     public static string Tag(NodeRecord n, int i) => $"{n.Name} · {i + 1}";
     public static JsonObject SingboxOutbound(NodeRecord n, string tag)

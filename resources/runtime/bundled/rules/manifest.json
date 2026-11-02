@@ -1,0 +1,275 @@
+[
+  {
+    "engine": "sing-box",
+    "tag": "anti-ad",
+    "format": "binary",
+    "url": "https://anti-ad.net/anti-ad-sing-box.srs",
+    "file": "sing-box-anti-ad.srs",
+    "size": 782337,
+    "sha256": "1191d709dffc25ac5eba1e75a6edd873f1a13e69a306ce0035f2deb2cf7a5925",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-github",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/github.srs",
+    "file": "sing-box-geosite-github.srs",
+    "size": 786,
+    "sha256": "60417c90ba40fcc051e4c8625d83c326d8b31236e40cc59f490fc48a56065fea",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geoip-google",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/google.srs",
+    "file": "sing-box-geoip-google.srs",
+    "size": 8408,
+    "sha256": "9b52eb40bb0a351a292fb20e438bf2ddd97f8b872899b19320293bb207c2601a",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-google",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/google.srs",
+    "file": "sing-box-geosite-google.srs",
+    "size": 8029,
+    "sha256": "c4984283c71cab362637e030f46f37cdb4340e4ced1545e1ab6c4bcbb2c6fdb1",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-microsoft",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/microsoft.srs",
+    "file": "sing-box-geosite-microsoft.srs",
+    "size": 6991,
+    "sha256": "4062fbe153e8b404acda395b423d7c4e4bb10ba7a5d18deaaaa8f5cf3400cb71",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geoip-telegram",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/telegram.srs",
+    "file": "sing-box-geoip-telegram.srs",
+    "size": 127,
+    "sha256": "c5ae208004b0752baee307348ef820b9fe9e8aa3a14556f54af68791b6d4030b",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-telegram",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/telegram.srs",
+    "file": "sing-box-geosite-telegram.srs",
+    "size": 248,
+    "sha256": "30cd392b1d79b0569af077874b36c6892bf13a94dce0d8e4410c3b1976d62ea2",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geoip-twitter",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/twitter.srs",
+    "file": "sing-box-geoip-twitter.srs",
+    "size": 201,
+    "sha256": "6b4d87c5fe8158eec4f040367a76c454d5e2fa88a5aeb3b19209e16db342e0c3",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-twitter",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/twitter.srs",
+    "file": "sing-box-geosite-twitter.srs",
+    "size": 284,
+    "sha256": "a2da69babdc2441e8ac487ddf91a5259e4628de74f44bb9bcd6a2113841bac0f",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-youtube",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/youtube.srs",
+    "file": "sing-box-geosite-youtube.srs",
+    "size": 1144,
+    "sha256": "ae9a576c046627c01bc1488f526775dfe919f1152c3ce6f75b678fce92498b3f",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-ai",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/category-ai-!cn.srs",
+    "file": "sing-box-geosite-ai.srs",
+    "size": 2110,
+    "sha256": "e10363a9bd1da164728f532be5e217ccd06a523c846a8fba0ad23d5040dc5da3",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geosite-cn",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/cn.srs",
+    "file": "sing-box-geosite-cn.srs",
+    "size": 440027,
+    "sha256": "0e8a3bf62266fedd8b4dd7c11bb0bfb16ae34e86728b747179411e0dfbdcf1cb",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "sing-box",
+    "tag": "geoip-cn",
+    "format": "binary",
+    "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/cn.srs",
+    "file": "sing-box-geoip-cn.srs",
+    "size": 37214,
+    "sha256": "e16735139f93f7ba6716f712ae1ef73201f6f510fb2760646f5c4c8fb8f742da",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "anti-ad",
+    "format": "yaml",
+    "behavior": "domain",
+    "url": "https://anti-ad.net/clash.yaml",
+    "file": "mihomo-anti-ad.yaml",
+    "size": 2759044,
+    "sha256": "eedbb09fd642defe35d219a4bfbd88273ed1dcf651fd102642787520aef795e3",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-github",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs",
+    "file": "mihomo-geosite-github.mrs",
+    "size": 832,
+    "sha256": "1ff37cbbd49e7962ac781014c400e2b292d09148c96791536b92c184837edf60",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geoip-google",
+    "format": "mrs",
+    "behavior": "ipcidr",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs",
+    "file": "mihomo-geoip-google.mrs",
+    "size": 8369,
+    "sha256": "673d040076194651400d8a694987f332072c273a050c569c17c5ee4549ae85ad",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-google",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs",
+    "file": "mihomo-geosite-google.mrs",
+    "size": 8973,
+    "sha256": "ad92420fecc12694f11af2ed86ddc5d233ec1350b1ae15e8d24959fda23bc200",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-microsoft",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs",
+    "file": "mihomo-geosite-microsoft.mrs",
+    "size": 8031,
+    "sha256": "910ec23c50e0dde0b92c54ed7444a97fa9fadecdcd1f35d96c6af5edb7ac7824",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geoip-telegram",
+    "format": "mrs",
+    "behavior": "ipcidr",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs",
+    "file": "mihomo-geoip-telegram.mrs",
+    "size": 145,
+    "sha256": "d121af95b9aeca3d8c29b2112d5e6685b2a6716383df8ae31b5fbb3408c527b3",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-telegram",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs",
+    "file": "mihomo-geosite-telegram.mrs",
+    "size": 274,
+    "sha256": "ffa4d1d3e8649965e529c1c570d8add75a0d6f70aa8503ece8add841ce48c0e7",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geoip-twitter",
+    "format": "mrs",
+    "behavior": "ipcidr",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/twitter.mrs",
+    "file": "mihomo-geoip-twitter.mrs",
+    "size": 198,
+    "sha256": "e8fc8a292d91cf630475a1e759d52acf81cf38bc7283329253be5914dc23630f",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-twitter",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/twitter.mrs",
+    "file": "mihomo-geosite-twitter.mrs",
+    "size": 324,
+    "sha256": "b287eac1d2a97da62e17cffddf55e0296665a289a41fba774fdba7397e6ea3f7",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-youtube",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/youtube.mrs",
+    "file": "mihomo-geosite-youtube.mrs",
+    "size": 1366,
+    "sha256": "e212b2ce9f39b30f4e2ab57da9ed0937673606bc56bb46e5d55ad7dd9af00aef",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-ai",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs",
+    "file": "mihomo-geosite-ai.mrs",
+    "size": 2281,
+    "sha256": "980e6f5b7543751f8fa2323b0c5bc9b86421f0593fffe3851c57035616a16ce6",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geosite-cn",
+    "format": "mrs",
+    "behavior": "domain",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs",
+    "file": "mihomo-geosite-cn.mrs",
+    "size": 532882,
+    "sha256": "0b8c7c4d9773471991dd65737fdb16f3bf1baf2512c8b764d4c235318f01b7c6",
+    "fetchedOn": "2026-11-02"
+  },
+  {
+    "engine": "mihomo",
+    "tag": "geoip-cn",
+    "format": "mrs",
+    "behavior": "ipcidr",
+    "url": "https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs",
+    "file": "mihomo-geoip-cn.mrs",
+    "size": 38572,
+    "sha256": "1cd97d734afafcac0708895cefa931ed19aeac28933458afdc4f9c13e915fcb5",
+    "fetchedOn": "2026-11-02"
+  }
+]

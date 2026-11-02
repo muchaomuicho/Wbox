@@ -38,19 +38,20 @@ final class NodeLatencyTester {
                 String secret=UUID.randomUUID().toString();
                 int mixed,controller;try(ServerSocket one=new ServerSocket(0);ServerSocket two=new ServerSocket(0)){mixed=one.getLocalPort();controller=two.getLocalPort();}
                 dir=new File(context.getCacheDir(),"latency/"+UUID.randomUUID());dir.mkdirs();
-                File config=new File(dir,"config.json");Files.write(config.toPath(),p.compile(secret,mixed,controller,true).getBytes(StandardCharsets.UTF_8));
+                File config=new File(dir,"config.json");String compiled=p.compile(secret,mixed,controller,true,dir);Files.write(config.toPath(),compiled.getBytes(StandardCharsets.UTF_8));
+                if(p.engine().equals("mihomo"))Geodata.prepare(dir,Profiles.yamlMap(compiled),context.getAssets()::open,message->{});
                 File binary=new File(context.getApplicationInfo().nativeLibraryDir,p.engine().equals("sing-box")?"libsingbox.so":"libmihomo.so");
                 List<String> command=new ArrayList<>(List.of(binary.getAbsolutePath()));
                 if(p.engine().equals("sing-box"))command.addAll(List.of("run","-c",config.getAbsolutePath(),"-D",dir.getAbsolutePath()));else command.addAll(List.of("-f",config.getAbsolutePath(),"-d",dir.getAbsolutePath()));
                 ProcessBuilder builder=new ProcessBuilder(command).directory(dir).redirectErrorStream(true).redirectOutput(new File("/dev/null"));
                 builder.environment().put("GOMEMLIMIT","48MiB");process=builder.start();api=new CoreApi(secret,controller);
-                boolean ready=false;for(int i=0;i<60;i++){if(!process.isAlive())throw new IOException("测速内核启动失败");try{api.proxies();ready=true;break;}catch(IOException ignored){Thread.sleep(100);}}
+                List<String> requiredRules=CoreApi.requiredRules(p.engine(),compiled);boolean ready=false;for(int i=0;i<60;i++){if(!process.isAlive())throw new IOException("测速内核启动失败");try{api.checkReady(1000,mixed,requiredRules);ready=true;break;}catch(IOException ignored){Thread.sleep(100);}}
                 if(!ready)throw new IOException("测速内核启动超时");
             } finally {starts.release();}
-            return api.delay(name,source.data.optString("test_url",Profiles.TEST_URL));
+            return api.delay(BundledRules.nodeTag(name),source.data.optString("test_url",Profiles.TEST_URL));
         } finally {
             if(process!=null){process.destroy();try{if(!process.waitFor(1,TimeUnit.SECONDS))process.destroyForcibly();}catch(InterruptedException e){process.destroyForcibly();Thread.currentThread().interrupt();}}
-            if(dir!=null){File[] files=dir.listFiles();if(files!=null)for(File file:files)file.delete();dir.delete();}
+            if(dir!=null){File[] files=dir.listFiles();if(files!=null)try(var paths=Files.walk(dir.toPath())){paths.sorted(java.util.Comparator.reverseOrder()).forEach(path->{try{Files.deleteIfExists(path);}catch(IOException ignored){}});}}
         }
     }
     static String resolve(JSONObject groups,String name,Set<String> seen){if(!seen.add(name))return name;JSONObject group=groups.optJSONObject(name);String selected=group==null?"":group.optString("now");return selected.isEmpty()?name:resolve(groups,selected,seen);}

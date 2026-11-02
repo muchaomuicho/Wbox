@@ -101,7 +101,7 @@ public final class WboxVpnService extends VpnService {
         File binary=new File(getApplicationInfo().nativeLibraryDir,p.engine().equals("sing-box")?"libsingbox.so":"libmihomo.so");if(!binary.isFile())throw new IOException("安装包缺少内核 "+binary.getName());
         List<String> cmd=new ArrayList<>(List.of("/system/bin/sh","-c","echo $$; exec \"$@\"","wbox",binary.getAbsolutePath()));
         if(p.engine().equals("sing-box"))cmd.addAll(List.of("run","-c",config.getAbsolutePath(),"-D",dir.getAbsolutePath()));else cmd.addAll(List.of("-f",config.getAbsolutePath(),"-d",dir.getAbsolutePath()));
-        if(p.engine().equals("mihomo")&&p.mode().equals("config")){
+        if(p.engine().equals("mihomo")){
             startStage="准备离线规则数据库";
             Geodata.prepare(dir,Profiles.yamlMap(new String(Files.readAllBytes(config.toPath()),java.nio.charset.StandardCharsets.UTF_8)),getAssets()::open,WboxVpnService::log);
             if(shuttingDown)return;
@@ -111,9 +111,9 @@ public final class WboxVpnService extends VpnService {
         ProcessBuilder pb=new ProcessBuilder(cmd).directory(dir).redirectErrorStream(true);pb.environment().put("GOMEMLIMIT","96MiB");pb.environment().put("GOGC","75");core=pb.start();
         BufferedReader reader=new BufferedReader(new InputStreamReader(core.getInputStream()));String pidLine=reader.readLine();try{corePid=Long.parseLong(pidLine);}catch(Exception ignored){log(pidLine==null?"内核未返回 PID":pidLine);}
         Thread logReader=new Thread(()->{try{String line;while((line=reader.readLine())!=null){String plain=LogStyle.plain(line);if(starting&&(plain.contains("level=fatal")||plain.contains("FATAL")||plain.contains("panic:")))startupDiagnostic=plain;log(line);}}catch(IOException ignored){}} ,"core-log");logReader.start();
-        CoreApi controller=api();
+        CoreApi controller=api();List<String> requiredRules=CoreApi.requiredRules(p.engine(),new String(Files.readAllBytes(config.toPath()),java.nio.charset.StandardCharsets.UTF_8));
         if(!CoreStartup.await(CoreStartup.TIMEOUT_MS,SystemClock::elapsedRealtime,Thread::sleep,
-                ()->{if(core.isAlive())return true;try{logReader.join(300);}catch(InterruptedException e){Thread.currentThread().interrupt();}return false;},()->shuttingDown,timeout->controller.checkReady(timeout,10808),()->{
+                ()->{if(core.isAlive())return true;try{logReader.join(300);}catch(InterruptedException e){Thread.currentThread().interrupt();}return false;},()->shuttingDown,timeout->controller.checkReady(timeout,10808,requiredRules),()->{
                     status="正在初始化内核";
                     log("INFO 内核仍在初始化，等待远程规则集及服务就绪；可随时停止连接");
                     getSystemService(NotificationManager.class).notify(NOTIFY,notification());

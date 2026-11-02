@@ -1,4 +1,4 @@
-param([string]$Version = '0.6.4', [string]$AndroidVersion = '0.6.4')
+param([string]$Version = '0.6.5', [string]$AndroidVersion = '0.6.5')
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = Join-Path $repo "dist/Wbox-$Version-source.zip"
@@ -12,7 +12,7 @@ try {
         -g '!**/bin/**' -g '!**/obj/**' -g '!**/build/**' -g '!**/.gradle/**' `
         -g '!**/node_modules/**' -g '!desktop/out/**' -g '!desktop/dashboard/vendor/**' `
         -g '!windows/backend-publish/**' -g '!windows/desktop-publish/**' -g '!windows/desktop-test-runtime/**' `
-        -g '!**/*.tsbuildinfo' -g '!**/.pnpm-store/**' -g '!**/test-results/**' `
+        -g '!**/__pycache__/**' -g '!**/*.tsbuildinfo' -g '!**/.pnpm-store/**' -g '!**/test-results/**' `
         -g '!**/.git/**' -g '!**/.git' -g '!**/publish/**' -g '!windows/test-runtime/**' `
         -g '!windows/memory-test-*/**' -g '!windows/ui-*.png' -g '!android/local.properties' `
         -g '!resources/cores/windows/**' -g '!resources/cores/android/**' -g '!*.log'

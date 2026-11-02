@@ -2,7 +2,7 @@
 import hashlib, json, pathlib, sys, zipfile
 
 root = pathlib.Path(__file__).resolve().parent.parent
-version = sys.argv[1] if len(sys.argv) > 1 else '0.6.4'
+version = sys.argv[1] if len(sys.argv) > 1 else '0.6.5'
 manifest = json.loads((root/'resources/geodata/manifest.json').read_text())
 checks = []
 with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
@@ -14,6 +14,16 @@ with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
         assert hashlib.sha256(apk.read(f'lib/arm64-v8a/{library}')).digest() == hashlib.sha256((root/'resources/cores/android/arm64-v8a'/library).read_bytes()).digest(), library
     checks.append('APK includes both cores and native tunnel')
     checks.append('Packaged core and JNI tunnel hashes match current build inputs')
+    rules = json.loads((root/'resources/runtime/bundled/rules/manifest.json').read_text())
+    assert json.loads(apk.read('assets/bundled/rules/manifest.json')) == rules
+    for entry in rules:
+        for data in [apk.read('assets/bundled/rules/'+entry['file']), (root/'windows/desktop-publish/win-unpacked/resources/backend/bundled/rules'/entry['file']).read_bytes()]:
+            assert hashlib.sha256(data).hexdigest() == entry['sha256']
+    for name in ['sing-box.json','mihomo.yaml']:
+        expected=(root/'resources/runtime/bundled/templates'/name).read_bytes()
+        assert apk.read('assets/bundled/templates/'+name)==expected
+        assert (root/'windows/desktop-publish/win-unpacked/resources/backend/bundled/templates'/name).read_bytes()==expected
+    checks.append('Both packages contain all 26 verified rule sets and identical sanitized node templates')
     android_manifest = apk.read('AndroidManifest.xml')
     for encoding in ('utf-8', 'utf-16le'):
         assert 'RuntimeProbeReceiver'.encode(encoding) not in android_manifest

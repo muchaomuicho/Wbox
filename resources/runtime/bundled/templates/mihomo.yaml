@@ -1,0 +1,220 @@
+mode: rule
+log-level: info
+ipv6: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: false
+  sniff:
+    HTTP:
+      ports:
+        - 1-65535
+    TLS:
+      ports:
+        - 1-65535
+    QUIC:
+      ports:
+        - 1-65535
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.0/15
+  fake-ip-range6: fc00::/18
+  use-hosts: true
+  use-system-hosts: true
+  default-nameserver:
+    - 223.5.5.5
+  nameserver:
+    - https://223.5.5.5/dns-query
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
+  nameserver-policy:
+    rule-set:geosite-cn:
+      - https://223.5.5.5/dns-query
+  fake-ip-filter: []
+proxies: []
+proxy-groups:
+  - name: 节点选择
+    type: select
+    proxies:
+      - __WBOX_SELECTED__
+      - DIRECT
+  - name: Microsoft
+    type: select
+    proxies:
+      - DIRECT
+      - 节点选择
+  - name: AI
+    type: select
+    proxies:
+      - 节点选择
+      - DIRECT
+  - name: Steam
+    type: select
+    proxies:
+      - 节点选择
+      - DIRECT
+  - name: Steam Download
+    type: select
+    proxies:
+      - DIRECT
+      - 节点选择
+  - name: 国内
+    type: select
+    proxies:
+      - DIRECT
+      - 节点选择
+rule-providers:
+  anti-ad:
+    type: http
+    behavior: domain
+    format: yaml
+    interval: 86400
+    url: https://anti-ad.net/clash.yaml
+    path: ./rule-providers/anti-ad.yaml
+  geosite-github:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/github.mrs
+    path: ./rule-providers/github.mrs
+  geoip-google:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/google.mrs
+    path: ./rule-providers/google_ip.mrs
+  geosite-google:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs
+    path: ./rule-providers/google.mrs
+  geosite-microsoft:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft.mrs
+    path: ./rule-providers/microsoft.mrs
+  geoip-telegram:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/telegram.mrs
+    path: ./rule-providers/telegram_ip.mrs
+  geosite-telegram:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/telegram.mrs
+    path: ./rule-providers/telegram.mrs
+  geoip-twitter:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/twitter.mrs
+    path: ./rule-providers/twitter_ip.mrs
+  geosite-twitter:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/twitter.mrs
+    path: ./rule-providers/twitter.mrs
+  geosite-youtube:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/youtube.mrs
+    path: ./rule-providers/youtube.mrs
+  geosite-ai:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ai-!cn.mrs
+    path: ./rule-providers/ai.mrs
+  geosite-cn:
+    type: http
+    behavior: domain
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs
+    path: ./rule-providers/cn.mrs
+  geoip-cn:
+    type: http
+    behavior: ipcidr
+    format: mrs
+    interval: 86400
+    url: https://cdn.jsdmirror.com/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs
+    path: ./rule-providers/cn_ip.mrs
+rules:
+  - GEOIP,PRIVATE,DIRECT,no-resolve
+  - RULE-SET,anti-ad,REJECT
+  - RULE-SET,geosite-github,节点选择
+  - RULE-SET,geoip-google,节点选择,no-resolve
+  - RULE-SET,geosite-google,节点选择
+  - RULE-SET,geosite-microsoft,Microsoft
+  - DOMAIN-SUFFIX,steamserver.net,Steam Download
+  - DOMAIN-SUFFIX,cm.steampowered.com,Steam Download
+  - DOMAIN-KEYWORD,steampipe,DIRECT
+  - DOMAIN-KEYWORD,steamcontent,DIRECT
+  - DOMAIN-SUFFIX,steampipe-kr.akamaized.net,DIRECT
+  - DOMAIN-SUFFIX,steampipe-partner.akamaized.net,DIRECT
+  - DOMAIN-SUFFIX,steampipe.akamaized.net,DIRECT
+  - DOMAIN-SUFFIX,steamcontent.com,DIRECT
+  - DOMAIN-SUFFIX,csgo.wmsj.cn,DIRECT
+  - DOMAIN-SUFFIX,dota2.wmsj.cn,DIRECT
+  - DOMAIN-SUFFIX,wmsjsteam.com,DIRECT
+  - DOMAIN-SUFFIX,dl.steam.clngaa.com,DIRECT
+  - DOMAIN-SUFFIX,dl.steam.ksyna.com,DIRECT
+  - DOMAIN-SUFFIX,st.dl.bscstorage.net,DIRECT
+  - DOMAIN-SUFFIX,st.dl.eccdnx.com,DIRECT
+  - DOMAIN-SUFFIX,st.dl.pinyuncloud.com,DIRECT
+  - DOMAIN-SUFFIX,steampipe.steamcontent.tnkjmec.com,DIRECT
+  - DOMAIN-SUFFIX,steampowered.com.8686c.com,DIRECT
+  - DOMAIN-SUFFIX,steamstatic.com.8686c.com,DIRECT
+  - DOMAIN-SUFFIX,steamchina.com,DIRECT
+  - DOMAIN-SUFFIX,qtlglb.com,DIRECT
+  - DOMAIN-SUFFIX,queniuqe.com,DIRECT
+  - DOMAIN,steambroadcast.akamaized.net,Steam
+  - DOMAIN,steamcdn-a.akamaihd.net,Steam
+  - DOMAIN,steamcommunity-a.akamaihd.net,Steam
+  - DOMAIN,steampipe.akamaized.net,Steam
+  - DOMAIN,steamstore-a.akamaihd.net,Steam
+  - DOMAIN,steamusercontent-a.akamaihd.net,Steam
+  - DOMAIN,steamuserimages-a.akamaihd.net,Steam
+  - DOMAIN-SUFFIX,fanatical.com,Steam
+  - DOMAIN-SUFFIX,humblebundle.com,Steam
+  - DOMAIN-SUFFIX,playartifact.com,Steam
+  - DOMAIN-SUFFIX,steam-chat.com,Steam
+  - DOMAIN-SUFFIX,steamcommunity.com,Steam
+  - DOMAIN-SUFFIX,steamgames.com,Steam
+  - DOMAIN-SUFFIX,steampowered.com,Steam
+  - DOMAIN-SUFFIX,steamstat.us,Steam
+  - DOMAIN-SUFFIX,steamstatic.com,Steam
+  - DOMAIN-SUFFIX,underlords.com,Steam
+  - DOMAIN-SUFFIX,valvesoftware.com,Steam
+  - DOMAIN-SUFFIX,steamusercontent.com,Steam
+  - RULE-SET,geoip-telegram,节点选择,no-resolve
+  - RULE-SET,geosite-telegram,节点选择
+  - RULE-SET,geoip-twitter,节点选择,no-resolve
+  - RULE-SET,geosite-twitter,节点选择
+  - RULE-SET,geosite-youtube,节点选择
+  - RULE-SET,geosite-ai,AI
+  - RULE-SET,geoip-cn,国内,no-resolve
+  - RULE-SET,geosite-cn,国内
+  - MATCH,节点选择

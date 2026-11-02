@@ -11,6 +11,7 @@
     <ApplicationIcon Condition="Exists('../../resources/wbox.ico')">../../resources/wbox.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="../../resources/runtime/bundled/**/*" Link="bundled/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../resources/geodata/*" Link="geodata/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Resource Include="../../resources/ui-assets/flags/*.png" Link="flags/%(Filename)%(Extension)" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />

@@ -29,6 +29,7 @@ int checks = 0;
 void Check(bool condition, string label) { if (!condition) throw new Exception("FAILED: " + label); checks++; Console.WriteLine("PASS " + label); }
 if(args.Contains("--forwarding")){await ForwardingChecks.Run(Check);Console.WriteLine($"{checks} forwarding checks passed.");return;}
 if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
+BundledRuleChecks.Run(Check);
 await ImportChecks.Run(Check);
 await IsolationChecks.Run(Check);
 Check(new Preferences().Mode == "config", "Fresh installs default to configuration workspace");
@@ -53,7 +54,7 @@ var native = NodeParser.ParseSubscription("proxies:\n  - name: A\n    type: ss\n
 Check(native.Count == 1 && native[0].NativeMihomo != null, "Native YAML subscription");
 var p = new Preferences { Mode = "nodes", Nodes = [ss, vm, vl], Core = "sing-box" };
 var sing = JsonNode.Parse(ConfigBuilder.Build(p, "secret"))!;
-Check(sing["outbounds"]![0]!["outbounds"]!.AsArray().Count == 1 && sing["experimental"]!["clash_api"]!["secret"]!.ToString() == "secret", "Sing-box selector and protected controller");
+Check(sing["outbounds"]![0]!["outbounds"]!.AsArray().Count == 2 && sing["experimental"]!["clash_api"]!["secret"]!.ToString() == "secret", "Sing-box selector and protected controller");
 p.Core = "mihomo";
 var mihomo = JsonNode.Parse(ConfigBuilder.Build(p, "secret"))!;
 Check(mihomo["ipv6"]!.GetValue<bool>() && mihomo["mixed-port"]!.GetValue<int>() == 10808 && mihomo["proxies"]!.AsArray().Count == 1, "Mihomo IPv6 node config");

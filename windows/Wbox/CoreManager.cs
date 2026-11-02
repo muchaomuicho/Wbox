@@ -62,14 +62,15 @@ public sealed class CoreManager : IDisposable
         var secret = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
         ProxyPort = StartupPolicy.AvailablePort(ConfigBuilder.MixedPort);
         ApiPort = StartupPolicy.AvailablePort(ConfigBuilder.ControllerPort, ProxyPort);
-        var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort, transient);
-        globalTarget = p.Core == "mihomo" ? GlobalTarget(ConfigBuilder.ParseYaml(config)) : null;
-        StartupPolicy.Check(config, p.Core);
-        // Resolve relative providers, certificates, rule sets and included files against the imported config directory.
         var working = p.Mode == "config" ? Path.GetDirectoryName(Path.GetFullPath(p.ConfigPath))! : Path.Combine(Store.DirectoryPath, p.Core);
         if (transient) working = transientDirectory = Path.Combine(Store.DirectoryPath, "latency", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(working);
-        if(p.Core=="mihomo" && p.Mode=="config")Geodata.Prepare(working,ConfigBuilder.ParseYaml(config),message=>Log?.Invoke(message));
+        var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort, transient, working);
+        globalTarget = p.Core == "mihomo" ? GlobalTarget(ConfigBuilder.ParseYaml(config)) : null;
+        StartupPolicy.Check(config, p.Core);
+        var requiredRules=p.Core=="mihomo" ? (ConfigBuilder.ParseYaml(config)["rule-providers"] as JsonObject)?.Where(e=>e.Value?["type"]?.ToString() is "file" or "http").Select(e=>e.Key).ToArray() ?? [] : [];
+        bool rulesReady=false;
+        if(p.Core=="mihomo")Geodata.Prepare(working,ConfigBuilder.ParseYaml(config),message=>Log?.Invoke(message));
         runtimePath = Path.Combine(working, $".wbox-runtime-{Guid.NewGuid():N}.{(p.Core == "sing-box" ? "json" : "yaml")}");
         File.WriteAllText(runtimePath, config);
             // run performs the same validation and reports startup errors. Avoid
@@ -105,6 +106,12 @@ public sealed class CoreManager : IDisposable
                         if (response.IsSuccessStatusCode) {
                             using var listener=new System.Net.Sockets.TcpClient();
                             await listener.ConnectAsync("127.0.0.1",ProxyPort,deadline.Token);
+                            if(requiredRules.Length>0) {
+                                using var rulesResponse=await api.GetAsync("/providers/rules",deadline.Token);rulesResponse.EnsureSuccessStatusCode();
+                                var providers=JsonNode.Parse(await rulesResponse.Content.ReadAsStringAsync(deadline.Token))?["providers"];
+                                bool loaded=requiredRules.All(name=>providers?[name]?["updatedAt"]?.ToString() is string date&&!date.StartsWith("0001-")&&date.Length>10);
+                                if(!loaded||!rulesReady){rulesReady=loaded;throw new HttpRequestException("规则集仍在初始化");}
+                            }
                             ready = true; break;
                         }
                         lastProbe=$"控制接口返回 HTTP {(int)response.StatusCode}";

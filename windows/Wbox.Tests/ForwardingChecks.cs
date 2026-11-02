@@ -36,19 +36,21 @@ static class ForwardingChecks {
             check(await client.GetStringAsync($"http://{fake}:{port}/")=="Wbox","FakeIP traffic survives stop/restart before metadata timer fires");
             core.Stop();
             // A second packaged core is a SOCKS upstream: verify a real two-hop path.
-            File.WriteAllText(source,"{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"direct\"}]}");
+            File.WriteAllText(source,"{\"outbounds\":[{\"type\":\"direct\",\"tag\":\"direct\"}],\"route\":{\"rules\":[{\"action\":\"route-options\",\"override_address\":\"127.0.0.1\"}]}}");
             await core.StartAsync(prefs);
             foreach(var engine in new[]{"sing-box","mihomo"}) {
                 using var downstream=new CoreManager(()=>true);
                 var downstreamLogs = new List<string>();downstream.Log+=line=>downstreamLogs.Add(line);
                 await downstream.StartAsync(new Preferences{Mode="nodes",Core=engine,SystemProxy=false,Nodes=[NodeParser.Parse($"socks5://127.0.0.1:{core.ProxyPort}#upstream")]});
+                await downstream.RequestAsync("PATCH","/configs",new JsonObject{["log-level"]="debug"});
                 using var proxy=new HttpClient(new SocketsHttpHandler{Proxy=new WebProxy($"http://127.0.0.1:{downstream.ProxyPort}"),UseProxy=true}){Timeout=TimeSpan.FromSeconds(5)};
-                check(await proxy.GetStringAsync($"http://127.0.0.1:{port}/")=="Wbox",engine+" forwards through selected SOCKS upstream");
+                try {using var reply=await proxy.GetAsync($"http://8.8.8.8:{port}/");var body=await reply.Content.ReadAsStringAsync();if(!reply.IsSuccessStatusCode){await Task.Delay(500);throw new Exception("HTTP "+reply.StatusCode+" "+body);}check(body=="Wbox",engine+" forwards through selected SOCKS upstream");}
+                catch {Console.WriteLine(string.Join("\n",downstreamLogs));throw;}
                 check((await downstream.GroupsAsync()).All(g=>g.Name!="GLOBAL"),engine+" hides the internal GLOBAL group");
                 if(engine=="mihomo") {
                     await downstream.SetModeAsync("global");
-                    check((await downstream.RequestAsync("GET","/proxies"))?["proxies"]?["GLOBAL"]?["now"]?.ToString()=="Wbox","Mihomo global mode uses the selected proxy group");
-                    check(await proxy.GetStringAsync($"http://127.0.0.1:{port}/")=="Wbox","Mihomo global mode forwards successfully");
+                    check((await downstream.RequestAsync("GET","/proxies"))?["proxies"]?["GLOBAL"]?["now"]?.ToString()=="节点选择","Mihomo global mode uses the selected proxy group");
+                    check(await proxy.GetStringAsync($"http://8.8.8.8:{port}/")=="Wbox","Mihomo global mode forwards successfully");
                     foreach(var mode in new[]{"direct","rule"}){await downstream.SetModeAsync(mode);check((await downstream.RequestAsync("GET","/configs"))?["mode"]?.ToString()==mode,"Mihomo switches to "+mode);}
                 } else check(string.Equals((await downstream.RequestAsync("GET","/configs"))?["mode"]?.ToString(),"rule",StringComparison.OrdinalIgnoreCase),"Sing-box starts in rule mode");
                 downstream.Stop();

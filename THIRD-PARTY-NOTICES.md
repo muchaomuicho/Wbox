@@ -22,3 +22,5 @@ The sing-box Android dashboard and lifecycle source were read as references; the
 Release asset URLs, exact SHA256 values and binary sizes are recorded in `resources/cores/manifest.json`; Android ELF alignment evidence is in `resources/cores/ANDROID-ELF.txt`.
 
 Wbox 0.6.0 Android uses Kotlin / AndroidX Compose / Material 3 (Apache-2.0). The LineChart source is adapted directly from SagerNet/sing-box-for-android, commit a548a7903e96266a0046018562c73b192edbfc18; dashboard/card/status-bar layouts are adapted to the Wbox model and monochrome theme. GPL-3.0-or-later and upstream naming condition are retained in resources/cores/licenses/LICENSE-sing-box-for-android. See docs/UPSTREAM-ANDROID.md for exact source mapping.
+
+0.6.5 bundles anti-AD rule snapshots (MIT, `resources/cores/licenses/LICENSE-anti-AD`), MetaCubeX/meta-rules-dat MRS records (GPL-3.0) and the user-specified perfect-panel/rules SRS records. Exact source URLs and SHA-256 values are in `resources/runtime/bundled/rules/manifest.json`; editable rule records and source notes are included. See `docs/BUNDLED-RULES.md` for provenance and the upstream license metadata.

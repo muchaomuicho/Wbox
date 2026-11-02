@@ -20,6 +20,21 @@ public final class CoreApi {
     private final int port;
     public CoreApi(String secret){this(secret,19090);}
     public CoreApi(String secret,int port){this.secret=secret;this.port=port;}
+    private boolean rulesReady;
+    static java.util.List<String> requiredRules(String engine,String config)throws Exception {
+        java.util.List<String> result=new java.util.ArrayList<>();
+        if(!engine.equals("mihomo"))return result;
+        JSONObject providers=new JSONObject(Profiles.yamlMap(config)).optJSONObject("rule-providers");
+        if(providers!=null)for(java.util.Iterator<String> it=providers.keys();it.hasNext();){String name=it.next();JSONObject p=providers.optJSONObject(name);if(p!=null&&java.util.List.of("file","http").contains(p.optString("type")))result.add(name);}
+        return result;
+    }
+    void checkReady(int timeoutMs,int mixedPort,java.util.List<String> requiredRules)throws Exception {
+        checkReady(timeoutMs,mixedPort);
+        if(requiredRules.isEmpty())return;
+        JSONObject providers=request("GET","/providers/rules",null).getJSONObject("providers");boolean loaded=true;
+        for(String name:requiredRules){JSONObject p=providers.optJSONObject(name);String date=p==null?"":p.optString("updatedAt");if(date.length()<10||date.startsWith("0001-")){loaded=false;break;}}
+        if(!loaded||!rulesReady){rulesReady=loaded;throw new IOException("规则集仍在初始化");}
+    }
     void checkReady(int timeoutMs,int mixedPort)throws Exception {
         checkReady(timeoutMs);
         // Mihomo's controller can listen before the mixed inbound is bound.

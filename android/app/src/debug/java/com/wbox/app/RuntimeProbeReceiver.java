@@ -18,12 +18,6 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
                 JSONObject result=new JSONObject().put("origins",new JSONArray(Arrays.asList(NativeTunnel.connectionOrigins()))).put("connections",rows);
                 Files.write(new File(context.getFilesDir(),"probe-details.json").toPath(),result.toString().getBytes());return;
             }
-            if("details".equals(action)){
-                WboxVpnService.wantsConnections=true;WboxVpnService.refreshDetails(false).get(10,TimeUnit.SECONDS);
-                JSONArray rows=new JSONArray();for(ConnectionRecord row:WboxVpnService.connectionRows)rows.put(new JSONObject().put("source",row.source).put("destination",row.destination).put("network",row.network).put("package",row.packageName));
-                JSONObject result=new JSONObject().put("origins",new JSONArray(Arrays.asList(NativeTunnel.connectionOrigins()))).put("connections",rows);
-                Files.write(new File(context.getFilesDir(),"probe-details.json").toPath(),result.toString().getBytes());return;
-            }
             if("fetch".equals(action)) {
                 JSONObject result=new JSONObject();
                 try {
@@ -42,6 +36,10 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
                 Files.write(new File(context.getFilesDir(),"probe-state.json").toPath(),state.toString().getBytes());return;
             }
             String core=intent.getStringExtra("engine");if(core==null)core="sing-box";
+            if("seed-template".equals(action)) {
+                Profiles nodeProfile=new Profiles(context);nodeProfile.data=new JSONObject().put("mode","nodes").put("theme","dark");
+                nodeProfile.importNodes("socks5://10.0.2.2:19283#Template%20upstream",null);nodeProfile.data.put("engine",core).put("node_engine",core);nodeProfile.save();return;
+            }
             String json="{\"log\":{\"level\":\"info\"},\"inbounds\":[{\"type\":\"tun\",\"tag\":\"tun-in\",\"address\":[\"172.18.0.1/30\"],\"auto_route\":true}],\"route\":{\"auto_detect_interface\":true,\"final\":\"Proxy\"},\"outbounds\":[{\"type\":\"selector\",\"tag\":\"Proxy\",\"outbounds\":[\"🇯🇵 Tokyo\",\"🇭🇰 Hong Kong\"]},{\"type\":\"direct\",\"tag\":\"🇯🇵 Tokyo\"},{\"type\":\"direct\",\"tag\":\"🇭🇰 Hong Kong\"},{\"type\":\"selector\",\"tag\":\"Media\",\"outbounds\":[\"🇯🇵 Tokyo\",\"🇭🇰 Hong Kong\"]}]}";
             String yaml="log-level: info\nproxies: []\nproxy-groups:\n - {name: Proxy, type: select, proxies: [DIRECT]}\nrules: ['MATCH,Proxy']\n";
             Profiles p=new Profiles(context);p.data=new JSONObject().put("mode","config").put("theme","dark");p.importConfig(core.equals("sing-box")?new JSONObject(json).toString(2):yaml,null,null);p.setWorkspace("config");p.activeConfig().put("name","我的配置");p.save();

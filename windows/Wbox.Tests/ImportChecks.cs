@@ -51,6 +51,7 @@ static class ImportChecks
         var naivePath=Path.Combine(Store.DirectoryPath,"naive.json");File.WriteAllText(naivePath,ConfigBuilder.Build(preferences,"test"));await Validate("sing-box",naivePath,check);
     }
     public static async Task Validate(string core,string path,Action<bool,string> check) {
+        if(core=="mihomo")Geodata.Prepare(Store.DirectoryPath,ConfigBuilder.ParseYaml(File.ReadAllText(path)));
         var start=new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory,"cores",core+".exe")){UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true,RedirectStandardOutput=true};
         foreach(var arg in core=="sing-box"?new[]{"check","-c",path}:new[]{"-t","-f",path,"-d",Store.DirectoryPath})start.ArgumentList.Add(arg);
         using var p=Process.Start(start)!;var stdout=p.StandardOutput.ReadToEndAsync();var stderr=p.StandardError.ReadToEndAsync();

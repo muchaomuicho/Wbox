@@ -13,12 +13,14 @@ import java.util.*;
 public final class Profiles {
     public static final String TEST_URL="https://www.apple.com/library/test/success.html";
     final File file;
+    private final Geodata.Source bundled;
     public JSONObject data;
     private JSONArray cachedArray;
     private List<Node> cachedNodes=List.of();
     private boolean writeThrough=true;
-    public Profiles(Context c) { this(c.getFilesDir()); }
-    public Profiles(File directory) { file=new File(directory,"profiles.json");load(); }
+    public Profiles(Context c) { this(c.getFilesDir(),name->c.getAssets().open("bundled/"+name)); }
+    public Profiles(File directory) { this(directory,name->{InputStream in=Profiles.class.getResourceAsStream("/bundled/"+name);if(in==null)throw new FileNotFoundException(name);return in;}); }
+    private Profiles(File directory,Geodata.Source source) { file=new File(directory,"profiles.json");bundled=source;load(); }
     public synchronized void load(){try{data=new JSONObject(new String(Files.readAllBytes(file.toPath()),StandardCharsets.UTF_8));}catch(Exception e){data=new JSONObject();}
         try {
             if(!data.has("node_engine"))data.put("node_engine",engine());
@@ -27,7 +29,7 @@ public final class Profiles {
         } catch(Exception ignored){}
     }
     public synchronized void save() throws Exception { if(!writeThrough)return;File tmp=new File(file.getParentFile(),"profiles.tmp");Files.write(tmp.toPath(),data.toString(2).getBytes(StandardCharsets.UTF_8));Files.move(tmp.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING); }
-    public Profiles copy()throws Exception {Profiles copy=new Profiles(file.getParentFile());copy.data=new JSONObject(data.toString());copy.writeThrough=false;return copy;}
+    public Profiles copy()throws Exception {Profiles copy=new Profiles(file.getParentFile(),bundled);copy.data=new JSONObject(data.toString());copy.writeThrough=false;return copy;}
     public static boolean subscriptionAddress(String input) {try{URI uri=new URI(input.trim());return List.of("http","https").contains(uri.getScheme())&&uri.getHost()!=null&&uri.getUserInfo()==null&&uri.getFragment()==null&&!input.contains("\n");}catch(Exception e){return false;}}
     public String engine(){return data.optString("engine","sing-box");}
     public String mode(){return data.optString("mode","config");}
@@ -103,6 +105,10 @@ public final class Profiles {
     public static String readLimited(InputStream in)throws Exception{ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1){out.write(buf,0,n);if(out.size()>4*1024*1024)throw new IOException("配置超过 4 MB");}return out.toString("UTF-8");}
     public String compile(String secret) throws Exception { return compile(secret,10808,19090,false); }
     public String compile(String secret,int mixedPort,int controllerPort,boolean transientConfig) throws Exception {
+        String profile=mode().equals("config")&&activeConfig()!=null?activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";
+        return compile(secret,mixedPort,controllerPort,transientConfig,new File(file.getParentFile(),"runtime/"+engine()+"/"+profile));
+    }
+    public String compile(String secret,int mixedPort,int controllerPort,boolean transientConfig,File working) throws Exception {
         boolean sb=engine().equals("sing-box");List<Node> ns=mode().equals("nodes")?nodes():List.of();
         LinkedHashMap<Node,JSONObject> active=new LinkedHashMap<>();
         if(mode().equals("nodes")) {
@@ -112,9 +118,7 @@ public final class Profiles {
         if(sb) {
             JSONObject j;
             if(mode().equals("config")){String cfg=data.optString("config_sing-box");if(cfg.isBlank())throw new IllegalArgumentException("请导入 sing-box JSON 配置");j=new JSONObject(cfg);}
-            else {JSONArray outs=new JSONArray(),names=new JSONArray(),endpoints=new JSONArray();for(Node n:ns){if(n.protocol.equals("wireguard"))endpoints.put(active.get(n));else outs.put(active.get(n));if(n==ns.get(0))names.put(n.name);}names.put("DIRECT");outs.put(new JSONObject().put("type","direct").put("tag","DIRECT"));outs.put(new JSONObject().put("type","selector").put("tag","Wbox").put("outbounds",names).put("default",ns.get(0).name));
-                String selected=data.optString("selected");for(Node n:ns)if(n.name.equals(selected))outs.getJSONObject(outs.length()-1).put("default",selected);
-                j=new JSONObject().put("endpoints",endpoints).put("log",new JSONObject().put("level","warn")).put("outbounds",outs).put("route",new JSONObject().put("final","Wbox").put("default_domain_resolver","dns")).put("dns",new JSONObject().put("servers",new JSONArray().put(new JSONObject().put("type","udp").put("tag","dns").put("server","1.1.1.1"))).put("strategy",data.optBoolean("ipv6",true)?"prefer_ipv6":"ipv4_only"));}
+            else {j=BundledRules.nodes(true,active,bundled);j.getJSONObject("dns").put("strategy",data.optBoolean("ipv6",true)?"prefer_ipv6":"ipv4_only");}
             // Android owns the VPN. Preserve user rules/outbounds, replace only OS-facing TUN and reserved mixed listener.
             JSONArray in=j.optJSONArray("inbounds"),kept=new JSONArray();if(in!=null)for(int i=0;i<in.length();i++){JSONObject v=in.getJSONObject(i);if(!v.optString("type").equals("tun")&&v.optInt("listen_port")!=10808)kept.put(v);}
             kept.put(new JSONObject().put("type","mixed").put("tag","wbox-in").put("listen","127.0.0.1").put("listen_port",mixedPort));j.put("inbounds",kept);
@@ -123,13 +127,15 @@ public final class Profiles {
             String cacheId=mode().equals("config")&&activeConfig()!=null?activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";
             cache.put("path",new File(file.getParentFile(),"cache-"+cacheId+".db").getAbsolutePath());ex.put("cache_file",cache);
             AndroidConfig.adaptSingBox(j,in);
+            BundledRules.apply(j,true,working,bundled);
             return j.toString(2);
         }
         Map<String,Object> m;
         if(mode().equals("config")){String cfg=data.optString("config_mihomo");if(cfg.isBlank())throw new IllegalArgumentException("请导入 mihomo YAML 配置");m=yamlMap(cfg);}
-        else{m=new LinkedHashMap<>();m.put("log-level","warning");List<Object> proxies=new ArrayList<>();List<String> names=new ArrayList<>();for(Node n:ns){proxies.add(yamlMap(active.get(n).toString()));if(n==ns.get(0))names.add(n.name);}String selected=data.optString("selected");if(names.remove(selected))names.add(0,selected);names.add("DIRECT");m.put("proxies",proxies);m.put("proxy-groups",List.of(Map.of("name","Wbox","type","select","proxies",names)));m.put("rules",List.of("MATCH,Wbox"));m.put("ipv6",data.optBoolean("ipv6",true));m.put("dns",Map.of("enable",true,"ipv6",data.optBoolean("ipv6",true),"enhanced-mode","redir-host","nameserver",List.of("https://1.1.1.1/dns-query")));}
+        else {JSONObject j=BundledRules.nodes(false,active,bundled);j.put("ipv6",data.optBoolean("ipv6",true));j.getJSONObject("dns").put("ipv6",data.optBoolean("ipv6",true));m=yamlMap(j.toString());}
         m.put("mixed-port",mixedPort);m.put("allow-lan",false);m.put("bind-address","127.0.0.1");m.put("external-controller","127.0.0.1:"+controllerPort);m.put("secret",secret);m.put("tun",Map.of("enable",false));m.putIfAbsent("ipv6",true);
         AndroidConfig.adaptMihomo(m);
-        return new Yaml().dump(m);
+        JSONObject localized=new JSONObject(m);BundledRules.apply(localized,false,working,bundled);
+        return new Yaml().dump(yamlMap(localized.toString()));
     }
 }

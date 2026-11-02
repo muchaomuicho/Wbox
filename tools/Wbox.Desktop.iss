@@ -1,7 +1,7 @@
 [Setup]
 AppId={{49D04E75-742E-4E26-B77D-412E21C1D2AC}
 AppName=Wbox
-AppVersion=0.6.4
+AppVersion=0.6.5
 AppPublisher=Wbox
 DefaultDirName={localappdata}\Programs\Wbox
 DefaultGroupName=Wbox
@@ -10,7 +10,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=Wbox-0.6.4-windows-x64-setup
+OutputBaseFilename=Wbox-0.6.5-windows-x64-setup
 SetupIconFile=..\resources\wbox.ico
 UninstallDisplayIcon={app}\Wbox.exe
 Compression=lzma2/max
@@ -30,7 +30,7 @@ Name: "desktopicon"; Description: "Create desktop shortcut"; GroupDescription: "
 Source: "..\windows\desktop-publish\win-unpacked\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\docs\RELEASE-0.6.4.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\RELEASE-0.6.5.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\resources\cores\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]

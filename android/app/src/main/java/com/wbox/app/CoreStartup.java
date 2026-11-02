@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 
-/** The controller starts after remote rules and other core services are ready. */
+/** Waits for controller, listener and rule-provider initialization. */
 final class CoreStartup {
     static final long TIMEOUT_MS = 120_000;
     interface Probe { void check(int timeoutMs) throws Exception; }
