@@ -33,6 +33,8 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
             if("connect".equals(action)){if(android.net.VpnService.prepare(context)!=null)throw new IllegalStateException("Test VPN approval missing");context.startForegroundService(new Intent(context,WboxVpnService.class));return;}
             if("status".equals(action)){
                 JSONObject state=new JSONObject().put("running",WboxVpnService.running).put("starting",WboxVpnService.starting).put("status",WboxVpnService.status).put("error",WboxVpnService.lastError).put("upload",WboxVpnService.upload).put("download",WboxVpnService.download).put("logs",new JSONArray(WboxVpnService.logSnapshot()));
+                List<WboxVpnService.TrafficSample> samples=WboxVpnService.trafficSnapshot();
+                state.put("visible",WboxVpnService.visible).put("lastSample",samples.isEmpty()?0:samples.get(samples.size()-1).time);
                 Files.write(new File(context.getFilesDir(),"probe-state.json").toPath(),state.toString().getBytes());return;
             }
             String core=intent.getStringExtra("engine");if(core==null)core="sing-box";

@@ -23,6 +23,15 @@ public class BundledRulesTest {
             File first=new File(rules.get(0).getString("path"));long stamp=first.lastModified();p.compile("secret");assertEquals(stamp,first.lastModified());Files.write(first.toPath(),"broken".getBytes(java.nio.charset.StandardCharsets.UTF_8));p.compile("secret");assertTrue(first.length()>32);
         }
     }
+    @Test public void latencyProbeSkipsRulesWithoutChangingTheNormalTemplate()throws Exception {
+        Profiles p=new Profiles(dir);p.importNodes("socks5://127.0.0.1:19999#Test",null);p.setWorkspace("nodes");
+        for(String engine:List.of("sing-box","mihomo")){
+            p.data.put("engine",engine);JSONObject probe=new JSONObject(Profiles.yamlMap(p.compile("secret",10808,19090,true,new File(dir,"probe"))));
+            if(engine.equals("sing-box"))assertFalse(probe.getJSONObject("route").has("rule_set"));else assertFalse(probe.has("rule-providers"));
+            JSONObject normal=new JSONObject(Profiles.yamlMap(p.compile("secret")));
+            if(engine.equals("sing-box"))assertEquals(13,normal.getJSONObject("route").getJSONArray("rule_set").length());else assertEquals(13,normal.getJSONObject("rule-providers").length());
+        }
+    }
     @Test public void customUrlsAndSavedSourceArePreserved()throws Exception {
         Profiles p=new Profiles(dir);
         String url="https://anti-ad.net/anti-ad-sing-box.srs";

@@ -48,7 +48,7 @@ function NodeRow({node,current,selected,select,activate,edit,run}: {node:Node;cu
     <button role="menuitem" className="menu-item" onClick={()=>void run('cloneNode',{index:node.index})}><Icon name="content_copy" />克隆为手动节点</button>
     <button role="menuitem" className="menu-item" onClick={()=>void run('removeNode',{index:node.index})}><Icon name="delete" />移除节点</button>
   </>);
-  return <><tr {...menu.triggerProps} onContextMenu={e=>{select();e.currentTarget.focus();menu.triggerProps.onContextMenu(e);}} className={selected?'selected':''} tabIndex={0} aria-selected={selected} onClick={select} onDoubleClick={activate} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();activate();}if(e.ctrlKey&&e.key.toLowerCase()==='d'){e.preventDefault();edit();}}}>
+  return <><tr title={node.name} {...menu.triggerProps} onContextMenu={e=>{select();e.currentTarget.focus();menu.triggerProps.onContextMenu(e);}} className={selected?'selected':''} tabIndex={0} aria-selected={selected} onClick={select} onDoubleClick={activate} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();activate();}if(e.ctrlKey&&e.key.toLowerCase()==='d'){e.preventDefault();edit();}}}>
     <td className="wbox-node-current">{current&&<Icon name="check" />}</td><td title={node.name}>{node.name}</td><td>{node.protocol.toUpperCase()}</td><td title={node.server}>{node.server}</td><td>{node.port}</td><td>{node.delayText}</td>
   </tr>{menu.element}</>;
 }

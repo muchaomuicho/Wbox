@@ -1,4 +1,4 @@
-param([string]$Version = '0.6.5', [string]$AndroidVersion = '0.6.5')
+param([string]$Version = '0.6.6', [string]$AndroidVersion = '0.6.6')
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = Join-Path $repo "dist/Wbox-$Version-source.zip"
@@ -15,7 +15,10 @@ try {
         -g '!**/__pycache__/**' -g '!**/*.tsbuildinfo' -g '!**/.pnpm-store/**' -g '!**/test-results/**' `
         -g '!**/.git/**' -g '!**/.git' -g '!**/publish/**' -g '!windows/test-runtime/**' `
         -g '!windows/memory-test-*/**' -g '!windows/ui-*.png' -g '!android/local.properties' `
+        -g '!windows/performance-*/**' -g '!windows/startup-ui-runtime/**' -g '!windows/reliability-runtime/**' `
         -g '!resources/cores/windows/**' -g '!resources/cores/android/**' -g '!*.log'
+    # Build-time installer assets are source inputs, not generated build output.
+    $paths += & rg --files desktop/build
     if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate source files' }
     $file = [IO.File]::Open($output,[IO.FileMode]::Create)
     $archive = [IO.Compression.ZipArchive]::new($file,[IO.Compression.ZipArchiveMode]::Create)

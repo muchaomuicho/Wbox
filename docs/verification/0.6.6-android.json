@@ -1,0 +1,15 @@
+{
+  "version": "0.6.6",
+  "tests": 64,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 4,
+  "lint": "passed",
+  "release": "ARM64 signed; R8 and resource shrinking enabled",
+  "skippedTests": [
+    "protocolAndRealityConfigsPassActualCoreValidation",
+    "realCoresForwardHttpOverIpv4AndIpv6",
+    "expandedProtocolsPassActualCores",
+    "providedRemoteConfigImportsInBothWorkspaces"
+  ]
+}

@@ -158,6 +158,11 @@ function TrayMenuContent(props: { host: DesktopHost }) {
   const closeMenu = () => host.application.closeTrayMenu();
   useTrayTheme();
   const controller = useSubmenuController();
+  useEffect(() => {
+    const refresh = () => { controller.close(); if (!document.hidden) { api.serviceStatus.retryNow(); api.groups.retryNow(); } };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  });
   useMenuKeyboard(controller, closeMenu);
   const api = useMemo(
     () => new DaemonApi(TRAY_LOCAL_SERVER, language, host.transport),

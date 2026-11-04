@@ -253,7 +253,6 @@ const ConnectionRowView = memo(function ConnectionRowView(props: {
   return (
     <button type="button" className={styles.connectionRow} onClick={() => props.onOpen(connection.id)}>
       <div className={styles.head}>
-        <ConnectionAppIcon path={connection.processInfo?.processPath || ""} />
         <Badge>{connection.network.toUpperCase()}</Badge>
         <span className={styles.destination}>{connection.domain || connection.destination}</span>
         <span className={styles.spacer} />
@@ -293,13 +292,6 @@ const ConnectionRowView = memo(function ConnectionRowView(props: {
     </button>
   );
 });
-
-function ConnectionAppIcon({path}:{path:string}) {
-  const [icon,setIcon]=useState<string|null>(null);
-  useEffect(()=>{let active=true;setIcon(null);if(path&&window.wbox?.processIcon)void window.wbox.processIcon(path).then(value=>{if(active)setIcon(value);}).catch(()=>{});return()=>{active=false;};},[path]);
-  const name=path.split(/[\\/]/).pop() || "未识别应用";
-  return <span className={styles.appIcon} title={name}>{icon?<img src={icon} alt={name}/>:<Icon name="terminal" size={24}/>}</span>;
-}
 
 function ConnectionDetailBody(props: { row: ConnectionRow; onClose: () => void }) {
   const api = useApi();

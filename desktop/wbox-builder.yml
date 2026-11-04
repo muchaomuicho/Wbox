@@ -5,6 +5,7 @@ electronVersion: 43.7.7
 electronDist: node_modules/electron/dist
 npmRebuild: false
 asar: true
+electronLanguages: [en-US, zh-CN, zh-TW]
 directories:
   output: ../windows/desktop-publish
 files:

@@ -101,7 +101,7 @@ public final class Profiles {
         return value;
     }
     public static String fetch(String address)throws Exception{return fetch(address,false);}
-    public static String fetch(String address,boolean nodes) throws Exception {URL url=new URL(address);if(!List.of("https","http").contains(url.getProtocol()))throw new IllegalArgumentException("订阅必须是 HTTP / HTTPS 地址");HttpURLConnection c=(HttpURLConnection)url.openConnection();c.setConnectTimeout(15000);c.setReadTimeout(20000);c.setRequestProperty("User-Agent","clash.meta/1.19.33");try{if(c.getResponseCode()!=200)throw new IOException("订阅 HTTP "+c.getResponseCode());try(InputStream in=c.getInputStream()){return readLimited(in);}}finally{c.disconnect();}}
+    public static String fetch(String address,boolean nodes) throws Exception {return SubscriptionFetch.fetch(address);}
     public static String readLimited(InputStream in)throws Exception{ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1){out.write(buf,0,n);if(out.size()>4*1024*1024)throw new IOException("配置超过 4 MB");}return out.toString("UTF-8");}
     public String compile(String secret) throws Exception { return compile(secret,10808,19090,false); }
     public String compile(String secret,int mixedPort,int controllerPort,boolean transientConfig) throws Exception {
@@ -118,7 +118,7 @@ public final class Profiles {
         if(sb) {
             JSONObject j;
             if(mode().equals("config")){String cfg=data.optString("config_sing-box");if(cfg.isBlank())throw new IllegalArgumentException("请导入 sing-box JSON 配置");j=new JSONObject(cfg);}
-            else {j=BundledRules.nodes(true,active,bundled);j.getJSONObject("dns").put("strategy",data.optBoolean("ipv6",true)?"prefer_ipv6":"ipv4_only");}
+            else {j=BundledRules.nodes(true,active,bundled);j.getJSONObject("dns").put("strategy",data.optBoolean("ipv6",true)?"prefer_ipv6":"ipv4_only");if(transientConfig)prepareProbe(j,true);}
             // Android owns the VPN. Preserve user rules/outbounds, replace only OS-facing TUN and reserved mixed listener.
             JSONArray in=j.optJSONArray("inbounds"),kept=new JSONArray();if(in!=null)for(int i=0;i<in.length();i++){JSONObject v=in.getJSONObject(i);if(!v.optString("type").equals("tun")&&v.optInt("listen_port")!=10808)kept.put(v);}
             kept.put(new JSONObject().put("type","mixed").put("tag","wbox-in").put("listen","127.0.0.1").put("listen_port",mixedPort));j.put("inbounds",kept);
@@ -132,10 +132,22 @@ public final class Profiles {
         }
         Map<String,Object> m;
         if(mode().equals("config")){String cfg=data.optString("config_mihomo");if(cfg.isBlank())throw new IllegalArgumentException("请导入 mihomo YAML 配置");m=yamlMap(cfg);}
-        else {JSONObject j=BundledRules.nodes(false,active,bundled);j.put("ipv6",data.optBoolean("ipv6",true));j.getJSONObject("dns").put("ipv6",data.optBoolean("ipv6",true));m=yamlMap(j.toString());}
+        else {JSONObject j=BundledRules.nodes(false,active,bundled);j.put("ipv6",data.optBoolean("ipv6",true));j.getJSONObject("dns").put("ipv6",data.optBoolean("ipv6",true));if(transientConfig)prepareProbe(j,false);m=yamlMap(j.toString());}
         m.put("mixed-port",mixedPort);m.put("allow-lan",false);m.put("bind-address","127.0.0.1");m.put("external-controller","127.0.0.1:"+controllerPort);m.put("secret",secret);m.put("tun",Map.of("enable",false));m.putIfAbsent("ipv6",true);
         AndroidConfig.adaptMihomo(m);
         JSONObject localized=new JSONObject(m);BundledRules.apply(localized,false,working,bundled);
         return new Yaml().dump(yamlMap(localized.toString()));
+    }
+    static void prepareProbe(JSONObject root,boolean sb)throws JSONException {
+        if(sb){
+            root.put("log",new JSONObject().put("level","error"));
+            JSONObject route=root.getJSONObject("route");route.remove("rules");route.remove("rule_set");route.put("find_process",false);
+            JSONObject dns=root.getJSONObject("dns");dns.remove("rules");dns.put("final","ali");
+            JSONArray servers=dns.getJSONArray("servers");for(int i=servers.length()-1;i>=0;i--)if(servers.getJSONObject(i).optString("type").equals("fakeip"))servers.remove(i);
+        }else{
+            root.remove("rule-providers");root.remove("sniffer");root.put("rules",new JSONArray().put("MATCH,节点选择"));
+            root.put("log-level","error").put("find-process-mode","off");root.put("profile",new JSONObject().put("store-selected",false).put("store-fake-ip",false));
+            JSONObject dns=root.getJSONObject("dns");dns.remove("nameserver-policy");dns.put("enhanced-mode","redir-host");
+        }
     }
 }

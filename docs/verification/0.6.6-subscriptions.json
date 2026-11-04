@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-04",
+  "client": "Wbox ProfileImport.FetchAsync",
+  "userAgent": "clash.meta/1.19.33",
+  "results": [
+    {
+      "variant": "default",
+      "nodes": 5,
+      "elapsedMs": 5874
+    },
+    {
+      "variant": "clash query flag",
+      "nodes": 5,
+      "elapsedMs": 13128
+    }
+  ],
+  "note": "URLs and tokens omitted. One successful run does not guarantee server availability."
+}

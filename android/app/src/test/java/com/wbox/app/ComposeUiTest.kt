@@ -27,6 +27,12 @@ class ComposeUiTest {
         val p=Profiles(ui.activity);p.data=JSONObject().put("mode","nodes");p.importNodes(ProfilesTest.SS,null);p.save();m.reload()
     }}
     @After fun clear(){WboxVpnService.running=false;WboxVpnService.starting=false;WboxVpnService.stopping=false}
+    @Test fun longPressGroupCardShowsSelectableFullName(){
+        val name="🇯🇵 日本 · 很长的节点名称 · Tokyo relay premium 01"
+        ui.runOnIdle{m.groups=JSONObject().put("Proxy",JSONObject().put("type","Selector").put("now",name).put("all",JSONArray().put(name))).put(name,JSONObject().put("type","Shadowsocks"));m.sheet="groups"}
+        ui.onNodeWithText(name).performTouchInput{longClick()}
+        ui.onNodeWithText("节点名称").assertExists();ui.onAllNodesWithText(name).onLast().assertIsDisplayed()
+    }
     @Test fun navigationUsesFourDestinationsAndCompactStart(){
         ui.onNodeWithContentDescription("连接代理").assertExists()
         ui.onNodeWithText("当前节点").assertExists()

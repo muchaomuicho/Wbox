@@ -13,7 +13,9 @@ import java.util.function.BiConsumer;
 /** Each library node is measured in isolation without changing the active VPN. */
 final class NodeLatencyTester {
     static void run(Context context,Profiles source,List<String> names,BiConsumer<String,String> result)throws Exception {
-        ExecutorService workers=Executors.newFixedThreadPool(4);
+        String url=source.data.optString("test_url",Profiles.TEST_URL);
+        validateUrl(source.engine(),url);
+        ExecutorService workers=Executors.newFixedThreadPool(source.mode().equals("config")?4:1);
         Semaphore starts=new Semaphore(1);
         try {
             List<Future<?>> pending=new ArrayList<>();
@@ -28,6 +30,10 @@ final class NodeLatencyTester {
             }
             for(Future<?> task:pending)task.get();
         } finally {workers.shutdownNow();workers.awaitTermination(3,TimeUnit.SECONDS);}
+    }
+    static void validateUrl(String engine,String url) {
+        if(!url.startsWith("https://")&&!url.startsWith("http://"))throw new IllegalArgumentException("测试地址必须是 HTTP / HTTPS");
+        if(engine.equals("sing-box")&&!url.startsWith("https://"))throw new IllegalArgumentException("sing-box 的测速 API 会忽略 HTTP 地址，请使用 HTTPS 测试地址。");
     }
     private static long measure(Context context,Profiles source,String name,Semaphore starts)throws Exception {
         Process process=null;File dir=null;CoreApi api;

@@ -82,7 +82,7 @@ public sealed class CoreManager : IDisposable
             if (p.Core == "sing-box") { start.ArgumentList.Add("run"); start.ArgumentList.Add("-c"); start.ArgumentList.Add(runtimePath); }
             else { start.ArgumentList.Add("-d"); start.ArgumentList.Add(working); start.ArgumentList.Add("-f"); start.ArgumentList.Add(runtimePath); }
             start.Environment["GOMEMLIMIT"] = "96MiB";
-            start.Environment["GOGC"] = "75";
+            start.Environment["GOGC"] = "100";
             process = new Process { StartInfo = start, EnableRaisingEvents = true };
             process.OutputDataReceived += (_, e) => { if (e.Data != null) CaptureLog(e.Data); };
             process.ErrorDataReceived += (_, e) => { if (e.Data != null) CaptureLog(e.Data); };

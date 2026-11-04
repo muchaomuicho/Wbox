@@ -1,6 +1,8 @@
 using Wbox;
 using System.Collections.Concurrent;
 
+if(args.Length==2&&args[0]=="--remove-startup") {try{StartupRegistration.Configure(args[1],false,false);}catch{Environment.ExitCode=1;}return;}
+
 Console.InputEncoding = new UTF8Encoding(false);
 Console.OutputEncoding = new UTF8Encoding(false);
 
@@ -59,7 +61,7 @@ object State() => new {
 async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation) {
     using var starts = new SemaphoreSlim(1);
     try {
-        await Parallel.ForEachAsync(Enumerable.Range(0, records.Length), new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = cancellation }, async (i, token) => {
+        await Parallel.ForEachAsync(Enumerable.Range(0, records.Length), new ParallelOptions { MaxDegreeOfParallelism = 2, CancellationToken = cancellation }, async (i, token) => {
             string result;
             using var tester = new CoreManager(() => true);
             try {
@@ -85,6 +87,7 @@ async Task<object?> Handle(string method, JsonElement a) {
     int I(string name) => a.GetProperty(name).GetInt32();
     switch (method) {
         case "state": return State();
+        case "startup": return StartupRegistration.Configure(S("executable"), a.GetProperty("enabled").GetBoolean(), a.GetProperty("silent").GetBoolean());
         case "service": return new { running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
         case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.PrivateMemorySize64;
         case "start": coreGeneration++; if(prefs.Mode=="config"){var selected=prefs.Configs.FirstOrDefault(p=>p.Path==prefs.ConfigPath);if(selected!=null)prefs.Core=selected.Core;}await core.StartAsync(CopyPreferences()); Save(); return null;

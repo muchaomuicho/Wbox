@@ -22,5 +22,19 @@ try {
     & ./gradlew.bat @tasks --console=plain
     if ($LASTEXITCODE -ne 0) { throw 'Android build failed' }
     New-Item -ItemType Directory -Force "$repo/dist" | Out-Null
-    Copy-Item -LiteralPath app/build/outputs/apk/release/app-release.apk -Destination "$repo/dist/Wbox-0.6.5-android-arm64-v8a.apk" -Force
+    $repacked = "$repo/android/app/build/outputs/apk/release/wbox-repacked.apk"
+    $aligned = "$repo/android/app/build/outputs/apk/release/wbox-aligned.apk"
+    $destination = "$repo/dist/Wbox-0.6.6-android-arm64-v8a.apk"
+    try {
+        & python "$repo/tools/optimize-apk.py" app/build/outputs/apk/release/app-release.apk $repacked
+        if ($LASTEXITCODE -ne 0) { throw 'APK recompression failed' }
+        & "$SdkPath/build-tools/34.0.0/zipalign.exe" -f 4 $repacked $aligned
+        if ($LASTEXITCODE -ne 0) { throw 'APK alignment failed' }
+        & "$SdkPath/build-tools/34.0.0/apksigner.bat" sign --v4-signing-enabled false --ks $key --ks-key-alias wbox --ks-pass env:WBOX_KEYSTORE_PASSWORD --key-pass env:WBOX_KEYSTORE_PASSWORD --out $destination $aligned
+        if ($LASTEXITCODE -ne 0) { throw 'APK signing failed' }
+        & "$SdkPath/build-tools/34.0.0/apksigner.bat" verify $destination
+        if ($LASTEXITCODE -ne 0) { throw 'APK signature verification failed' }
+    } finally {
+        Remove-Item -LiteralPath $repacked,$aligned -Force -ErrorAction SilentlyContinue
+    }
 } finally { Pop-Location }

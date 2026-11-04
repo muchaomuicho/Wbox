@@ -12,7 +12,7 @@
 
 `windows/desktop-publish/win-unpacked/` 包含 Wbox.exe、Electron、后台 .NET 运行库、两内核与 sing-box 的 libcronet.dll。必须整体分发；安装程序输出到 `dist/`。
 
-数据继续保存在 `%LOCALAPPDATA%\Wbox`。`WBOX_DATA_DIR` 隔离测试数据、实例和 Chromium 存储，并禁用测试实例写入开机启动项。`--silent` 不创建主窗口。主窗口关闭后收起托盘并在 30 秒后释放；托盘菜单关闭后 5 秒释放。
+数据继续保存在 `%LOCALAPPDATA%\Wbox`。`WBOX_DATA_DIR` 隔离测试数据、实例和 Chromium 存储，并禁用测试实例写入开机启动项。`--silent` 不创建主窗口。主窗口关闭后收起托盘并在 1.5 秒后释放；托盘菜单关闭后缓存 60 秒再释放。
 
 完整配置的运行副本位于原配置目录，以保留相对资源路径，停止后删除。Windows 默认使用受管 mixed 入站和系统代理。原生入站/TUN 可在设置启用，TUN 配置需要管理员身份。停止前必须成功恢复 WinINet 代理，恢复失败保留运行内核和持久记录。
 

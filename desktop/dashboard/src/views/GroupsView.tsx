@@ -165,6 +165,7 @@ function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: ()
       <button
         type="button"
         className={cx(styles.groupItem, props.selected && styles.selected)}
+        title={item.tag}
         onClick={props.onSelect}
         {...menu.triggerProps}
       >

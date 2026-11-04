@@ -108,8 +108,9 @@ internal data class RuntimeState(
     suspend fun sample() {
         WboxVpnService.wantsGroups = sheet=="groups"
         WboxVpnService.wantsConnections = sheet=="connections"
+        WboxVpnService.wantsOverview = page=="overview" && sheet.isEmpty()
         if (sheet!="connections") WboxVpnService.connectionRows=emptyList()
-        val mem = if (sampleCount++%5==0 && page=="overview") withContext(Dispatchers.Default){Debug.getPss().toLong()*1024} else runtime.appMemory
+        val mem = if (sampleCount++%10==0 && page=="overview") withContext(Dispatchers.Default){Debug.getPss().toLong()*1024} else runtime.appMemory
         runtime=RuntimeState(WboxVpnService.running,WboxVpnService.starting,WboxVpnService.stopping,WboxVpnService.status,WboxVpnService.lastError,
             if(WboxVpnService.running) (SystemClock.elapsedRealtime()-WboxVpnService.startedAt)/1000 else 0,
             WboxVpnService.upload,WboxVpnService.download,WboxVpnService.upRate,WboxVpnService.downRate,WboxVpnService.inbound,WboxVpnService.outbound,WboxVpnService.coreMemory,mem)

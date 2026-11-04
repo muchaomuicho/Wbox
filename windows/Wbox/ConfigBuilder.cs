@@ -46,6 +46,7 @@ public static class ConfigBuilder
         {
             if (preferences.Nodes.Count == 0) throw new InvalidOperationException("请先导入节点或订阅。");
             root = singbox ? SingboxNodes(preferences) : MihomoNodes(preferences);
+            if (transient) PrepareProbe(root, singbox);
         }
         if (singbox)
         {
@@ -91,6 +92,22 @@ public static class ConfigBuilder
         workingDirectory ??= preferences.Mode=="config" ? Path.GetDirectoryName(Path.GetFullPath(preferences.ConfigPath))! : Path.Combine(Store.DirectoryPath,preferences.Core);
         BundledRules.Apply(root,singbox,workingDirectory);
         return singbox ? root.ToJsonString(Store.JsonOptions) : SerializeYaml(root);
+    }
+    public static void PrepareProbe(JsonObject root, bool singbox)
+    {
+        // A node probe needs its explicit outbound chain and DNS, not routing databases,
+        // sniffers, FakeIP mappings or background rule/provider downloads.
+        if (singbox) {
+            root["log"] = new JsonObject { ["level"] = "error" };
+            var route = root["route"]!.AsObject(); route.Remove("rules"); route.Remove("rule_set"); route["find_process"] = false;
+            var dns = root["dns"]!.AsObject(); dns.Remove("rules"); dns["final"] = "ali";
+            if (dns["servers"] is JsonArray servers) for (int i = servers.Count - 1; i >= 0; i--) if (servers[i]?["type"]?.ToString() == "fakeip") servers.RemoveAt(i);
+        } else {
+            root.Remove("rule-providers"); root.Remove("sniffer"); root["rules"] = new JsonArray("MATCH,节点选择");
+            root["log-level"] = "error"; root["find-process-mode"] = "off";
+            root["profile"] = new JsonObject { ["store-selected"] = false, ["store-fake-ip"] = false };
+            var dns = root["dns"]!.AsObject(); dns.Remove("nameserver-policy"); dns["enhanced-mode"] = "redir-host";
+        }
     }
     // Build only the active node and its explicit chain. An unrelated broken
     // node in the library must never prevent the selected node from starting.

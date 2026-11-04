@@ -4,7 +4,12 @@ using Wbox;
 
 try
 {
+if(args.Length==2&&args[0]=="--startup-child"){File.WriteAllText(args[1],"started");return;}
 Environment.SetEnvironmentVariable("WBOX_DATA_DIR", Path.GetFullPath("windows/test-runtime"));
+if(args.Contains("--startup-native")){await NativeStartupChecks.Run();return;}
+if(args.Length==2&&args[0]=="--fetch") {
+    int index=0;foreach(string address in File.ReadAllLines(args[1])) {var time=System.Diagnostics.Stopwatch.StartNew();try{var content=await ProfileImport.FetchAsync(address);var nodes=NodeParser.ParseSubscription(content);Console.WriteLine($"Subscription {++index}: {nodes.Count} nodes, {time.ElapsedMilliseconds} ms, UA {ProfileImport.MihomoUserAgent}");}catch(Exception error){Console.WriteLine($"Subscription {++index}: {error.GetType().Name}, {time.ElapsedMilliseconds} ms: {error.Message}");throw new Exception("Subscription fetch failed");}}return;
+}
 if(args.Contains("--geodata")){await GeodataChecks.Run((ok,name)=>{if(!ok)throw new Exception(name);Console.WriteLine("PASS "+name);});return;}
 if(args.Length==2&&args[0]=="--diagnose"){await DiagnosticChecks.Run(args[1]);return;}
 if (args.Length == 2 && args[0] is "--subscription" or "--nodes-subscription") {
@@ -30,6 +35,7 @@ void Check(bool condition, string label) { if (!condition) throw new Exception("
 if(args.Contains("--forwarding")){await ForwardingChecks.Run(Check);Console.WriteLine($"{checks} forwarding checks passed.");return;}
 if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
 BundledRuleChecks.Run(Check);
+await ReliabilityChecks.Run(Check);
 await ImportChecks.Run(Check);
 await IsolationChecks.Run(Check);
 Check(new Preferences().Mode == "config", "Fresh installs default to configuration workspace");

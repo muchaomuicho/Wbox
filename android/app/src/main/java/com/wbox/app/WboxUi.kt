@@ -248,7 +248,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
     }
 }
 
-@Composable private fun ActionSheet(title:String,dismiss:()->Unit,actions:List<Pair<String,()->Unit>>) {ModalBottomSheet(onDismissRequest=dismiss,containerColor=MaterialTheme.colorScheme.surface){Text(title,Modifier.padding(horizontal=24.dp,vertical=12.dp),style=MaterialTheme.typography.titleLarge);actions.forEach{(label,action)->ListItem(headlineContent={Text(label)},modifier=Modifier.clickable{dismiss();action()},colors=ListItemDefaults.colors(containerColor=Color.Transparent))};Spacer(Modifier.height(16.dp))} }
+@Composable private fun ActionSheet(title:String,dismiss:()->Unit,actions:List<Pair<String,()->Unit>>) {ModalBottomSheet(onDismissRequest=dismiss,containerColor=MaterialTheme.colorScheme.surface){SelectionContainer{Text(title,Modifier.heightIn(max=180.dp).verticalScroll(rememberScrollState()).padding(horizontal=24.dp,vertical=12.dp),style=MaterialTheme.typography.titleLarge)};actions.forEach{(label,action)->ListItem(headlineContent={Text(label)},modifier=Modifier.clickable{dismiss();action()},colors=ListItemDefaults.colors(containerColor=Color.Transparent))};Spacer(Modifier.height(16.dp))} }
 private fun host(url:String):String=try{URI(url).host ?: "订阅"}catch(_:Exception){"订阅"}
 
 @Composable private fun ProfilePicker(m:MobileModel) {Column{Text("选择配置",Modifier.padding(20.dp),style=MaterialTheme.typography.titleLarge);LazyColumn{items(m.configs,key={it.optString("id")}){p->ListItem(headlineContent={Text(p.optString("name"))},supportingContent={Muted(p.optString("core"))},trailingContent={if(p.optString("id")==m.profiles.data.optString("active_config"))Icon(Icons.Outlined.Check,null)},modifier=Modifier.clickable{m.selectProfile(p.getString("id"));m.sheet=""})}}} }
@@ -274,6 +274,7 @@ private fun host(url:String):String=try{URI(url).host ?: "订阅"}catch(_:Except
 private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return it};val values=m.groups.optJSONObject(name)?.optJSONArray("history");val n=values?.optJSONObject(values.length()-1)?.optInt("delay") ?: return null;return if(n>0)"$n ms" else "失败"}
 // Group header, rounded row surfaces and selected latency dots follow SFA GroupsCard.
 @Composable private fun Groups(m:MobileModel) {
+    var fullName by remember{mutableStateOf<String?>(null)}
     val snapshot=m.groups
     val groups=remember(snapshot){snapshot.keys().asSequence().filter{it!="GLOBAL"&&snapshot.optJSONObject(it)?.optJSONArray("all")!=null}.toList()}
     val expanded=remember{mutableStateMapOf<String,Boolean>()}
@@ -304,8 +305,8 @@ private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return
                         Surface(Modifier.fillMaxWidth().padding(bottom=if(last)12.dp else 0.dp),color=MaterialTheme.colorScheme.surfaceVariant,shape=if(last)RoundedCornerShape(bottomStart=20.dp,bottomEnd=20.dp)else RoundedCornerShape(0.dp)){
                             Row(Modifier.padding(start=16.dp,end=16.dp,top=8.dp,bottom=if(last)16.dp else 0.dp),horizontalArrangement=Arrangement.spacedBy(10.dp)){
                                 pair.forEach{node->val selected=group.optString("now")==node
-                                    Surface(onClick={m.selectNode(node,tag)},modifier=Modifier.weight(1f),shape=RoundedCornerShape(16.dp),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface){
-                                        Column(Modifier.padding(horizontal=12.dp,vertical=10.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
+                                    Surface(modifier=Modifier.weight(1f),shape=RoundedCornerShape(16.dp),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface){
+                                        Column(Modifier.fillMaxWidth().combinedClickable(onClick={m.selectNode(node,tag)},onLongClick={fullName=node},onLongClickLabel="显示完整节点名称").padding(horizontal=12.dp,vertical=10.dp),verticalArrangement=Arrangement.spacedBy(4.dp)){
                                             Text(node,style=MaterialTheme.typography.bodyMedium,fontWeight=FontWeight.SemiBold,maxLines=2,overflow=TextOverflow.Ellipsis)
                                             Row(verticalAlignment=Alignment.CenterVertically){Muted(m.groups.optJSONObject(node)?.optString("type") ?: "",Modifier.weight(1f));DelayText(delay(m,node))}
                                         }
@@ -317,6 +318,7 @@ private fun delay(m:MobileModel,name:String):String? {m.delays[name]?.let{return
             }
         }
     }
+    fullName?.let{name->AlertDialog(onDismissRequest={fullName=null},title={Text("节点名称")},text={SelectionContainer{Text(name,Modifier.heightIn(max=360.dp).verticalScroll(rememberScrollState()))}},confirmButton={TextButton(onClick={fullName=null}){Text("关闭")}})}
 }
 
 @Composable private fun Connections(m:MobileModel) {

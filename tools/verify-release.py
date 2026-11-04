@@ -2,7 +2,7 @@
 import hashlib, json, pathlib, sys, zipfile
 
 root = pathlib.Path(__file__).resolve().parent.parent
-version = sys.argv[1] if len(sys.argv) > 1 else '0.6.5'
+version = sys.argv[1] if len(sys.argv) > 1 else '0.6.6'
 manifest = json.loads((root/'resources/geodata/manifest.json').read_text())
 checks = []
 with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
