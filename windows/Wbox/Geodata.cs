@@ -2,7 +2,20 @@ namespace Wbox;
 
 public static class Geodata
 {
-    public static void Prepare(string directory, JsonObject config, Action<string>? log=null, string? assets=null)
+    public static bool Required(JsonObject config,string key)
+    {
+        if(config["geo-auto-update"]?.ToString().Equals("true",StringComparison.OrdinalIgnoreCase)==true)return true;
+        if(config["rule-providers"] is JsonObject providers&&providers.Any(p=>p.Value?["behavior"]?.ToString()=="classical"))return true;
+        bool site=key=="geosite";string text=config.ToJsonString().ToLowerInvariant();
+        if(text.Contains(site?"geosite,":"geoip,")||text.Contains(site?"geosite:":"geoip:"))return true;
+        if(config["dns"] is JsonObject dns&&dns["fallback"] is JsonArray { Count: >0 }) {
+            var filter=dns["fallback-filter"] as JsonObject;
+            if(!site&&filter?["geoip"]?.ToString().Equals("false",StringComparison.OrdinalIgnoreCase)!=true)return true;
+            if(site&&filter?["geosite"] is JsonArray { Count: >0 })return true;
+        }
+        return false;
+    }
+    public static void Prepare(string directory, JsonObject config, Action<string>? log=null, string? assets=null,bool onlyRequired=false)
     {
         assets ??= Path.Combine(AppContext.BaseDirectory,"geodata");
         var manifest=JsonNode.Parse(File.ReadAllText(Path.Combine(assets,"manifest.json")))!.AsArray();
@@ -13,6 +26,7 @@ public static class Geodata
             if(key=="geoip"&&!dataMode || key=="mmdb"&&dataMode)continue;
             var url=custom?[key]?.ToString();
             if(!string.IsNullOrWhiteSpace(url)&&!url.Equals(entry["url"]!.ToString(),StringComparison.OrdinalIgnoreCase))continue;
+            if(onlyRequired&&!Required(config,key))continue;
             var aliases=entry["aliases"]!.AsArray().Select(a=>a!.ToString()).ToArray();
             var target=Directory.GetFiles(directory).OrderBy(Path.GetFileName,StringComparer.Ordinal).FirstOrDefault(f=>aliases.Contains(Path.GetFileName(f),StringComparer.OrdinalIgnoreCase)) ?? Path.Combine(directory,name);
             if(LooksComplete(target,name.EndsWith(".metadb")))continue;

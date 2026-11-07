@@ -1,0 +1,6 @@
+{
+  "checks": [
+    "Silent login retains the application without opening a renderer window, including after tray re-registration",
+    "Manual reopen of a silent login instance opens the UI with the backend ready"
+  ]
+}

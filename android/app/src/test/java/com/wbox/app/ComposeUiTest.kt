@@ -29,11 +29,12 @@ class ComposeUiTest {
     @After fun clear(){WboxVpnService.running=false;WboxVpnService.starting=false;WboxVpnService.stopping=false}
     @Test fun longPressGroupCardShowsSelectableFullName(){
         val name="🇯🇵 日本 · 很长的节点名称 · Tokyo relay premium 01"
-        ui.runOnIdle{m.groups=JSONObject().put("Proxy",JSONObject().put("type","Selector").put("now",name).put("all",JSONArray().put(name))).put(name,JSONObject().put("type","Shadowsocks"));m.sheet="groups"}
+        ui.runOnIdle{val p=Profiles(ui.activity);p.setWorkspace("config");p.importConfig(JSONObject().put("outbounds",JSONArray().put(JSONObject().put("type","selector").put("tag","Proxy").put("outbounds",JSONArray().put(name))).put(JSONObject().put("type","direct").put("tag",name))).toString(),null,null);p.save();m.reload();m.page="proxies"}
+        ui.waitUntil(10000){ui.onAllNodesWithText(name).fetchSemanticsNodes().isNotEmpty()}
         ui.onNodeWithText(name).performTouchInput{longClick()}
         ui.onNodeWithText("节点名称").assertExists();ui.onAllNodesWithText(name).onLast().assertIsDisplayed()
     }
-    @Test fun navigationUsesFourDestinationsAndCompactStart(){
+    @Test fun navigationUsesFiveDestinationsAndCompactStart(){
         ui.onNodeWithContentDescription("连接代理").assertExists()
         ui.onNodeWithText("当前节点").assertExists()
         ui.onAllNodesWithText("日志").onLast().performClick();ui.onNodeWithContentDescription("复制日志").assertExists()
@@ -95,27 +96,25 @@ class ComposeUiTest {
         runBlocking{m.writeProfile(saved.activeConfig(),original.replace("DIRECT","Updated"))}
         assertTrue(WboxVpnService.running);assertTrue(Profiles(ui.activity).activeConfig().getString("content").contains("Updated"))
     }
-    @Test fun groupsExpandFirstAndKeepOtherChildrenHidden(){
-        ui.runOnIdle{m.groups=JSONObject("""{"First":{"all":["🇯🇵 Tokyo"],"now":"🇯🇵 Tokyo"},"Second":{"all":["Hidden node"],"now":"DIRECT"}}""");m.sheet="groups";WboxVpnService.proxies=m.groups}
-        ui.onAllNodesWithText("🇯🇵 Tokyo").assertCountEquals(1);ui.onNodeWithText("Hidden node").assertDoesNotExist()
-        ui.onNodeWithContentDescription("展开 Second").performClick();ui.onNodeWithText("Hidden node").assertExists()
+    @Test fun proxyTabsRemainAvailableWhileDisconnected(){
+        ui.runOnIdle{val p=Profiles(ui.activity);p.setWorkspace("config");p.importConfig("""{"outbounds":[{"type":"selector","tag":"Z first","outbounds":["Tokyo"]},{"type":"selector","tag":"A second","outbounds":["London"]},{"type":"direct","tag":"Tokyo"},{"type":"direct","tag":"London"}]}""",null,null);p.save();m.reload();m.page="proxies"}
+        ui.waitUntil(10000){ui.onAllNodesWithText("Tokyo").fetchSemanticsNodes().isNotEmpty()}
+        ui.onNodeWithText("London").assertDoesNotExist();ui.onNodeWithContentDescription("延迟测试").assertExists()
+        ui.onNodeWithText("A second").performClick();ui.onNodeWithText("London").assertExists();ui.onNodeWithText("Tokyo").assertDoesNotExist()
+        ui.runOnIdle{assertFalse(WboxVpnService.running);assertEquals(listOf("Z first","A second"),m.groupOrder)}
     }
     @Test fun logColorSpansKeepOriginalText(){
         val text="+0800 2026-11-01 11:15:51 FATAL[0000] netlink socket banned\n11:15:52 INFO [123 0ms] connected"
         for(dark in listOf(false,true)){val styled=LogStyle.color(text,dark) as Spanned;assertEquals(text,styled.toString());assertTrue(styled.getSpans(0,styled.length,ForegroundColorSpan::class.java).size>=3)}
     }
-    @Test fun largeGroupsStayLazyAndIgnoreNullMembership(){
-        val nodes=JSONArray((0..3999).map{"Node $it"})
-        val root=JSONObject().put("DIRECT",JSONObject().put("all",JSONObject.NULL))
-        for(tag in listOf("0","header","nodes","Large"))root.put(tag,JSONObject().put("all",nodes).put("now","Node 0").put("type","Selector"))
-        ui.runOnIdle{m.groups=root;WboxVpnService.proxies=root;m.sheet="groups"}
-        ui.onNodeWithText("Node 0").assertIsDisplayed()
-        ui.onNodeWithText("Node 3999").assertDoesNotExist()
-        ui.onNodeWithContentDescription("展开或收起全部").performClick()
-        ui.onNodeWithText("Node 0").assertDoesNotExist()
-        ui.onNodeWithContentDescription("展开或收起全部").performClick()
-        ui.onNodeWithText("Node 0").assertIsDisplayed()
-        ui.onNodeWithText("Node 3999").assertDoesNotExist()
+    @Test fun largeGroupsStayLazyAndSwitchTabs(){
+        val names=(0..3999).map{"Node $it"}
+        val outbounds=JSONArray().put(JSONObject().put("type","selector").put("tag","Large").put("outbounds",JSONArray(names))).put(JSONObject().put("type","selector").put("tag","Small").put("outbounds",JSONArray().put("DIRECT"))).put(JSONObject().put("type","direct").put("tag","DIRECT"))
+        ui.runOnIdle{val p=Profiles(ui.activity);p.setWorkspace("config");p.importConfig(JSONObject().put("outbounds",outbounds).toString(),null,null);p.save();m.reload();m.page="proxies"}
+        ui.waitUntil(10000){ui.onAllNodesWithText("Node 0").fetchSemanticsNodes().isNotEmpty()}
+        ui.onNodeWithText("Node 0").assertIsDisplayed();ui.onNodeWithText("Node 3999").assertDoesNotExist()
+        ui.onNodeWithText("Small").performClick();ui.onNodeWithText("DIRECT").assertIsDisplayed();ui.onNodeWithText("Node 0").assertDoesNotExist()
+        ui.onNodeWithText("Large").performClick();ui.onNodeWithText("Node 0").assertIsDisplayed();ui.onNodeWithText("Node 3999").assertDoesNotExist()
     }
     @Test fun connectionsRenderApplicationIconAndDetails(){
         val row=ConnectionRecord().apply{id="app";network="TCP";destination="example.test:443";packageName=ui.activity.packageName}

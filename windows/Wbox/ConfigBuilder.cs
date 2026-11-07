@@ -50,6 +50,7 @@ public static class ConfigBuilder
         }
         if (singbox)
         {
+            if(transient) root["inbounds"]=new JsonArray();
             root["route"] ??= new JsonObject();root["route"]!["find_process"] ??= true;
             if (preferences.Mode == "config" && !preferences.NativeInbounds) {
                 var mixed = (root["inbounds"] as JsonArray)?.OfType<JsonObject>().FirstOrDefault(i => i["type"]?.ToString() == "mixed");
@@ -78,6 +79,12 @@ public static class ConfigBuilder
         }
         else
         {
+            if(transient) {
+                root.Remove("tun");root.Remove("listeners");
+                foreach(var port in new[]{"port","socks-port","redir-port","tproxy-port"})root.Remove(port);
+                if(root["dns"] is JsonObject dns)dns.Remove("listen");
+                root["profile"]=new JsonObject{["store-selected"]=false,["store-fake-ip"]=false};
+            }
             root["external-controller"] = $"127.0.0.1:{controllerPort}"; root["secret"] = secret;
             root["find-process-mode"] ??= "always";
             root.Remove("external-controller-tls"); root.Remove("external-controller-unix"); root.Remove("external-controller-pipe");
@@ -90,8 +97,21 @@ public static class ConfigBuilder
             root["ipv6"] ??= true;
         }
         workingDirectory ??= preferences.Mode=="config" ? Path.GetDirectoryName(Path.GetFullPath(preferences.ConfigPath))! : Path.Combine(Store.DirectoryPath,preferences.Core);
+        if(transient && preferences.Mode=="config") RelocateResources(root,Path.GetDirectoryName(Path.GetFullPath(preferences.ConfigPath))!,workingDirectory);
         BundledRules.Apply(root,singbox,workingDirectory);
         return singbox ? root.ToJsonString(Store.JsonOptions) : SerializeYaml(root);
+    }
+    static void RelocateResources(JsonNode node,string source,string target) {
+        if(node is JsonArray array){foreach(var child in array)if(child!=null)RelocateResources(child,source,target);return;}
+        if(node is not JsonObject obj)return;
+        foreach(var entry in obj.ToArray()) {
+            if(entry.Key=="path" && (obj.ContainsKey("url")||obj.ContainsKey("behavior")||obj["type"]?.ToString() is "file" or "local" or "remote") && entry.Value is JsonValue value && value.TryGetValue<string>(out var path) && path.Length>0) {
+                var original=Path.GetFullPath(path,source);
+                var dest=Path.Combine(target,"resource-"+Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(original)))[..16]+Path.GetExtension(path));
+                if(File.Exists(original))File.Copy(original,dest,true);
+                obj[entry.Key]=dest;
+            } else if(entry.Value is JsonObject or JsonArray)RelocateResources(entry.Value,source,target);
+        }
     }
     public static void PrepareProbe(JsonObject root, bool singbox)
     {

@@ -5,6 +5,10 @@ static class GeodataChecks {
     public static async Task Run(Action<bool,string> check) {
         string directory=Path.Combine(Store.DirectoryPath,"geodata-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(directory);
         try {
+            var noRules=new JsonObject{["rules"]=new JsonArray("MATCH,DIRECT")};
+            check(!Geodata.Required(noRules,"mmdb")&&!Geodata.Required(noRules,"geosite"),"Configs without geographic rules do not expand unused databases");
+            check(Geodata.Required(ConfigBuilder.ParseYaml("dns: {fallback: [1.1.1.1]}"),"mmdb"),"DNS fallback keeps its implicit GEOIP dependency");
+            check(Geodata.Required(ConfigBuilder.ParseYaml("rule-providers: {remote: {behavior: classical}}"),"geosite"),"Opaque classical providers retain offline databases");
             File.WriteAllText(Path.Combine(directory,"Country.mmdb"),"interrupted download");
             File.WriteAllText(Path.Combine(directory,"GeoSite.dat"),"<html>download failed</html>");
             Geodata.Prepare(directory,new JsonObject());

@@ -132,13 +132,15 @@
   {
     "engine": "mihomo",
     "tag": "anti-ad",
-    "format": "yaml",
+    "format": "mrs",
     "behavior": "domain",
     "url": "https://anti-ad.net/clash.yaml",
-    "file": "mihomo-anti-ad.yaml",
-    "size": 2759044,
-    "sha256": "eedbb09fd642defe35d219a4bfbd88273ed1dcf651fd102642787520aef795e3",
-    "fetchedOn": "2026-11-02"
+    "file": "mihomo-anti-ad.mrs",
+    "size": 873008,
+    "sha256": "e276c715597e93a7ecf631f839e46a6d299919644a368aa067f9c02fef961ad7",
+    "fetchedOn": "2026-11-02",
+    "sourceFormat": "yaml",
+    "sourceSha256": "eedbb09fd642defe35d219a4bfbd88273ed1dcf651fd102642787520aef795e3"
   },
   {
     "engine": "mihomo",

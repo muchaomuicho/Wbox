@@ -15,7 +15,7 @@ public static class StartupRegistration
         XElement Element(string name, object? content) => new(ns + name, content);
         return new XDocument(new XElement(ns + "Task", new XAttribute("version", "1.2"),
             Element("RegistrationInfo", Element("Description", "Wbox 登录启动")),
-            Element("Triggers", Element("LogonTrigger", new[] { Element("Enabled", "true"), Element("UserId", sid) })),
+            Element("Triggers", Element("LogonTrigger", new[] { Element("Enabled", "true"), Element("UserId", sid), Element("Delay", "PT5S") })),
             Element("Principals", new XElement(ns + "Principal", new XAttribute("id", "WboxUser"),
                 Element("UserId", sid), Element("LogonType", "InteractiveToken"), Element("RunLevel", elevated ? "HighestAvailable" : "LeastPrivilege"))),
             Element("Settings", new[] { Element("MultipleInstancesPolicy", "IgnoreNew"), Element("DisallowStartIfOnBatteries", "false"),

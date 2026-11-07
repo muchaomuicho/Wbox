@@ -1,6 +1,8 @@
 param([Parameter(Mandatory)][string]$JavaHome,[Parameter(Mandatory)][string]$SdkPath,[switch]$Test)
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+& python "$repo/tools/optimize-rules.py"
+if ($LASTEXITCODE -ne 0) { throw 'Bundled rule compilation failed' }
 $env:JAVA_HOME = $JavaHome
 if (!$env:GRADLE_USER_HOME) { $env:GRADLE_USER_HOME = Join-Path $env:USERPROFILE '.gradle' }
 $signing = Join-Path $repo 'signing'
@@ -19,12 +21,12 @@ Push-Location "$repo/android"
 try {
     $tasks = @(':app:assembleRelease')
     if ($Test) { $tasks += @(':app:testDebugUnitTest',':app:lintDebug') }
-    & ./gradlew.bat @tasks --console=plain
+    & ./gradlew.bat @tasks '-Pkotlin.compiler.execution.strategy=in-process' --console=plain
     if ($LASTEXITCODE -ne 0) { throw 'Android build failed' }
     New-Item -ItemType Directory -Force "$repo/dist" | Out-Null
     $repacked = "$repo/android/app/build/outputs/apk/release/wbox-repacked.apk"
     $aligned = "$repo/android/app/build/outputs/apk/release/wbox-aligned.apk"
-    $destination = "$repo/dist/Wbox-0.6.6-android-arm64-v8a.apk"
+    $destination = "$repo/dist/Wbox-0.6.7-android-arm64-v8a.apk"
     try {
         & python "$repo/tools/optimize-apk.py" app/build/outputs/apk/release/app-release.apk $repacked
         if ($LASTEXITCODE -ne 0) { throw 'APK recompression failed' }

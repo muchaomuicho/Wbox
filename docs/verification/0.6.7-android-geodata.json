@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "MMDB and GEOSITE start without Wi-Fi or mobile data",
+    "Truncated MMDB is repaired offline before core startup",
+    "DAT GEOIP mode also starts offline"
+  ],
+  "seconds": {
+    "MMDB and GEOSITE start without Wi-Fi or mobile data": 2.76,
+    "Truncated MMDB is repaired offline before core startup": 5.33,
+    "DAT GEOIP mode also starts offline": 6.46
+  },
+  "emulator": "Android 15 x86_64, minified debug"
+}

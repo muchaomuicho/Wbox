@@ -120,14 +120,15 @@ public final class Profiles {
             if(mode().equals("config")){String cfg=data.optString("config_sing-box");if(cfg.isBlank())throw new IllegalArgumentException("请导入 sing-box JSON 配置");j=new JSONObject(cfg);}
             else {j=BundledRules.nodes(true,active,bundled);j.getJSONObject("dns").put("strategy",data.optBoolean("ipv6",true)?"prefer_ipv6":"ipv4_only");if(transientConfig)prepareProbe(j,true);}
             // Android owns the VPN. Preserve user rules/outbounds, replace only OS-facing TUN and reserved mixed listener.
-            JSONArray in=j.optJSONArray("inbounds"),kept=new JSONArray();if(in!=null)for(int i=0;i<in.length();i++){JSONObject v=in.getJSONObject(i);if(!v.optString("type").equals("tun")&&v.optInt("listen_port")!=10808)kept.put(v);}
+            JSONArray in=j.optJSONArray("inbounds"),kept=new JSONArray();if(!transientConfig&&in!=null)for(int i=0;i<in.length();i++){JSONObject v=in.getJSONObject(i);if(!v.optString("type").equals("tun")&&v.optInt("listen_port")!=10808)kept.put(v);}
             kept.put(new JSONObject().put("type","mixed").put("tag","wbox-in").put("listen","127.0.0.1").put("listen_port",mixedPort));j.put("inbounds",kept);
             JSONObject ex=j.optJSONObject("experimental");if(ex==null)ex=new JSONObject();ex.put("clash_api",new JSONObject().put("external_controller","127.0.0.1:"+controllerPort).put("secret",secret));j.put("experimental",ex);
             JSONObject cache=ex.optJSONObject("cache_file");if(cache==null)cache=new JSONObject();cache.put("enabled",!transientConfig).put("store_fakeip",true);
             String cacheId=mode().equals("config")&&activeConfig()!=null?activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";
             cache.put("path",new File(file.getParentFile(),"cache-"+cacheId+".db").getAbsolutePath());ex.put("cache_file",cache);
             AndroidConfig.adaptSingBox(j,in);
-            BundledRules.apply(j,true,working,bundled);
+            if(transientConfig&&mode().equals("config"))relocateResources(j,working);
+            BundledRules.apply(j,true,working,bundled,new File(file.getParentFile(),"bundled-cache"));
             return j.toString(2);
         }
         Map<String,Object> m;
@@ -135,8 +136,28 @@ public final class Profiles {
         else {JSONObject j=BundledRules.nodes(false,active,bundled);j.put("ipv6",data.optBoolean("ipv6",true));j.getJSONObject("dns").put("ipv6",data.optBoolean("ipv6",true));if(transientConfig)prepareProbe(j,false);m=yamlMap(j.toString());}
         m.put("mixed-port",mixedPort);m.put("allow-lan",false);m.put("bind-address","127.0.0.1");m.put("external-controller","127.0.0.1:"+controllerPort);m.put("secret",secret);m.put("tun",Map.of("enable",false));m.putIfAbsent("ipv6",true);
         AndroidConfig.adaptMihomo(m);
-        JSONObject localized=new JSONObject(m);BundledRules.apply(localized,false,working,bundled);
+        if(transientConfig){for(String key:List.of("listeners","port","socks-port","redir-port","tproxy-port","external-controller-tls","external-controller-unix"))m.remove(key);Object dns=m.get("dns");if(dns instanceof Map)((Map<?,?>)dns).remove("listen");m.put("profile",Map.of("store-selected",false,"store-fake-ip",false));}
+        JSONObject localized=new JSONObject(m);if(transientConfig&&mode().equals("config"))relocateResources(localized,working);BundledRules.apply(localized,false,working,bundled,new File(file.getParentFile(),"bundled-cache"));
         return new Yaml().dump(yamlMap(localized.toString()));
+    }
+    private void relocateResources(JSONObject root,File working)throws Exception {
+        String profile=activeConfig()==null?"":activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]","");
+        relocate(root,new File(file.getParentFile(),"runtime/"+engine()+"/"+profile),working);
+    }
+    private static void relocate(Object node,File source,File target)throws Exception {
+        if(node instanceof JSONArray a){for(int i=0;i<a.length();i++)relocate(a.get(i),source,target);return;}
+        if(!(node instanceof JSONObject obj))return;
+        List<String> keys=new ArrayList<>();obj.keys().forEachRemaining(keys::add);
+        for(String key:keys){
+            Object value=obj.get(key);
+            if(key.equals("path")&&(obj.has("url")||obj.has("behavior")||List.of("file","local","remote").contains(obj.optString("type")))&&value instanceof String path&&!path.isEmpty()){
+                File original=new File(path);if(!original.isAbsolute())original=new File(source,path);
+                String hash=String.format("%064x",new java.math.BigInteger(1,java.security.MessageDigest.getInstance("SHA-256").digest(original.getAbsolutePath().getBytes(StandardCharsets.UTF_8)))).substring(0,16);
+                File destination=new File(target,"resource-"+hash+"-"+original.getName());
+                if(original.isFile())Files.copy(original.toPath(),destination.toPath(),StandardCopyOption.REPLACE_EXISTING);
+                obj.put(key,destination.getAbsolutePath());
+            }else relocate(value,source,target);
+        }
     }
     static void prepareProbe(JSONObject root,boolean sb)throws JSONException {
         if(sb){

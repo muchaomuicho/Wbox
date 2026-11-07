@@ -53,7 +53,7 @@ public final class CoreApi {
         }finally{c.disconnect();}
     }
     public JSONObject request(String method,String path,JSONObject body) throws Exception {
-        HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:"+port+path).openConnection();c.setRequestMethod(method);c.setConnectTimeout(1200);c.setReadTimeout(path.contains("delay")?6000:2000);c.setRequestProperty("Authorization","Bearer "+secret);
+        HttpURLConnection c=(HttpURLConnection)new URL("http://127.0.0.1:"+port+path).openConnection(java.net.Proxy.NO_PROXY);c.setRequestMethod(method);c.setConnectTimeout(1200);c.setReadTimeout(path.contains("delay")?8000:2000);c.setRequestProperty("Authorization","Bearer "+secret);
         try{if(body!=null){c.setDoOutput(true);c.setRequestProperty("Content-Type","application/json");try(OutputStream out=c.getOutputStream()){out.write(body.toString().getBytes(StandardCharsets.UTF_8));}}
             int status=c.getResponseCode();if(status>=400){String error="";if(c.getErrorStream()!=null)error=Profiles.readLimited(c.getErrorStream());throw new IOException("控制接口 HTTP "+status+" "+error);}
             if(status==204)return new JSONObject();try(InputStream in=c.getInputStream()){String s=Profiles.readLimited(in);return s.isBlank()?new JSONObject():new JSONObject(s);}
@@ -86,6 +86,6 @@ public final class CoreApi {
         if(root.get("proxy-groups") instanceof java.util.List<?> groups&&!groups.isEmpty()&&groups.get(0) instanceof java.util.Map<?,?> group)return String.valueOf(group.get("name"));
         return null;
     }
-    public long delay(String node,String url)throws Exception{if(!url.startsWith("https://")&&!url.startsWith("http://"))throw new IllegalArgumentException("测试地址必须是 HTTP / HTTPS");return request("GET","/proxies/"+encode(node)+"/delay?timeout=4000&url="+encode(url),null).getLong("delay");}
+    public long delay(String node,String url)throws Exception{if(!url.startsWith("https://")&&!url.startsWith("http://"))throw new IllegalArgumentException("测试地址必须是 HTTP / HTTPS");long value=request("GET","/proxies/"+encode(node)+"/delay?timeout=5000&url="+encode(url),null).getLong("delay");if(value<=0)throw new IOException("延迟测试超时或未返回有效结果");return value;}
     static String encode(String s){try{return URLEncoder.encode(s,"UTF-8").replace("+","%20");}catch(UnsupportedEncodingException impossible){throw new AssertionError(impossible);}}
 }

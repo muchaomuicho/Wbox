@@ -11,7 +11,7 @@ public static class BundledRules
         var manifest=JsonNode.Parse(File.ReadAllText(Path.Combine(Assets,"rules","manifest.json")))!.AsArray();
         foreach(var rule in rules) {
             if(rule["type"]?.ToString()!=(singbox?"remote":"http"))continue;
-            var entry=manifest.OfType<JsonObject>().FirstOrDefault(e=>e["engine"]!.ToString()==(singbox?"sing-box":"mihomo")&&e["url"]!.ToString()==rule["url"]?.ToString()&&e["format"]!.ToString()==(rule["format"]?.ToString()??(singbox?"source":"yaml"))&&(singbox||e["behavior"]!.ToString()==rule["behavior"]?.ToString()));
+            var entry=manifest.OfType<JsonObject>().FirstOrDefault(e=>e["engine"]!.ToString()==(singbox?"sing-box":"mihomo")&&e["url"]!.ToString()==rule["url"]?.ToString()&&(e["sourceFormat"]??e["format"])!.ToString()==(rule["format"]?.ToString()??(singbox?"source":"yaml"))&&(singbox||e["behavior"]!.ToString()==rule["behavior"]?.ToString()));
             if(entry==null)continue;
             var directory=Path.Combine(workingDirectory,".wbox-rules");Directory.CreateDirectory(directory);
             string hash=entry["sha256"]!.ToString(),file=entry["file"]!.ToString();
@@ -22,7 +22,7 @@ public static class BundledRules
                 try {File.Copy(Path.Combine(Assets,"rules",file),temp);if(!Matches(temp))throw new IOException("内置规则集校验失败："+file);File.Move(temp,target,true);}
                 finally {if(File.Exists(temp))File.Delete(temp);}
             }
-            rule["type"]=singbox?"local":"file";rule["path"]=Path.GetFullPath(target);
+            rule["type"]=singbox?"local":"file";rule["path"]=Path.GetFullPath(target);rule["format"]=entry["format"]!.ToString();
             foreach(var key in new[]{"url","download_detour","update_interval","http_client","interval","proxy","header","size-limit"})rule.Remove(key);
         }
     }

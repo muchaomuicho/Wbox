@@ -15,6 +15,46 @@ long coreGeneration = 0;
 bool delayTesting = false;
 CancellationTokenSource nodeTestCancellation = new();
 Task nodeTests = Task.CompletedTask;
+var groupDelays = new ConcurrentDictionary<string,int>();
+List<GroupItem>? probeGroups = null;
+string groupContext = "";
+string groupTestError = "";
+string GroupContext() => $"{coreGeneration}|{prefs.Mode}|{prefs.Core}|{prefs.ConfigPath}|{(File.Exists(prefs.ConfigPath)?File.GetLastWriteTimeUtc(prefs.ConfigPath).Ticks:0)}|{prefs.DelayUrl}";
+void CheckGroupContext() {var key=GroupContext();if(key!=groupContext){groupContext=key;groupDelays.Clear();probeGroups=null;}}
+async Task<List<GroupItem>> Groups() {
+    CheckGroupContext();
+    var groups=core.Ready?await core.GroupsAsync():probeGroups??ProxyCatalog.Offline(prefs);
+    return groups.Select(g=>g with {Details=g.Details.Select(n=>{
+        string leaf;try{leaf=ProxyCatalog.Resolve(groups,n.Name);}catch{leaf=n.Name;}
+        return groupDelays.TryGetValue(leaf,out var value)?n with {Delay=value}:n with {Delay=prefs.Mode=="nodes"?n.Delay:null};
+    }).ToList()}).ToList();
+}
+async Task TestGroup(Preferences snapshot,string tag,string context,CancellationToken token) {
+    using var tester=new CoreManager(()=>true);
+    try {
+        var target=core;
+        if(!core.Ready) {
+            snapshot.SystemProxy=false;snapshot.NativeInbounds=false;
+            token.ThrowIfCancellationRequested();var starting=tester.StartAsync(snapshot,true);
+            using var cancel=token.Register(tester.CancelStartup);
+            await starting;token.ThrowIfCancellationRequested();target=tester;
+        }
+        var groups=await target.GroupsAsync();
+        if(context==GroupContext() && target==tester)probeGroups=groups.Select(g=>g with {Selectable=false}).ToList();
+        var group=groups.FirstOrDefault(g=>g.Name==tag);
+        var names=(group?.Nodes ?? [tag]).Select(n=>ProxyCatalog.Resolve(groups,n)).Distinct().ToArray();
+        Write(new{changed=true});
+        await Parallel.ForEachAsync(names,new ParallelOptions{MaxDegreeOfParallelism=4,CancellationToken=token},async(name,ct)=>{
+            int value;
+            try {value=await target.DelayAsync(name,snapshot.DelayUrl,ct);}
+            catch(OperationCanceledException) when(ct.IsCancellationRequested){return;}
+            catch{value=0;}
+            if(context==GroupContext()){groupDelays[name]=value;Write(new{changed=true});}
+        });
+    }catch(OperationCanceledException) when(token.IsCancellationRequested){}
+    catch(Exception error){Log("ERROR 代理组测速失败："+error.Message);groupTestError=error.Message;}
+    finally {tester.Stop();delayTesting=false;Write(new{changed=true});}
+}
 var logs = new ConcurrentQueue<object>();
 long logId = 0;
 void Log(string text) { var entry = LogFormatting.Format(text); logs.Enqueue(new { id = Interlocked.Increment(ref logId), message = entry.Message, level = entry.Level }); while (logs.Count > 1000) logs.TryDequeue(out _); }
@@ -53,6 +93,7 @@ void Idle() { if (core.Running || core.Starting) throw new InvalidOperationExcep
 ConfigProfile Profile(string id) => prefs.Configs.FirstOrDefault(p => p.Id == id) ?? throw new ArgumentException("配置不存在。");
 object State() => new {
     delayTesting,
+    groupTestError,
     prefs.Core, prefs.Mode, prefs.ConfigPath, prefs.DelayUrl, prefs.Silent, prefs.AutoStart, prefs.AutoConnect, prefs.SystemProxy, prefs.NativeInbounds, prefs.SelectedNode,
     configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
@@ -90,12 +131,21 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "startup": return StartupRegistration.Configure(S("executable"), a.GetProperty("enabled").GetBoolean(), a.GetProperty("silent").GetBoolean());
         case "service": return new { running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
         case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.PrivateMemorySize64;
-        case "start": coreGeneration++; if(prefs.Mode=="config"){var selected=prefs.Configs.FirstOrDefault(p=>p.Path==prefs.ConfigPath);if(selected!=null)prefs.Core=selected.Core;}await core.StartAsync(CopyPreferences()); Save(); return null;
-        case "stop": nodeTestCancellation.Cancel(); core.Stop(); coreGeneration++; Save(); return null;
+        case "start": nodeTestCancellation.Cancel();await nodeTests;coreGeneration++; if(prefs.Mode=="config"){var selected=prefs.Configs.FirstOrDefault(p=>p.Path==prefs.ConfigPath);if(selected!=null)prefs.Core=selected.Core;}await core.StartAsync(CopyPreferences()); Save(); return null;
+        case "stop": nodeTestCancellation.Cancel();await nodeTests;core.Stop(); coreGeneration++; Save(); return null;
         case "logs": return logs.ToArray();
         case "clearLogs": logs.Clear(); return null;
         case "stats": return core.Ready ? await core.StatsAsync(false) : null;
-        case "groups": return core.Ready ? await core.GroupsAsync() : [];
+        case "groups": return await Groups();
+        case "cancelTest": nodeTestCancellation.Cancel();return null;
+        case "testGroup": {
+            if(delayTesting)return null;
+            if(prefs.Mode=="nodes")return await Handle("delayNodes",a);
+            CheckGroupContext();groupTestError="";
+            nodeTestCancellation.Dispose();nodeTestCancellation=new();delayTesting=true;
+            nodeTests=TestGroup(CopyPreferences(),S("tag"),GroupContext(),nodeTestCancellation.Token);
+            Write(new{changed=true});return null;
+        }
         case "connections": return core.Ready ? await core.RequestAsync("GET", "/connections") : null;
         case "mode": return core.Ready && prefs.Core=="mihomo" ? await core.RequestAsync("GET", "/configs") : null;
         case "setMode": await core.SetModeAsync(S("mode")); return null;

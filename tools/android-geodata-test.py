@@ -80,6 +80,6 @@ finally:
     adb('shell', 'svc', 'data', 'enable' if mobile == b'1' else 'disable')
     adb('shell', 'am', 'force-stop', 'com.wbox.app')
 
-output = ROOT/'docs/verification/0.6.3-android-geodata.json'
+output = ROOT/'docs/verification/0.6.7-android-geodata.json'
 output.write_text(json.dumps({'checks': checks, 'seconds': timings, 'emulator': 'Android 15 x86_64, minified debug'}, indent=2))
 print(json.dumps({'checks': checks, 'seconds': timings}, indent=2))

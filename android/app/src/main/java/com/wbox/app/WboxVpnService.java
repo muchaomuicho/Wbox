@@ -21,6 +21,7 @@ public final class WboxVpnService extends VpnService {
     public static volatile long upload,download,upRate,downRate,memory,appMemory,coreMemory;
     public static volatile int inbound,outbound;
     public static volatile JSONObject connections=new JSONObject(), proxies=new JSONObject();
+    public static volatile List<String> groupOrder=List.of();
     public static final Deque<String> logs=new ArrayDeque<>();
     public static final class TrafficSample {
         public final long time,up,down;
@@ -99,12 +100,13 @@ public final class WboxVpnService extends VpnService {
         ConnectionApps.clear();
         startStage="生成配置";
         Profiles p=new Profiles(this);secret=UUID.randomUUID().toString();String profile=p.mode().equals("config")&&p.activeConfig()!=null?p.activeConfig().optString("id").replaceAll("[^a-zA-Z0-9-]",""):"nodes";File dir=new File(getFilesDir(),"runtime/"+p.engine()+"/"+profile);dir.mkdirs();File config=new File(dir,p.engine().equals("sing-box")?"config.json":"config.yaml");Files.write(config.toPath(),p.compile(secret).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        groupOrder=ProxyCatalog.order(new JSONObject(Profiles.yamlMap(new String(Files.readAllBytes(config.toPath()),java.nio.charset.StandardCharsets.UTF_8))),p.engine().equals("sing-box"));
         File binary=new File(getApplicationInfo().nativeLibraryDir,p.engine().equals("sing-box")?"libsingbox.so":"libmihomo.so");if(!binary.isFile())throw new IOException("安装包缺少内核 "+binary.getName());
         List<String> cmd=new ArrayList<>(List.of("/system/bin/sh","-c","echo $$; exec \"$@\"","wbox",binary.getAbsolutePath()));
         if(p.engine().equals("sing-box"))cmd.addAll(List.of("run","-c",config.getAbsolutePath(),"-D",dir.getAbsolutePath()));else cmd.addAll(List.of("-f",config.getAbsolutePath(),"-d",dir.getAbsolutePath()));
         if(p.engine().equals("mihomo")){
             startStage="准备离线规则数据库";
-            Geodata.prepare(dir,Profiles.yamlMap(new String(Files.readAllBytes(config.toPath()),java.nio.charset.StandardCharsets.UTF_8)),getAssets()::open,WboxVpnService::log);
+            Geodata.prepareRequired(dir,Profiles.yamlMap(new String(Files.readAllBytes(config.toPath()),java.nio.charset.StandardCharsets.UTF_8)),Geodata.assets(this),WboxVpnService::log);
             if(shuttingDown)return;
         }
         startStage="启动 "+p.engine();

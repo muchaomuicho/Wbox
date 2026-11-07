@@ -12,6 +12,9 @@ final class BundledRules {
         try(InputStream in=source.open(path)){return Profiles.readLimited(in);}
     }
     static void apply(JSONObject root,boolean sb,File working,Geodata.Source source)throws Exception {
+        apply(root,sb,working,source,null);
+    }
+    static void apply(JSONObject root,boolean sb,File working,Geodata.Source source,File shared)throws Exception {
         List<JSONObject> rules=new ArrayList<>();
         if(sb){JSONObject route=root.optJSONObject("route");JSONArray list=route==null?null:route.optJSONArray("rule_set");if(list!=null)for(int i=0;i<list.length();i++)if(list.optJSONObject(i)!=null)rules.add(list.getJSONObject(i));}
         else {JSONObject providers=root.optJSONObject("rule-providers");if(providers!=null)for(Iterator<String> it=providers.keys();it.hasNext();){JSONObject rule=providers.optJSONObject(it.next());if(rule!=null)rules.add(rule);}}
@@ -20,7 +23,7 @@ final class BundledRules {
         for(JSONObject rule:rules) {
             if(!rule.optString("type").equals(sb?"remote":"http"))continue;
             JSONObject entry=null;
-            for(int i=0;i<entries.length();i++){JSONObject e=entries.getJSONObject(i);if(e.getString("engine").equals(sb?"sing-box":"mihomo")&&e.getString("url").equals(rule.optString("url"))&&e.getString("format").equals(rule.optString("format",sb?"source":"yaml"))&&(sb||e.getString("behavior").equals(rule.optString("behavior")))){entry=e;break;}}
+            for(int i=0;i<entries.length();i++){JSONObject e=entries.getJSONObject(i);if(e.getString("engine").equals(sb?"sing-box":"mihomo")&&e.getString("url").equals(rule.optString("url"))&&e.optString("sourceFormat",e.getString("format")).equals(rule.optString("format",sb?"source":"yaml"))&&(sb||e.getString("behavior").equals(rule.optString("behavior")))){entry=e;break;}}
             if(entry==null)continue;
             File directory=new File(working,".wbox-rules");if(!directory.isDirectory()&&!directory.mkdirs())throw new IOException("无法创建规则目录");
             String hash=entry.getString("sha256"),name=entry.getString("file");File target=new File(directory,hash.substring(0,12)+"-"+name);
@@ -31,9 +34,31 @@ final class BundledRules {
                     Files.move(temp.toPath(),target.toPath(),StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
                 }finally{Files.deleteIfExists(temp.toPath());}
             }
-            rule.put("type",sb?"local":"file").put("path",target.getAbsolutePath());
+            if(shared!=null)share(target,hash,shared);
+            if(entry.has("sourceSha256")) {
+                String original=entry.getString("sourceSha256");
+                File old=new File(directory,original.substring(0,12)+"-"+name.replace(".mrs",".yaml"));
+                if(matches(old,original))Files.delete(old.toPath());
+            }
+            rule.put("type",sb?"local":"file").put("path",target.getAbsolutePath()).put("format",entry.getString("format"));
             for(String key:List.of("url","download_detour","update_interval","http_client","interval","proxy","header","size-limit"))rule.remove(key);
         }
+    }
+    private static void share(File target,String hash,File directory)throws Exception {
+        if(!directory.isDirectory()&&!directory.mkdirs())throw new IOException("无法创建规则缓存");
+        File cached=new File(directory,target.getName());
+        if(!matches(cached,hash)) {
+            File temp=File.createTempFile("rule-",".tmp",directory);
+            try {Files.copy(target.toPath(),temp.toPath(),StandardCopyOption.REPLACE_EXISTING);Files.move(temp.toPath(),cached.toPath(),StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);}
+            finally {Files.deleteIfExists(temp.toPath());}
+        }
+        if(Files.isSameFile(target.toPath(),cached.toPath()))return;
+        // These are pinned, local providers: the core never updates their contents.
+        // Keep paths inside each core's allowed directory while sharing disk blocks.
+        java.nio.file.Path link=new File(target.getParentFile(),UUID.randomUUID()+".link").toPath();
+        try {Files.createLink(link,cached.toPath());Files.move(link,target.toPath(),StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);}
+        catch(IOException|UnsupportedOperationException ignored) { /* Ordinary copies remain valid on filesystems without hard links. */ }
+        finally {Files.deleteIfExists(link);}
     }
     private static boolean matches(File file,String expected)throws Exception {
         if(!file.isFile())return false;

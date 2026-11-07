@@ -10,7 +10,35 @@ import java.util.function.Consumer;
 /** Seeds core-owned default data before startup; never downloads via the VPN. */
 final class Geodata {
     interface Source { InputStream open(String name)throws IOException; }
+    static Source assets(android.content.Context context) {
+        return name->name.equals("manifest.json")?context.getAssets().open(name):decode(context.getAssets().open(name+".xz"));
+    }
+    static InputStream decode(InputStream compressed)throws IOException {
+        try {return new org.tukaani.xz.XZInputStream(compressed,8192);}
+        catch(IOException|RuntimeException error){compressed.close();throw error;}
+    }
     static void prepare(File directory,Map<String,Object> config,Source source,Consumer<String> log)throws Exception {
+        prepare(directory,config,source,log,false);
+    }
+    static void prepareRequired(File directory,Map<String,Object> config,Source source,Consumer<String> log)throws Exception {
+        prepare(directory,config,source,log,true);
+    }
+    static boolean required(Map<String,Object> config,String key) {
+        // Classical providers can contain GEOIP/GEOSITE rules not visible here.
+        if(Boolean.TRUE.equals(config.get("geo-auto-update")))return true;
+        if(config.get("rule-providers") instanceof Map<?,?> providers)
+            for(Object value:providers.values())if(value instanceof Map<?,?> rule&&"classical".equals(rule.get("behavior")))return true;
+        String text=new JSONObject(config).toString().toLowerCase(Locale.ROOT);
+        boolean site=key.equals("geosite");
+        if(text.contains(site?"geosite,":"geoip,")||text.contains(site?"geosite:":"geoip:"))return true;
+        if(config.get("dns") instanceof Map<?,?> dns&&dns.get("fallback") instanceof List<?> fallback&&!fallback.isEmpty()) {
+            Map<?,?> filter=dns.get("fallback-filter") instanceof Map<?,?> f?f:Map.of();
+            if(!site&&!Boolean.FALSE.equals(filter.get("geoip")))return true;
+            if(site&&filter.get("geosite") instanceof List<?> sites&&!sites.isEmpty())return true;
+        }
+        return false;
+    }
+    private static void prepare(File directory,Map<String,Object> config,Source source,Consumer<String> log,boolean onlyRequired)throws Exception {
         JSONArray manifest;
         try(InputStream input=source.open("manifest.json")){manifest=new JSONArray(Profiles.readLimited(input));}
         Map<?,?> custom=config.get("geox-url") instanceof Map<?,?>?(Map<?,?>)config.get("geox-url"):Map.of();
@@ -22,6 +50,17 @@ final class Geodata {
             if(url!=null&&!url.toString().isBlank()&&!url.toString().equalsIgnoreCase(entry.getString("url")))continue;
             JSONArray aliases=entry.getJSONArray("aliases");File target=new File(directory,name);
             File[] existing=directory.listFiles();if(existing!=null){Arrays.sort(existing,Comparator.comparing(File::getName));boolean found=false;for(File file:existing){if(!file.isFile())continue;for(int a=0;a<aliases.length();a++)if(file.getName().equalsIgnoreCase(aliases.getString(a))){target=file;found=true;break;}if(found)break;}}
+            if(onlyRequired&&!required(config,key)) {
+                // App-private runtime files only: remove an obsolete bundled copy,
+                // but preserve any downloaded or user-modified database.
+                if(target.isFile()&&target.length()==entry.getLong("size")) {
+                    MessageDigest digest=MessageDigest.getInstance("SHA-256");
+                    try(InputStream in=new FileInputStream(target)){byte[] b=new byte[65536];int n;while((n=in.read(b))!=-1)digest.update(b,0,n);}
+                    StringBuilder hex=new StringBuilder();for(byte b:digest.digest())hex.append(String.format(Locale.ROOT,"%02x",b&255));
+                    if(hex.toString().equalsIgnoreCase(entry.getString("sha256")))Files.delete(target.toPath());
+                }
+                continue;
+            }
             if(looksComplete(target,name.endsWith(".metadb")))continue;
             File temp=new File(target.getPath()+".wbox-tmp");
             try {

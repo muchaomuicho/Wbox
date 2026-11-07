@@ -1,0 +1,21 @@
+{
+  "windows": {
+    "logicalBytes": 549692583,
+    "beforeAllocatedBytes": 549692583,
+    "afterAllocatedBytes": 217255526,
+    "fileHashesUnchanged": true
+  },
+  "android": {
+    "0.6.6": {
+      "apkBytes": 60266657,
+      "extractedNativeBytes": 147082344,
+      "apkPlusNativeBytes": 207349001
+    },
+    "0.6.7": {
+      "apkBytes": 56158445,
+      "extractedNativeBytes": 147082344,
+      "apkPlusNativeBytes": 203240789
+    },
+    "note": "APK plus extracted native libraries; excludes ART, runtime data and filesystem overhead; not a phone storage measurement."
+  }
+}

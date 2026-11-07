@@ -312,7 +312,7 @@ function routeTitle(route: Route, t: Translate, language: string): string {
     case "overview":
       return t("Dashboard");
     case "groups":
-      return t("Groups");
+      return "代理";
     case "connections":
       return t("Connections");
     case "logs":
@@ -772,7 +772,6 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
       return;
     }
     const invisible =
-      (route.page === "groups" && (!started || (groupsKnown && !hasGroups))) ||
       (route.page === "connections" && !started) ||
       (isStartedOnlyToolsSubpage(route.page) && !started) ||
       (route.page === "tools/usbip" && capabilities.ready && !capabilities.supports("usbip")) ||
@@ -971,12 +970,12 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
             {started ? (
               <>
                 {navItem("overview", t("Overview"), "dashboard", route.page === "overview")}
-                {hasGroups && navItem("groups", t("Groups"), "folder", route.page === "groups")}
                 {navItem("connections", t("Connections"), "swap_vert", route.page === "connections")}
               </>
             ) : (
               navItem("overview", t("Dashboard"), "dashboard", route.page === "overview")
             )}
+            {navItem("groups", "代理", "folder", route.page === "groups")}
             {mainPages}
           </nav>
         ) : (
@@ -986,7 +985,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
               {serverInfo && <span className={styles.sidebarBrandVersion}>{serverInfo.version}</span>}
             </div>
             {navItem("overview", t("Overview"), "dashboard", route.page === "overview")}
-            {hasGroups && navItem("groups", t("Groups"), "folder", route.page === "groups")}
+            {navItem("groups", "代理", "folder", route.page === "groups")}
             {started && navItem("connections", t("Connections"), "swap_vert", route.page === "connections")}
             {mainPages}
             <ServerPicker

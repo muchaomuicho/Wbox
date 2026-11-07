@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Proxy tabs exist while disconnected and retain configuration order",
+    "Mihomo resolves a nested group to measured HTTP delay and shows Timeout for failure without VPN",
+    "Cancel releases the temporary core and files",
+    "Sing-box nested-node failures display Timeout and finish without VPN or leftover files"
+  ]
+}

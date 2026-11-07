@@ -76,7 +76,7 @@ try:
         assert payload in response,repr(response)
         sampled=until(lambda s:s['upload']>0 and s['download']>0)
         assert any('wbox-in' in l or f'{DESTINATION}:19281' in l for l in sampled['logs']),sampled
-        (ROOT/f'docs/previews/0.6.6-android-{engine}.png').write_bytes(adb('exec-out','screencap','-p'))
+        (ROOT/f'docs/previews/0.6.7-android-{engine}.png').write_bytes(adb('exec-out','screencap','-p'))
         if TEMPLATES:
             assert any('Template upstream' in l for l in sampled['logs']), 'Traffic did not use the selected template node'
             assert not any('start download' in l or 'updated rule-set' in l for l in sampled['logs']), 'Template downloaded rules at startup'
@@ -103,4 +103,4 @@ finally:
     except Exception:pass
     server.shutdown();server.server_close();udp.close()
     if upstream:upstream.terminate();upstream.wait(timeout=5)
-    (ROOT/('docs/verification/0.6.6-android-templates.json' if TEMPLATES else 'docs/verification/0.6.6-android-runtime.json')).write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
+    (ROOT/('docs/verification/0.6.7-android-templates.json' if TEMPLATES else 'docs/verification/0.6.7-android-runtime.json')).write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')

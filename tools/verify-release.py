@@ -1,8 +1,8 @@
 """Check packaged geodata, ARM64-only release and absence of debug probe entry points."""
-import hashlib, json, pathlib, sys, zipfile
+import hashlib, json, lzma, pathlib, sys, zipfile
 
 root = pathlib.Path(__file__).resolve().parent.parent
-version = sys.argv[1] if len(sys.argv) > 1 else '0.6.6'
+version = sys.argv[1] if len(sys.argv) > 1 else '0.6.7'
 manifest = json.loads((root/'resources/geodata/manifest.json').read_text())
 checks = []
 with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
@@ -13,6 +13,10 @@ with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
         assert f'lib/arm64-v8a/{library}' in names
         assert hashlib.sha256(apk.read(f'lib/arm64-v8a/{library}')).digest() == hashlib.sha256((root/'resources/cores/android/arm64-v8a'/library).read_bytes()).digest(), library
     checks.append('APK includes both cores and native tunnel')
+    if version == '0.6.7':
+        assert 'assets/LICENSE-xz-java' in names
+        assert 'assets/bundled/rules/mihomo-anti-ad.yaml' not in names
+        checks.append('Compressed asset decoder license is included and superseded YAML is excluded')
     checks.append('Packaged core and JNI tunnel hashes match current build inputs')
     rules = json.loads((root/'resources/runtime/bundled/rules/manifest.json').read_text())
     assert json.loads(apk.read('assets/bundled/rules/manifest.json')) == rules
@@ -30,7 +34,9 @@ with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
     checks.append('Release APK has no emulator diagnostic receiver')
     assert json.loads(apk.read('assets/manifest.json')) == manifest
     for entry in manifest:
-        assert hashlib.sha256(apk.read('assets/'+entry['name'])).hexdigest() == entry['sha256']
+        name='assets/'+entry['name']
+        data=apk.read(name) if name in names else lzma.decompress(apk.read(name+'.xz'))
+        assert hashlib.sha256(data).hexdigest() == entry['sha256']
         path = root/'windows/desktop-publish/win-unpacked/resources/backend/geodata'/entry['name']
         assert hashlib.sha256(path.read_bytes()).hexdigest() == entry['sha256']
         checks.append('Both packages contain verified ' + entry['name'])

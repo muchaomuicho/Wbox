@@ -1,16 +1,16 @@
 # Wbox
 
-Wbox 是 Windows / Android 双内核代理客户端。Windows 0.6.6 直接基于官方 sing-box desktop / dashboard 前端源码改造；Android 0.6.6 改用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与 sing-box 1.14.4，品牌图标为黑底白色 W。
+Wbox 是 Windows / Android 双内核代理客户端。当前版本为 0.6.7。Windows 基于官方 sing-box desktop / dashboard 前端源码改造；Android 使用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与 sing-box 1.14.4，品牌图标为黑底白色 W。
 
-Windows 0.6.6 复用官方导航、概览、代理组、连接详情和日志，增加两个独立工作区与双内核适配。通过 WinINet 修复停止后遗留系统代理的问题，支持远程 JSON / YAML、订阅与单节点。见 [发布说明](docs/RELEASE-0.6.6.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
+0.6.7 两端常设“代理”页面，按配置顺序排列组标签，右下角悬浮测速，支持未连接时临时内核测速。Windows 加固静默自启与托盘恢复；保留离线双内核并缩减资源及安装后的占用。见 [发布说明](docs/RELEASE-0.6.7.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
 
 ## 安装与使用
 
 交付文件在 `dist/`：
 
-- `Wbox-0.6.6-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录。
-- `Wbox-0.6.6-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
-- `Wbox-0.6.6-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
+- `Wbox-0.6.7-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录并进行系统透明压缩。
+- `Wbox-0.6.7-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
+- `Wbox-0.6.7-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
 - `SHA256SUMS.txt`：以上文件的校验值。
 
 默认以 `clash.meta/1.19.33`（mihomo）UA 下载配置与节点订阅，根据返回内容识别内核。
@@ -38,15 +38,17 @@ Android 第一次连接需要授权系统 VPN。设置页可选择全部应用�
 
 已支持 ALPN、SS obfs-local/simple-obfs/v2ray-plugin、Hysteria2 salamander 混淆、TUIC congestion_control/udp_relay_mode，以及 WS/gRPC/HTTP2 传输。代理组与节点切换、内核 HTTP 延迟测试、有界日志、活动连接明细、入站/出站逻辑连接数、本次流量、60 秒波形、内存显示和 Android 分应用 VPN 均保留。
 
-两端支持配置重命名，更新远程配置后保留名称。代理组默认仅展开第一组，其余收起并以色块显示延迟；日志按级别与连接编号着色。代理组测速按实际节点去重，Windows 最多 8 个并发、Android 最多 4 个并发；独立节点测速 Windows 最多 2 个临时内核、Android 1 个，单次内核请求超时 4 秒。
+两端支持配置重命名，更新远程配置后保留名称。常设代理页按配置顺序切换组标签，节点使用网格卡片；日志按级别与连接编号着色。代理组测速解析嵌套选择并按实际节点去重，Windows 和 Android 最多 4 个并发；独立节点测速 Windows 最多 2 个临时内核、Android 1 个，单次内核请求超时 4 秒。
 
-默认延迟测试 URL 为 `https://www.apple.com/library/test/success.html`。sing-box 1.14.4 上游 API 会替换 HTTP 测试地址，因此 Wbox 要求该内核自定义测速使用 HTTPS；mihomo 支持 HTTP 与 HTTPS。Android 配置工作区的代理组需要连接后测速；节点工作区支持离线测速。Android 节点列表支持单击选中、双击启用、长按编辑／克隆／移除，外接键盘可用 Ctrl+V、Ctrl+D 和 Enter。
+默认延迟测试 URL 为 `https://www.apple.com/library/test/success.html`。sing-box 1.14.4 上游 API 会替换 HTTP 测试地址，因此 Wbox 要求该内核自定义测速使用 HTTPS；mihomo 支持 HTTP 与 HTTPS。两端的配置代理组和独立节点均支持未连接时测速，临时内核不启用系统代理、TUN 或 VPN。Android 节点列表支持单击选中、双击启用、长按编辑／克隆／移除，外接键盘可用 Ctrl+V、Ctrl+D 和 Enter。
 
 未支持的分享格式或传输（例如 XHTTP、ECH 分享参数）会明确报错并保留原节点列表，可改用内核支持的完整配置。TLS SOCKS 需要 mihomo；WireGuard 分享链接的 dns 参数需使用 mihomo 或完整 sing-box 配置。NaiveProxy 仅 Windows 可用：当前官方 Android CLI 未编入该功能，不会把它标作可连接节点。订阅更新只替换该来源的节点，保留手动导入及其他订阅。原生节点不会跨内核做有损转换，Android 在纯原生订阅导入时自动选择对应内核；Windows 可在节点卡片中选择内核。
 
 连接数表示内核报告的活动逻辑代理流，一个流对应一条入站与一条出站，因此两项通常相同；它们不是操作系统的 socket 数或复用后的 TCP 连接数。Windows 分别显示界面及后台的私有内存、内核的 Working Set；Android 分别显示应用 PSS 和子进程内核 RSS。它们与其他客户端只显示 Go 堆或内核内存的读数不能直接比较。
 
 ## 轻量与省电设计
+
+0.6.7 保留离线双内核。Windows 安装目录使用 LZX 透明压缩，文件内容与功能不变。Android 随附数据库使用 XZ 无损压缩及按需解压；内置广告规则转为 MRS，固定规则在配置间共享磁盘数据。体积测量见 `docs/verification/0.6.7-size.json`；Android 安装占用还受 ART 编译、配置与运行数据影响。
 
 Windows 使用官方 Electron 前端。二维界面改用软件渲染；主窗口隐藏 1.5 秒后销毁页面；托盘菜单缓存 60 秒以便快速复用，之后销毁页面，后台和所选内核继续运行。同机空闲对比中，GPU 进程私有内存从约 123 MiB 降为约 29 MiB。应用私有内存统计排除了各进程共享页面的重复累计；它不包含单独显示的内核。测量原始记录见 `docs/verification/memory-hardware.json` 和 `memory-software.json`，这是独立测试实例，并非所有配置下的固定占用。
 

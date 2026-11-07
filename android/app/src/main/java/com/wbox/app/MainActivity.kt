@@ -78,6 +78,10 @@ internal data class RuntimeState(
     var runtime by mutableStateOf(RuntimeState())
     var history by mutableStateOf<List<WboxVpnService.TrafficSample>>(emptyList())
     var groups by mutableStateOf(JSONObject())
+    var groupOrder by mutableStateOf<List<String>>(emptyList())
+    var activeGroup by mutableStateOf("")
+    private var groupsContext=""
+    private fun proxyContext()=profiles.mode()+"|"+profiles.engine()+"|"+profiles.data.optString("config_"+profiles.engine())+"|"+profiles.data.opt("nodes")+"|"+profiles.data.optString("test_url",Profiles.TEST_URL)+"|"+(if(runtime.running)WboxVpnService.secret else "offline")
     var groupsLoading by mutableStateOf(false)
     var connectionsLoading by mutableStateOf(false)
     var groupsError by mutableStateOf("")
@@ -95,18 +99,29 @@ internal data class RuntimeState(
     internal fun reload() { profiles=Profiles(activity); nodes=profiles.nodes().toList(); configs=profiles.configs().objects() }
     fun work(action: suspend () -> Unit) { activity.lifecycleScope.launch { try { action() } catch(e: CancellationException){throw e} catch(e: Exception){ message=ErrorMessage.describe(e); WboxVpnService.log("ERROR $message") } } }
     suspend fun refreshDetails(){
-        val target=sheet
+        val target=if(page=="proxies")"groups" else sheet
         WboxVpnService.wantsGroups=target=="groups";WboxVpnService.wantsConnections=target=="connections"
-        if(!runtime.running || target !in listOf("groups","connections"))return
+        if(target !in listOf("groups","connections"))return
+        if(target=="groups"){
+            val context=proxyContext()
+            if(context!=groupsContext){latencyJob?.cancel();delays.clear();groups=JSONObject();activeGroup="";groupsContext=context}
+            try {
+                val snapshot=profiles.copy()
+                val catalog=withContext(Dispatchers.IO){ProxyCatalog.offline(snapshot) to ProxyCatalog.order(ProxyCatalog.source(snapshot),snapshot.engine()=="sing-box")}
+                groupOrder=if(runtime.running)WboxVpnService.groupOrder else catalog.second
+                if(!runtime.running){groups=catalog.first;groupsLoading=false;groupsError="";return}
+            }catch(e:Exception){groupsError=ErrorMessage.describe(e);return}
+        }
+        if(!runtime.running)return
         if(target=="groups"){groupsLoading=true;groupsError=""}else{connectionsLoading=true;connectionsError=""}
         try{
             withContext(Dispatchers.IO){WboxVpnService.refreshDetails(target=="groups").get(5,java.util.concurrent.TimeUnit.SECONDS)}
-            if(target==sheet){groups=WboxVpnService.proxies;connections=WboxVpnService.connectionRows}
+            if(target==(if(page=="proxies")"groups" else sheet)){groups=WboxVpnService.proxies;connections=WboxVpnService.connectionRows}
         }catch(e:CancellationException){throw e}catch(e:Exception){if(target=="groups")groupsError=ErrorMessage.describe(e.cause?:e)else connectionsError=ErrorMessage.describe(e.cause?:e)}
         finally{if(target=="groups")groupsLoading=false else connectionsLoading=false}
     }
     suspend fun sample() {
-        WboxVpnService.wantsGroups = sheet=="groups"
+        WboxVpnService.wantsGroups = page=="proxies" || sheet=="groups"
         WboxVpnService.wantsConnections = sheet=="connections"
         WboxVpnService.wantsOverview = page=="overview" && sheet.isEmpty()
         if (sheet!="connections") WboxVpnService.connectionRows=emptyList()
@@ -116,7 +131,7 @@ internal data class RuntimeState(
             WboxVpnService.upload,WboxVpnService.download,WboxVpnService.upRate,WboxVpnService.downRate,WboxVpnService.inbound,WboxVpnService.outbound,WboxVpnService.coreMemory,mem)
         if(page=="overview") history=WboxVpnService.trafficSnapshot()
         if(runtime.running&&page=="overview"&&profiles.engine()=="mihomo"&&sampleCount%3==0) try{proxyMode=withContext(Dispatchers.IO){WboxVpnService.api().request("GET","/configs",null).optString("mode","rule")}}catch(_:Exception){}
-        if(sheet=="groups") groups=WboxVpnService.proxies
+        if((page=="proxies"||sheet=="groups")&&runtime.running&&WboxVpnService.proxies.length()>0) groups=WboxVpnService.proxies
         if(sheet=="connections") connections=WboxVpnService.connectionRows else connections=emptyList()
         if(page=="logs" && !logsPaused) logs=WboxVpnService.logSnapshot()
     }
@@ -177,15 +192,17 @@ internal data class RuntimeState(
     fun latency(names: List<String>) {
         if(testing){latencyJob?.cancel();return}
         latencyJob=activity.lifecycleScope.launch {
-            try { mutable();testing=true;names.forEach{delays[it]="测试中"}; val snapshot=profiles.copy()
+            try { mutable();testing=true;val snapshot=profiles.copy();val context=groupsContext
                 val updates=kotlinx.coroutines.channels.Channel<Pair<String,String>>(kotlinx.coroutines.channels.Channel.UNLIMITED)
+                val snapshots=kotlinx.coroutines.channels.Channel<JSONObject>(kotlinx.coroutines.channels.Channel.CONFLATED)
                 coroutineScope {
-                    val collect=launch {for((name,value) in updates)delays[name]=value}
-                    try {runInterruptible(Dispatchers.IO){NodeLatencyTester.run(activity,snapshot,names){name,value->updates.trySend(name to value)}}}
-                    finally {updates.close();collect.join()}
+                    val collect=launch {for((name,value) in updates)if(context==groupsContext)delays[name]=value}
+                    val catalogs=launch {for(value in snapshots)if(context==groupsContext)groups=value}
+                    try {runInterruptible(Dispatchers.IO){NodeLatencyTester.run(activity,snapshot,names,{name,value->updates.trySend(name to value)},{value->snapshots.trySend(value)})}}
+                    finally {updates.close();snapshots.close();collect.join();catalogs.join()}
                 }
             } catch(e:CancellationException){throw e} catch(e:Exception){message=e.message ?: "测速失败"}
-            finally {testing=false;names.forEach{if(delays[it]=="测试中")delays[it]="未测试"}}
+            finally {testing=false;delays.keys.toList().forEach{if(delays[it]=="测试中")delays.remove(it)}}
         }
     }
     fun changeProxyMode(value:String) = work {check(profiles.engine()=="mihomo");withContext(Dispatchers.IO){WboxVpnService.api().setMode(value,WboxVpnService.globalTarget)};proxyMode=value}

@@ -32,6 +32,13 @@ public class BundledRulesTest {
             if(engine.equals("sing-box"))assertEquals(13,normal.getJSONObject("route").getJSONArray("rule_set").length());else assertEquals(13,normal.getJSONObject("rule-providers").length());
         }
     }
+    @Test public void profileRuleFilesShareStorageAndKeepCompactFormat()throws Exception {
+        Profiles p=new Profiles(dir);p.importNodes("socks5://127.0.0.1:19999#Test",null);p.setWorkspace("nodes");p.data.put("engine","mihomo");
+        JSONObject first=new JSONObject(Profiles.yamlMap(p.compile("s",10808,19090,false,new File(dir,"one"))));
+        JSONObject second=new JSONObject(Profiles.yamlMap(p.compile("s",10808,19090,false,new File(dir,"two"))));
+        JSONObject a=first.getJSONObject("rule-providers").getJSONObject("anti-ad"),b=second.getJSONObject("rule-providers").getJSONObject("anti-ad");
+        assertEquals("mrs",a.getString("format"));assertTrue(Files.isSameFile(Path.of(a.getString("path")),Path.of(b.getString("path"))));
+    }
     @Test public void customUrlsAndSavedSourceArePreserved()throws Exception {
         Profiles p=new Profiles(dir);
         String url="https://anti-ad.net/anti-ad-sing-box.srs";

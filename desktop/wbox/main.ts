@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, nativeImage, Tray } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, nativeImage, Tray, Menu } from 'electron';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { join, resolve } from 'node:path';
@@ -60,7 +60,7 @@ async function quit() {
   try { await rpc('stop'); quitting = true; clearTimeout(releaseTimer); trayMenu.destroy(); window?.destroy(); window = null; for (const call of pending.values()) { clearTimeout(call.timer); call.reject(new Error('Wbox 正在退出。')); } pending.clear(); backend.stdin.end(); tray?.destroy(); app.quit(); }
   catch (error) { closing = false; dialog.showErrorBox('系统代理尚未恢复', String(error)); await showWindow(); }
 }
-const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','connections','mode','setMode','select','close','delay','delayNodes','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile']);
+const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','connections','mode','setMode','select','close','delay','delayNodes','testGroup','cancelTest','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile']);
 async function registerStartup(autoStart: boolean, silent: boolean) {
   if (app.isPackaged && !process.env.WBOX_DATA_DIR)
     await rpc('startup', { executable: process.execPath, enabled: autoStart, silent });
@@ -100,19 +100,30 @@ ipcMain.handle('wbox:export', async (event, id: string) => {
   if (result.canceled || !result.filePath) return false; await writeFile(result.filePath, content); return true;
 });
 ipcMain.on('wbox:titlebar', (event, colors) => { if (event.sender === window?.webContents && /^rgb\([\d, ]+\)$/.test(colors.color) && /^rgb\([\d, ]+\)$/.test(colors.symbolColor)) window?.setTitleBarOverlay(colors); });
-app.on('second-instance', () => void showWindow());
+app.on('second-instance', (_event,argv) => { ensureTray();if(!argv.includes('--autostart'))void showWindow(); });
 app.on('before-quit', event => { if (!quitting) { event.preventDefault(); void quit(); } });
 app.on('window-all-closed', () => {});
-app.whenReady().then(async () => {
-  startBackend();
-  tray = new Tray(nativeImage.createFromPath(iconPath)); tray.setToolTip('Wbox');
-  const showTray = () => { void trayMenu.show(tray.getBounds()).catch(error => dialog.showErrorBox('Wbox', String(error))); };
+function ensureTray(recreate=false) {
+  if(quitting)return;
+  if(tray && !tray.isDestroyed() && !recreate)return;
+  tray?.destroy();
+  // A stable Windows identity retains notification-area placement across upgrades.
+  const icon=nativeImage.createFromPath(iconPath);
+  tray = process.env.WBOX_DATA_DIR?new Tray(icon):new Tray(icon,'a425bc0c-d46d-4cc9-9f0c-b0788d4e53c5'); tray.setToolTip('Wbox');
+  const showTray = () => { void trayMenu.show(tray.getBounds()).catch(() => tray.popUpContextMenu(Menu.buildFromTemplate([{label:'打开 Wbox',click:()=>void showWindow()},{label:'退出',click:()=>void quit()}]))); };
   tray.on('click', showTray);
   tray.on('right-click', showTray);
   tray.on('double-click', () => void showWindow());
+}
+app.whenReady().then(async () => {
+  ensureTray();
+  // At logon an elevated task can run before Explorer has a notification area.
+  // Re-register during shell startup; no permanent polling or hidden renderer.
+  if(process.argv.includes('--autostart'))for(const delay of [3000,10000,30000])setTimeout(()=>ensureTray(true),delay).unref();
+  startBackend();
   try {
     const state = await rpc('state');
-    if (!process.argv.includes('--silent') && !state.silent) await showWindow();
+    if (!process.argv.includes('--silent') && !(process.argv.includes('--autostart') && state.silent)) await showWindow();
     // Repair paths after an upgrade, and migrate elevated Run entries which Windows blocks at login.
     if (state.autoStart) try { await registerStartup(true, state.silent); } catch (error) { dialog.showErrorBox('自启设置未更新', String(error)); }
     if (state.autoConnect) await rpc('start');

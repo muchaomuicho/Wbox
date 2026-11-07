@@ -6,8 +6,8 @@ android {
         applicationId 'com.wbox.app'
         minSdk 26
         targetSdk 34
-        versionCode 14
-        versionName '0.6.6'
+        versionCode 15
+        versionName '0.6.7'
         ndk { abiFilters(project.findProperty('wboxTestAbi') ?: 'arm64-v8a') }
     }
     signingConfigs {
@@ -35,13 +35,26 @@ android {
     buildFeatures { compose true }
     composeOptions { kotlinCompilerExtensionVersion '1.5.14' }
     sourceSets {
-        main { jniLibs.srcDirs = ['../../resources/cores/android']; assets.srcDirs = ['../../resources/cores/licenses','../../resources/geodata','../../resources/runtime'] }
+        main { jniLibs.srcDirs = ['../../resources/cores/android']; assets.srcDirs = ['../../resources/cores/licenses',"$buildDir/generated/wboxGeodata","$buildDir/generated/wboxRuntime"] }
         test { resources.srcDirs += ['../../resources/runtime'] }
         debug { jniLibs.srcDirs += ['../../.tools/android-test-cores'] }
     }
     packagingOptions { jniLibs { useLegacyPackaging true; keepDebugSymbols += ['**/libmihomo.so', '**/libsingbox.so'] } }
     testOptions { unitTests.includeAndroidResources = true; unitTests.all { systemProperty 'wbox.root', rootProject.projectDir.parentFile.absolutePath } }
 }
+def prepareGeodata = tasks.register('prepareGeodata', Exec) {
+    inputs.dir '../../resources/geodata'
+    inputs.file '../../tools/compress-geodata.py'
+    outputs.dir "$buildDir/generated/wboxGeodata"
+    commandLine 'python', '../../tools/compress-geodata.py', "$buildDir/generated/wboxGeodata"
+}
+tasks.named('preBuild').configure { dependsOn prepareGeodata }
+def prepareRuntimeAssets = tasks.register('prepareRuntimeAssets', Sync) {
+    from '../../resources/runtime'
+    exclude 'bundled/rules/mihomo-anti-ad.yaml'
+    into "$buildDir/generated/wboxRuntime"
+}
+tasks.named('preBuild').configure { dependsOn prepareRuntimeAssets }
 if (project.hasProperty('wboxTestAbi') && gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }) {
     throw new GradleException('wboxTestAbi is for emulator debug builds only; releases must be ARM64.')
 }
@@ -58,6 +71,7 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
     implementation 'org.yaml:snakeyaml:2.4'
+    implementation 'org.tukaani:xz:1.10'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.json:json:20240303'
     testImplementation 'org.robolectric:robolectric:4.14.1'
