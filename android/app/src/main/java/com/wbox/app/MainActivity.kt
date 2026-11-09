@@ -154,6 +154,10 @@ internal data class RuntimeState(
     }
     fun switchWorkspace(value: String) = work { change(true){it.setWorkspace(value)}; sheet="" }
     fun setting(key: String, value: Any) = work { change(key=="engine") { it.data.put(key,value); if(key=="engine")it.data.put("node_engine",value) };if(key.startsWith("subscription_"))SubscriptionUpdates.schedule(activity) }
+    suspend fun editSubscription(id:String,oldUrl:String,name:String,url:String,enabled:Boolean,minutes:Int) {
+        change { SubscriptionUpdates.edit(it,id,oldUrl,name,url,enabled,minutes) }
+        SubscriptionUpdates.schedule(activity);message="订阅设置已保存"
+    }
     suspend fun saveApps(mode:String, apps:List<String>) { require(mode!="include" || apps.isNotEmpty()){ "请选择至少一个应用" };change {it.data.put("app_mode",mode).put("apps",JSONArray(apps))} }
     fun toggle() = work {
         if(runtime.stopping)return@work
@@ -213,7 +217,7 @@ internal data class RuntimeState(
     fun cloneNode(index: Int) = work { changeNodes{NodeEditing.cloneNode(it,index)} }
     fun removeNode(name: String) = work { changeNodes {p -> val keep=p.nodes().filter{it.name!=name};p.data.put("nodes",JSONArray(keep.map{it.storage()}));if(p.data.optString("selected")==name)p.data.put("selected",keep.firstOrNull()?.name ?: "")} }
     fun refreshSubscriptions(only: String?=null) = work { changeNodes { p -> val addresses=only?.let{listOf(it)} ?: p.data.optJSONObject("subscriptions")?.keys()?.asSequence()?.toList().orEmpty();for(url in addresses)p.importNodes(Profiles.fetch(url,true),url) };message="订阅已更新" }
-    fun removeSubscription(url: String) = work { changeNodes { p -> val kept=p.nodes().filter{it.source!=url};p.data.put("nodes",JSONArray(kept.map{it.storage()}));p.data.optJSONObject("subscriptions")?.remove(url);if(kept.none{it.name==p.data.optString("selected")})p.data.put("selected",kept.firstOrNull()?.name ?: "") } }
+    fun removeSubscription(url: String) = work { changeNodes { p -> val kept=p.nodes().filter{it.source!=url};p.data.put("nodes",JSONArray(kept.map{it.storage()}));p.data.optJSONObject("subscriptions")?.remove(url);p.data.optJSONObject("subscription_settings")?.remove(url);if(kept.none{it.name==p.data.optString("selected")})p.data.put("selected",kept.firstOrNull()?.name ?: "") };SubscriptionUpdates.schedule(activity) }
     fun latency(names: List<String>) {
         if(testing){latencyJob?.cancel();return}
         latencyJob=activity.lifecycleScope.launch {

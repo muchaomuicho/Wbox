@@ -31,16 +31,20 @@ export function createTrayController() {
     opening = true;
     try {
       const display = screen.getDisplayMatching(anchor), area = display.workArea;
-      const width = Math.min(832, area.width), height = Math.min(480, area.height);
+      const width = Math.min(832, area.width);
       const cx = anchor.x + anchor.width / 2, cy = anchor.y + anchor.height / 2;
       const side = area.x + area.width - cx >= cx - area.x ? 'right' : 'left';
-      const align = cy < area.y ? 'top' : cx < area.x || cx > area.x + area.width ? 'center' : 'bottom';
+      const horizontalTaskbar = cx >= area.x && cx <= area.x + area.width;
+      const above = Math.max(0, Math.min(anchor.y, area.y + area.height) - area.y);
+      const below = Math.max(0, area.y + area.height - Math.max(area.y, anchor.y + anchor.height));
+      const align = !horizontalTaskbar ? 'center' : cy < area.y || below > above ? 'top' : 'bottom';
+      const height = Math.min(480, area.height, align === 'center' ? area.height : Math.max(180, (align === 'top' ? below : above)));
       const x = Math.max(area.x, Math.min(area.x + area.width - width, Math.round(cx - (side === 'right' ? 170 : width - 170))));
-      const y = align === 'top' ? area.y : align === 'center' ? Math.max(area.y, Math.min(area.y + area.height - height, Math.round(cy - height / 2))) : area.y + area.height - height;
+      const y = align === 'top' ? Math.max(area.y, anchor.y + anchor.height) : align === 'center' ? Math.max(area.y, Math.min(area.y + area.height - height, Math.round(cy - height / 2))) : Math.min(area.y + area.height, anchor.y) - height;
       if(menu && !menu.isDestroyed()) {
         if(warming)return;
         menu.setBounds({x,y,width,height});
-        await menu.webContents.executeJavaScript(`document.documentElement.dataset.trayCascadeSide=${JSON.stringify(side)};document.documentElement.dataset.trayVerticalAlignment=${JSON.stringify(align)}`);
+        await menu.webContents.executeJavaScript(`document.documentElement.dataset.trayCascadeSide=${JSON.stringify(side)};document.documentElement.dataset.trayVerticalAlignment=${JSON.stringify(align)};window.dispatchEvent(new Event('wbox-tray-open'))`);
         menu.show();menu.focus();return;
       }
       const current = new BrowserWindow({ x, y, width, height, title: 'Wbox Tray', frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, alwaysOnTop: true, show: false, webPreferences: { preload: join(import.meta.dirname, '../preload/index.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });

@@ -29,6 +29,7 @@ public final class Profiles {
             if(!data.has("node_engine"))data.put("node_engine",engine());
             if(!data.has("configs")){JSONArray a=new JSONArray();for(String core:List.of("sing-box","mihomo")){String content=data.optString("config_"+core);if(content.isEmpty())continue;JSONObject p=new JSONObject().put("id",UUID.randomUUID().toString()).put("name",core+" 配置").put("core",core).put("content",content).put("url",data.optString("config_url_"+core)).put("updated",System.currentTimeMillis());a.put(p);if(core.equals(engine()))data.put("active_config",p.getString("id"));}data.put("configs",a);}
             if(!data.optBoolean("source_migrated")){JSONArray old=data.optJSONArray("nodes");JSONObject subs=data.optJSONObject("subscriptions");if(old!=null&&subs!=null){JSONArray rebuilt=new JSONArray();for(int i=0;i<old.length();i++){Object value=old.get(i);String source="";if(value instanceof String){Iterator<String> keys=subs.keys();while(keys.hasNext()){String key=keys.next();JSONArray links=subs.optJSONArray(key);if(links!=null)for(int j=0;j<links.length();j++)if(value.equals(links.optString(j)))source=key;}}rebuilt.put(source.isEmpty()?value:new JSONObject().put("link",value).put("source",source));}data.put("nodes",rebuilt);}data.put("source_migrated",true);}
+            SubscriptionUpdates.migrate(data);
         } catch(Exception ignored){}
     }
     public synchronized void save() throws Exception {
@@ -97,7 +98,8 @@ public final class Profiles {
         if(profile==null){profile=new JSONObject().put("id",UUID.randomUUID().toString());a.put(profile);}
         if(!profile.has("name"))profile.put("name",source==null?core+" 配置 "+a.length():new URL(source).getHost());
         profile.put("core",core).put("content",text).put("url",source==null?"":source).put("updated",System.currentTimeMillis());
-        data.put("configs",a);
+        data.put("configs",a);SubscriptionUpdates.migrate(data);
+        if(source!=null&&!source.isEmpty())profile.getJSONObject("subscription").put("last_attempt",System.currentTimeMillis()).put("last_success",System.currentTimeMillis()).put("error","");
         if(select||data.optString("active_config").isEmpty()||profile.getString("id").equals(data.optString("active_config")))activateConfig(profile.getString("id"));
         save();return "已保存 "+core+" 配置";
     }
@@ -117,7 +119,8 @@ public final class Profiles {
         for(Node n:previous)if(source==null||!n.source.equals(source))stored.put(n.source+"|"+n.raw,n.storage());
         for(Node n:parsed){n.source=owner;stored.put(owner+"|"+n.raw,n.storage());}
         JSONObject subscriptions=data.optJSONObject("subscriptions");if(subscriptions==null)subscriptions=new JSONObject();if(source!=null)subscriptions.put(source,new JSONArray());
-        data.put("nodes",new JSONArray(stored.values())).put("subscriptions",subscriptions);
+        data.put("nodes",new JSONArray(stored.values())).put("subscriptions",subscriptions);SubscriptionUpdates.migrate(data);
+        if(source!=null)SubscriptionUpdates.options(this,"",source).put("last_attempt",System.currentTimeMillis()).put("last_success",System.currentTimeMillis()).put("error","");
         List<Node> all=nodes();String compatible=all.stream().allMatch(n->n.nativeSingbox!=null)?"sing-box":all.stream().allMatch(n->n.nativeMihomo!=null)?"mihomo":null;
         if(compatible!=null){data.put("node_engine",compatible);if(mode().equals("nodes"))data.put("engine",compatible);}
         save();return "已导入 "+parsed.size()+" 个节点";

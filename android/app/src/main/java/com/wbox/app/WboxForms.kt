@@ -36,27 +36,14 @@ import java.net.URI
             Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("IPv6");Text("下次连接生效",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)};Switch(m.profiles.data.optBoolean("ipv6",true),{m.setting("ipv6",it)})}
             ListItem(headlineContent={Text("分应用代理")},supportingContent={Text(when(mode){"include"->"只代理所选应用";"exclude"->"绕过所选应用";else->"全部应用"})},trailingContent={Icon(Icons.Outlined.ChevronRight,null)},modifier=Modifier.clickable{m.sheet="apps"},colors=ListItemDefaults.colors(containerColor=Color.Transparent))
         }}
-        item {SettingsPanel("订阅自动更新") {
-            Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){
-                Text("定时更新远程配置与节点订阅",Modifier.weight(1f));Switch(m.profiles.data.optBoolean("subscription_auto_update"),{m.setting("subscription_auto_update",it)})
-            }
-            Choice("更新间隔",m.profiles.data.optInt("subscription_update_minutes",360).toString(),listOf("15" to "15 分钟","60" to "1 小时","360" to "6 小时","720" to "12 小时","1440" to "每天")){m.setting("subscription_update_minutes",it.toInt())}
-            Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
-                Text("后台由系统按网络和省电状态安排更新，可能延后。保留手动节点，连接下次启动时采用新内容。",style=MaterialTheme.typography.bodySmall)
-                val last=m.profiles.data.optLong("subscription_last_success")
-                Text(if(last>0)"最近成功："+java.text.DateFormat.getDateTimeInstance().format(java.util.Date(last)) else "尚未自动更新",style=MaterialTheme.typography.bodySmall)
-                val error=m.profiles.data.optString("subscription_update_error")
-                if(error.isNotEmpty())Text(error,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall)
-            }
-        }}
         item {SettingsPanel("延迟测试") {
             Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-                Text("默认使用 Apple 测试页。sing-box 需要 HTTPS；mihomo 支持 HTTP / HTTPS。mihomo 使用复用连接后的实际请求延迟。比较其他客户端时，请使用相同测试地址。",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("默认使用 Apple 测试页。sing-box 需要 HTTPS；mihomo 支持 HTTP / HTTPS。双内核均使用复用连接后的实际请求延迟。比较其他客户端时，请使用相同测试地址。",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedTextField(testUrl,{testUrl=it},Modifier.onFocusChanged{m.textInputFocused=it.isFocused}.fillMaxWidth(),label={Text("测试地址")},singleLine=true,shape=RoundedCornerShape(12.dp))
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){TextButton(onClick={testUrl=Profiles.TEST_URL}){Text("恢复默认")};Button(onClick={m.work{val uri=URI(testUrl);require(uri.scheme in listOf("https","http") && uri.host!=null){"请填写 HTTP / HTTPS 地址"};require(m.profiles.engine()!="sing-box" || uri.scheme=="https"){"sing-box 延迟测试需要 HTTPS 地址"};m.setting("test_url",testUrl.trim())}}){Text("保存")}}
             }
         }}
-        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox 0.6.8",style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
+        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox 0.6.9",style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4-wbox.1 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
     }
 }
 @Composable private fun SettingsPanel(title:String,content:@Composable ColumnScope.()->Unit) {Column(verticalArrangement=Arrangement.spacedBy(8.dp)){Text(title,Modifier.padding(start=12.dp),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant);Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(content=content)}}}

@@ -66,7 +66,7 @@ try { SystemProxy.Restore(); } catch (Exception ex) { Log(ex.Message); }
 if (prefs.Configs.Count == 0 && File.Exists(prefs.ConfigPath)) {
     prefs.Configs.Add(new() { Path = prefs.ConfigPath, Core = prefs.Core, Name = Path.GetFileNameWithoutExtension(prefs.ConfigPath) }); Store.Save(prefs);
 }
-void Save() { Store.Save(prefs); Write(new { changed = true }); }
+void Save() { SubscriptionRefresh.Normalize(prefs);Store.Save(prefs); Write(new { changed = true }); }
 Preferences CopyPreferences() {
     var copy = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(prefs))!;
     for (int i = 0; i < copy.Nodes.Count; i++) copy.Nodes[i].DelayText = prefs.Nodes[i].DelayText;
@@ -97,10 +97,10 @@ object State() => new {
     delayTesting,
     groupTestError,
     prefs.Core, prefs.Mode, prefs.ConfigPath, prefs.DelayUrl, prefs.Silent, prefs.AutoStart, prefs.AutoConnect, prefs.SystemProxy, prefs.NativeInbounds, prefs.SelectedNode,
-    configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated }),
+    configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated, c.Subscription }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
     prefs.Subscriptions, running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
-    ,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null
+    ,prefs.SubscriptionSettings,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null
 };
 async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation) {
     using var starts = new SemaphoreSlim(1);
@@ -136,12 +136,17 @@ async Task<object?> Handle(string method, JsonElement a) {
             bool manual=method=="refreshSubscriptions";
             if(subscriptionTask!=null||core.Starting||delayTesting||(!manual&&!SubscriptionRefresh.Due(prefs,DateTime.UtcNow)))return null;
             if(prefs.Subscriptions.Count==0&&!prefs.Configs.Any(c=>c.Url.Length>0))return null;
+            var snapshot=CopyPreferences();SubscriptionRefresh.MarkAttempts(prefs,manual,DateTime.UtcNow);
             prefs.SubscriptionLastAttempt=DateTime.UtcNow;subscriptionManual=manual;
-            subscriptionTask=SubscriptionRefresh.FetchAsync(CopyPreferences());
+            subscriptionTask=SubscriptionRefresh.FetchAsync(snapshot,manual);
             _=subscriptionTask.ContinueWith(_=>Write(new{changed=true}),TaskScheduler.Default);
             Save();return null;
         }
         case "startup": return StartupRegistration.Configure(S("executable"), a.GetProperty("enabled").GetBoolean(), a.GetProperty("silent").GetBoolean());
+        case "editSubscription": {
+            SubscriptionRefresh.Edit(prefs,S("id"),S("oldUrl"),S("name"),S("url"),a.GetProperty("autoUpdate").GetBoolean(),I("updateMinutes"));
+            Save();return null;
+        }
         case "service": return new { running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
         case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.PrivateMemorySize64;
         case "start": nodeTestCancellation.Cancel();await nodeTests;coreGeneration++; if(prefs.Mode=="config"){var selected=prefs.Configs.FirstOrDefault(p=>p.Path==prefs.ConfigPath);if(selected!=null)prefs.Core=selected.Core;}await core.StartAsync(CopyPreferences()); Save(); return null;
@@ -235,7 +240,7 @@ async Task<object?> Handle(string method, JsonElement a) {
         }
         case "removeSubscription": {
             var next = CopyPreferences(); var selected = next.Nodes.ElementAtOrDefault(next.SelectedNode);
-            next.Nodes.RemoveAll(n => n.SourceSubscription == S("url")); next.Subscriptions.Remove(S("url"));
+            next.Nodes.RemoveAll(n => n.SourceSubscription == S("url")); next.Subscriptions.Remove(S("url"));next.SubscriptionSettings.Remove(S("url"));
             next.SelectedNode = Math.Max(0, selected == null ? 0 : next.Nodes.IndexOf(selected));
             await CommitNodes(next); return null;
         }
@@ -256,6 +261,7 @@ async Task<object?> Handle(string method, JsonElement a) {
                 var index = selected == null ? 0 : next.Nodes.IndexOf(selected);
                 if (index < 0) index = next.Nodes.FindIndex(n => n.SourceSubscription == selected!.SourceSubscription && n.Name == selected.Name);
                 next.SelectedNode = Math.Max(0, index);
+                SubscriptionRefresh.Normalize(next);next.SubscriptionSettings[url].LastAttempt=DateTime.UtcNow;next.SubscriptionSettings[url].LastSuccess=DateTime.UtcNow;next.SubscriptionSettings[url].Error="";
             } else next.Nodes.AddRange(nodes);
             await CommitNodes(next); return nodes.Count;
         }
@@ -310,7 +316,7 @@ while ((line = await Console.In.ReadLineAsync()) != null) {
     try {
         if(subscriptionTask is {IsCompleted:true}&&!core.Starting&&!delayTesting) {
             var completed=subscriptionTask;subscriptionTask=null;
-            if(subscriptionManual||prefs.SubscriptionAutoUpdate) {
+            {
                 prefs.SubscriptionUpdateError=SubscriptionRefresh.Apply(prefs,await completed,core.Running);
                 if(prefs.SubscriptionUpdateError.Length==0)prefs.SubscriptionLastSuccess=DateTime.UtcNow;
                 else Log("WARN 订阅自动更新："+prefs.SubscriptionUpdateError);

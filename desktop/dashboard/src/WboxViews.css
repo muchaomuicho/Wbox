@@ -1,4 +1,6 @@
 .wbox-controls { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.wbox-workspace-picker .select { width:auto; padding-inline:12px; }
+.wbox-workspace-picker .select-value { flex:initial; }
 .wbox-controls input { flex:1; min-width:0; }
 .wbox-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
 .wbox-row:last-child { border-bottom:0; }
@@ -31,3 +33,4 @@
 .menu-item kbd { margin-inline-start:auto; padding-inline-start:20px; font:inherit; font-size:11px; color:var(--text-faint); }
 .wbox-notice { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:200; padding:12px 20px; color:var(--text); background:var(--card); border:1px solid var(--border); border-radius:var(--radius-control); box-shadow:var(--shadow-overlay); font-size:13px; pointer-events:none; }
 @media (max-width:700px) { .wbox-controls { flex-wrap:wrap; } .wbox-controls input { flex-basis:100%; } }
+.wbox-subscription-url.input { height:auto; padding:10px 12px; resize:vertical; overflow-wrap:anywhere; }

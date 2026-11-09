@@ -77,6 +77,8 @@ public static class ProfileImport
         File.WriteAllText(path + ".tmp", text); File.Move(path + ".tmp", path, true);
         profile.Core = engine; profile.Path = path; profile.Name = name; profile.Url = url; profile.Updated = DateTime.Now;
         if (existing == null) p.Configs.Add(profile);
+        SubscriptionRefresh.Normalize(p);
+        if(profile.Subscription!=null){profile.Subscription.LastAttempt=DateTime.UtcNow;profile.Subscription.LastSuccess=DateTime.UtcNow;profile.Subscription.Error="";}
         return profile;
     }
 }

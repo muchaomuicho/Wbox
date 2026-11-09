@@ -995,7 +995,9 @@ function useShowModal(kind: "dialog" | "drawer", focusSelf = false) {
     }
     syncScrimAttribute();
     if (focusSelf) {
-      dialog.focus();
+      dialog.focus({ preventScroll: true });
+      // showModal may focus the last action and scroll it into view first.
+      dialog.scrollTop = 0;
     }
     return () => {
       dialog.close();
@@ -1036,6 +1038,7 @@ function Drawer(props: { onClose: () => void; ariaLabel: string; children: React
       className="drawer"
       aria-label={props.ariaLabel}
       tabIndex={-1}
+      autoFocus
       onCancel={(event) => {
         event.preventDefault();
         props.onClose();

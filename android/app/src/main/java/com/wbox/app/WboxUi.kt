@@ -152,7 +152,6 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
         Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=4.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(m.runtime.status,Modifier.weight(1f),style=MaterialTheme.typography.labelLarge)
             TextButton(onClick={m.sheet="connections"}){Icon(Icons.Outlined.Cable,null,Modifier.size(18.dp));Spacer(Modifier.width(6.dp));Text(m.runtime.connectionsIn.toString())}
-            IconButton(onClick={m.page="proxies"}){Icon(Icons.Outlined.AccountTree,"代理组",Modifier.size(20.dp))}
             PowerControl(m,dark)
         }
     }
@@ -201,6 +200,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
     val selected=m.selectedRow
     var nodeMenu by remember {mutableStateOf<Node?>(null)}
     var profileMenu by remember {mutableStateOf<JSONObject?>(null)}
+    var subscriptionEditor by remember {mutableStateOf<SubscriptionEdit?>(null)}
     val config=m.workspace=="config"
     Column(Modifier.fillMaxSize()) {
         if(!config) TabRow(if(subscriptions)1 else 0){Tab(!subscriptions,{subscriptions=false},text={Text("节点")});Tab(subscriptions,{subscriptions=true},text={Text("订阅")})}
@@ -214,7 +214,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
             OutlinedTextField(query,{query=it},Modifier.onFocusChanged{m.textInputFocused=it.isFocused}.fillMaxWidth().padding(horizontal=16.dp),placeholder={Text("搜索节点")},leadingIcon={Icon(Icons.Outlined.Search,null)},singleLine=true,shape=RoundedCornerShape(16.dp))
             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal=16.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
                 FilterChip(source==null,{source=null},label={Text("全部")});FilterChip(source=="",{source=""},label={Text("手动节点")})
-                m.nodes.map{it.source}.filter{it.isNotEmpty()}.distinct().forEach{url->FilterChip(source==url,{source=url},label={Text(host(url))})}
+                m.nodes.map{it.source}.filter{it.isNotEmpty()}.distinct().forEach{url->FilterChip(source==url,{source=url},label={Text(SubscriptionUpdates.name(m.profiles,url))})}
             }
         }
         LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(horizontal=16.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
@@ -229,7 +229,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
             }else if(subscriptions){
                 val urls=m.profiles.data.optJSONObject("subscriptions")?.keys()?.asSequence()?.toList().orEmpty()
                 if(urls.isEmpty())item{EmptyState("还没有订阅","订阅地址可下载并持续更新一组节点。")}
-                items(urls){url->Panel{SectionTitle(host(url),Icons.Outlined.Public);Muted("${m.nodes.count{it.source==url}} 个节点");Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){TextButton(onClick={m.removeSubscription(url)}){Text("移除")};TextButton(onClick={m.refreshSubscriptions(url)}){Text("更新")}}}}
+                items(urls){url->Panel{SectionTitle(SubscriptionUpdates.name(m.profiles,url),Icons.Outlined.Public);val options=SubscriptionUpdates.options(m.profiles,"",url);Muted("${m.nodes.count{it.source==url}} 个节点 · "+if(options?.optBoolean("auto_update")==true)"每 ${options.optInt("update_minutes")} 分钟更新" else "手动更新");Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){TextButton(onClick={subscriptionEditor=SubscriptionEdit(url=url,name=SubscriptionUpdates.name(m.profiles,url))}){Text("编辑")};TextButton(onClick={m.removeSubscription(url)}){Text("移除")};TextButton(onClick={m.refreshSubscriptions(url)}){Text("更新")}}}}
             }else{
                 val visible=m.nodes.filter{(source==null||it.source==source)&&(it.name+it.server+it.protocol).contains(query,true)}
                 if(visible.isEmpty())item{EmptyState("没有匹配的节点","可粘贴节点链接或添加订阅地址。",Icons.Outlined.Dns)}
@@ -248,20 +248,22 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
     nodeMenu?.let{node->ActionSheet(node.name,{nodeMenu=null},listOf("设为当前节点" to {m.selectNode(node.name)},"测试延迟" to {m.latency(listOf(node.name))},"编辑节点" to {edit(Editor("node",index=m.nodes.indexOfFirst{it.name==node.name}))},"克隆为手动节点" to {m.cloneNode(m.nodes.indexOfFirst{it.name==node.name})},"移除节点" to {m.removeNode(node.name)}))}
     profileMenu?.let{p->
         ActionSheet(p.optString("name"),{profileMenu=null},buildList{
-            add("重命名" to {edit(Editor("rename",p))})
+            if(p.optString("url").isNotEmpty())add("编辑订阅" to {subscriptionEditor=SubscriptionEdit(p.getString("id"),p.getString("url"),p.getString("name"))})
+            else add("重命名" to {edit(Editor("rename",p))})
             add("编辑配置" to {edit(Editor("config",p))})
             if(p.optString("url").isNotEmpty())add("更新配置" to {m.updateProfile(p)})
             add("导出文件" to {m.activity.export(p)})
             add("移除配置" to {m.removeProfile(p.getString("id"))})
         })
     }
+    subscriptionEditor?.let{SubscriptionEditor(m,it){subscriptionEditor=null}}
 }
 
 @Composable private fun ActionSheet(title:String,dismiss:()->Unit,actions:List<Pair<String,()->Unit>>) {ModalBottomSheet(onDismissRequest=dismiss,containerColor=MaterialTheme.colorScheme.surface){SelectionContainer{Text(title,Modifier.heightIn(max=180.dp).verticalScroll(rememberScrollState()).padding(horizontal=24.dp,vertical=12.dp),style=MaterialTheme.typography.titleLarge)};actions.forEach{(label,action)->ListItem(headlineContent={Text(label)},modifier=Modifier.clickable{dismiss();action()},colors=ListItemDefaults.colors(containerColor=Color.Transparent))};Spacer(Modifier.height(16.dp))} }
 private fun host(url:String):String=try{URI(url).host ?: "订阅"}catch(_:Exception){"订阅"}
 
 @Composable private fun ProfilePicker(m:MobileModel) {Column{Text("选择配置",Modifier.padding(20.dp),style=MaterialTheme.typography.titleLarge);LazyColumn{items(m.configs,key={it.optString("id")}){p->ListItem(headlineContent={Text(p.optString("name"))},supportingContent={Muted(p.optString("core"))},trailingContent={if(p.optString("id")==m.profiles.data.optString("active_config"))Icon(Icons.Outlined.Check,null)},modifier=Modifier.clickable{m.selectProfile(p.getString("id"));m.sheet=""})}}} }
-@Composable private fun DelayText(value:String?) {Text(value ?: "未测试",fontFamily=FontFamily.Monospace,fontSize=11.sp,color=delayColor(value))}
+@Composable private fun DelayText(value:String?) {if(value==null||value=="未测试")Icon(Icons.Outlined.Bolt,"未测试",Modifier.size(18.dp),tint=MaterialTheme.colorScheme.primary)else Text(value,fontFamily=FontFamily.Monospace,fontSize=11.sp,color=delayColor(value))}
 @Composable private fun LoadingPanel(text:String){Row(Modifier.fillMaxWidth().padding(24.dp),horizontalArrangement=Arrangement.Center,verticalAlignment=Alignment.CenterVertically){CircularProgressIndicator(Modifier.size(20.dp),strokeWidth=2.dp);Spacer(Modifier.width(12.dp));Muted(text)}}
 @Composable private fun delayColor(value:String?):Color {val n=value?.substringBefore(" ")?.toLongOrNull();return when{value=="失败"||value=="Timeout"->MaterialTheme.colorScheme.error;n==null->MaterialTheme.colorScheme.onSurfaceVariant;n<800->Color(0xff539675);n<1500->Color(0xffbd9747);else->Color(0xffce6e63)}}
 @Composable private fun Connections(m:MobileModel) {

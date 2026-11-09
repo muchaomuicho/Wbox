@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { showError } from './app/errorStore';
 import { call } from '../../wbox/transport';
 
+export interface SubscriptionOptions { name:string; autoUpdate:boolean; updateMinutes:number; lastAttempt:string; lastSuccess:string; error:string }
 export interface WboxState {
   delayTesting: boolean;
   mode: string; core: string; configPath: string; running: boolean; selectedNode: number; delayUrl: string;
   silent: boolean; autoStart: boolean; autoConnect: boolean; systemProxy: boolean; nativeInbounds: boolean;
-  configs: {id: string; name: string; core: string; path: string; url: string; updated: string}[];
+  configs: {id: string; name: string; core: string; path: string; url: string; updated: string; subscription:SubscriptionOptions|null}[];
+  subscriptionSettings: Record<string,SubscriptionOptions>;
   nodes: {index: number; name: string; protocol: string; server: string; port: number; tag: string; sourceSubscription: string; delayText: string}[];
   subscriptions: string[];
   subscriptionAutoUpdate: boolean; subscriptionUpdateMinutes: number;

@@ -1076,7 +1076,11 @@ button.settings-row:focus-visible {
 
 /* Electron's native caption buttons sit above the web top layer. */
 body[data-platform="win32"] .drawer {
-  inset-block-start: env(titlebar-area-height, 38px);
+  inset-block-start: 0;
+  padding-block-start: calc(env(titlebar-area-height, 38px) + var(--space-20));
+  width: 480px;
+  max-width: min(92vw, 560px);
+  box-shadow: none;
 }
 
 [dir="rtl"] .drawer {

@@ -161,7 +161,8 @@ function TrayMenuContent(props: { host: DesktopHost }) {
   useEffect(() => {
     const refresh = () => { controller.close(); if (!document.hidden) { api.serviceStatus.retryNow(); api.groups.retryNow(); } };
     document.addEventListener('visibilitychange', refresh);
-    return () => document.removeEventListener('visibilitychange', refresh);
+    window.addEventListener('wbox-tray-open',refresh);
+    return () => {document.removeEventListener('visibilitychange', refresh);window.removeEventListener('wbox-tray-open',refresh);};
   });
   useMenuKeyboard(controller, closeMenu);
   const api = useMemo(

@@ -56,12 +56,12 @@ import androidx.compose.ui.unit.dp
                         val value=m.delays[leaf]?:"未测试"
                         val number=value.substringBefore(" ").toIntOrNull()
                         val color=when{value=="Timeout"||value=="失败"->MaterialTheme.colorScheme.error;number==null->MaterialTheme.colorScheme.onSurfaceVariant;number<800->Color(0xff539675);number<1500->Color(0xffbd9747);else->Color(0xffce6e63)}
-                        Surface(modifier=Modifier.weight(1f),shape=RoundedCornerShape(20.dp),border=BorderStroke(1.dp,if(selected)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant){
-                            Column(Modifier.fillMaxWidth().heightIn(min=132.dp).combinedClickable(onClick={m.selectNode(name,active)},onLongClick={fullName=name}).padding(14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
-                                Text(name,style=MaterialTheme.typography.bodyLarge,fontWeight=FontWeight.Medium,maxLines=2,overflow=TextOverflow.Ellipsis)
-                                Spacer(Modifier.weight(1f))
+                        Surface(modifier=Modifier.weight(1f),shape=RoundedCornerShape(16.dp),border=BorderStroke(1.dp,if(selected)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant){
+                            Column(Modifier.fillMaxWidth().combinedClickable(onClick={m.selectNode(name,active)},onLongClick={fullName=name}).padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
+                                Text(name,style=MaterialTheme.typography.bodyMedium,fontWeight=FontWeight.Medium,minLines=2,maxLines=2,overflow=TextOverflow.Ellipsis)
                                 Text(m.groups.optJSONObject(name)?.optString("type").orEmpty(),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(value,color=color,style=MaterialTheme.typography.labelLarge)
+                                if(value=="未测试")Icon(Icons.Outlined.Bolt,"未测试",Modifier.size(18.dp),tint=MaterialTheme.colorScheme.primary)
+                                else Text(value,color=color,style=MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -72,11 +72,11 @@ import androidx.compose.ui.unit.dp
     }
     if(choosing)ModalBottomSheet(onDismissRequest={choosing=false},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true)){
         Box(Modifier.fillMaxWidth().padding(horizontal=16.dp)){
-            Text("策略组",Modifier.align(Alignment.Center),style=MaterialTheme.typography.headlineSmall)
+            Text("策略组",Modifier.align(Alignment.Center),style=MaterialTheme.typography.titleMedium)
             FilledTonalIconButton(onClick={choosing=false},modifier=Modifier.align(Alignment.CenterEnd)){Icon(Icons.Outlined.Close,"关闭策略组")}
         }
-        FlowRow(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()).padding(20.dp),horizontalArrangement=Arrangement.spacedBy(10.dp,Alignment.CenterHorizontally),verticalArrangement=Arrangement.spacedBy(8.dp)){
-            groups.forEach{tag->FilterChip(selected=tag==active,onClick={m.activeGroup=tag;choosing=false},label={Text(tag,Modifier.padding(vertical=12.dp),style=MaterialTheme.typography.bodyLarge)},shape=RoundedCornerShape(16.dp))}
+        FlowRow(Modifier.fillMaxWidth().heightIn(max=420.dp).verticalScroll(rememberScrollState()).padding(horizontal=16.dp,vertical=8.dp),horizontalArrangement=Arrangement.spacedBy(8.dp,Alignment.CenterHorizontally),verticalArrangement=Arrangement.spacedBy(4.dp)){
+            groups.forEach{tag->FilterChip(selected=tag==active,onClick={m.activeGroup=tag;choosing=false},label={Text(tag,style=MaterialTheme.typography.bodyMedium)},shape=RoundedCornerShape(12.dp))}
         }
         Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }

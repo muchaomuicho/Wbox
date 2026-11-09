@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "command": "tools/native/build-singbox.ps1 -Emulator",
+  "version": "1.14.4-wbox.1",
+  "goVersion": "1.25.5",
+  "checks": [
+    "TestUnifiedDelayExcludesHandshake",
+    "TestUnifiedDelayNoReuseKeepsFirstMeasurement",
+    "TestUnifiedDelayCancellationAndFailure",
+    "TestUnifiedDelayNeverReportsZeroOnSuccess"
+  ],
+  "platformsBuilt": [
+    "windows/amd64",
+    "android/arm64",
+    "android/amd64 (emulator only)"
+  ],
+  "endToEnd": [
+    "0.6.9-desktop.json",
+    "0.6.9-android-runtime.json"
+  ]
+}

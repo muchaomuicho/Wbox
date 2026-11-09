@@ -1,0 +1,6 @@
+{
+  "passed": true,
+  "command": "dotnet run --project windows/Wbox.Tests -c Release --no-restore",
+  "checksPassed": 112,
+  "scope": "Core configuration, protocol parsing, subscription migration/edit/concurrency, node revision and proxy restoration checks"
+}

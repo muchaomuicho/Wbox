@@ -1,4 +1,4 @@
-param([string]$Version = '0.6.8', [string]$AndroidVersion = '0.6.8')
+param([string]$Version = '0.6.9', [string]$AndroidVersion = '0.6.9')
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = Join-Path $repo "dist/Wbox-$Version-source.zip"
@@ -33,5 +33,6 @@ try {
     $files = @("Wbox-$Version-windows-x64-setup.exe","Wbox-$AndroidVersion-android-arm64-v8a.apk","Wbox-$Version-source.zip")
     $lines = foreach ($name in $files) { $hash=Get-FileHash -LiteralPath (Join-Path "$repo/dist" $name) -Algorithm SHA256; "$($hash.Hash.ToLowerInvariant())  $name" }
     [IO.File]::WriteAllLines((Join-Path $repo 'dist/SHA256SUMS.txt'),$lines)
+    [IO.File]::WriteAllLines((Join-Path $repo "dist/SHA256SUMS-$Version.txt"),$lines)
     Get-Item -LiteralPath $output | Select-Object Name,Length
 } finally { Pop-Location }

@@ -14,6 +14,8 @@ public sealed class Preferences
     public int SelectedNode { get; set; }
     public List<NodeRecord> Nodes { get; set; } = [];
     public List<string> Subscriptions { get; set; } = [];
+    public Dictionary<string, SubscriptionOptions> SubscriptionSettings { get; set; } = [];
+    public bool SubscriptionSettingsMigrated { get; set; }
     public List<ConfigProfile> Configs { get; set; } = [];
     public string NodeCore { get; set; } = "";
     public string SubscriptionFilter { get; set; } = "";
@@ -31,9 +33,20 @@ public sealed class ConfigProfile
     public string Core { get; set; } = "sing-box";
     public string Path { get; set; } = "";
     public string Url { get; set; } = "";
+    public SubscriptionOptions? Subscription { get; set; }
     public DateTime Updated { get; set; } = DateTime.Now;
     public Dictionary<string, string> GroupSelections { get; set; } = [];
     public string Detail => $"{Core} · {(Url.Length == 0 ? "本地文件" : "远程配置")} · {Updated:MM-dd HH:mm}";
+}
+
+public sealed class SubscriptionOptions
+{
+    public string Name { get; set; } = "";
+    public bool AutoUpdate { get; set; }
+    public int UpdateMinutes { get; set; } = 1440;
+    public DateTime LastAttempt { get; set; }
+    public DateTime LastSuccess { get; set; }
+    public string Error { get; set; } = "";
 }
 
 public sealed class NodeRecord
@@ -76,7 +89,7 @@ public static class Store
     public static Preferences Load()
     {
         Directory.CreateDirectory(DirectoryPath);
-        try { return JsonSerializer.Deserialize<Preferences>(File.ReadAllText(PreferencesPath)) ?? new(); }
+        try { var p = JsonSerializer.Deserialize<Preferences>(File.ReadAllText(PreferencesPath)) ?? new(); SubscriptionRefresh.Normalize(p); return p; }
         catch { return new(); }
     }
     public static void Save(Preferences value)

@@ -185,7 +185,7 @@ function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: ()
               {item.urlTestDelay} ms
             </span>
           )}
-          {item.urlTestDelay===0&&<span className={cx(styles.delayText,item.urlTestTime>0&&styles.bad)}>{item.urlTestTime>0?"Timeout":"未测试"}</span>}
+          {item.urlTestDelay===0&&item.urlTestTime>0&&<span className={cx(styles.delayText,styles.bad)}>Timeout</span>}
         </span>
       </button>
       {menu.element}

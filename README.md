@@ -1,16 +1,16 @@
 # Wbox
 
-Wbox 是 Windows / Android 双内核代理客户端。当前版本为 0.6.8。Windows 基于官方 sing-box desktop / dashboard 前端源码改造；Android 使用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与 sing-box 1.14.4，品牌图标为黑底白色 W。
+Wbox 是 Windows / Android 双内核代理客户端。当前版本为 0.6.9。Windows 基于官方 sing-box desktop / dashboard 前端源码改造；Android 使用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与定制 sing-box 1.14.4-wbox.1，品牌图标为黑底白色 W。
 
-0.6.8 修复节点选择及 mihomo 延迟计时，预加载 Windows 托盘并修复数字字体，恢复 Windows 上游代理组布局，Android 使用底部策略组面板。设置页新增订阅自动更新。见 [发布说明](docs/RELEASE-0.6.8.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
+0.6.9 支持逐订阅编辑名称、URL、自动更新开关与间隔；缩小 Android 代理卡片和策略组面板，未测速改用闪电；修复 Windows 连接详情滚动、工作区空白和托盘自动展开。两端集成支持二次请求计时的定制 sing-box 内核。见 [发布说明](docs/RELEASE-0.6.9.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
 
 ## 安装与使用
 
 交付文件在 `dist/`：
 
-- `Wbox-0.6.8-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录并进行系统透明压缩。
-- `Wbox-0.6.8-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
-- `Wbox-0.6.8-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
+- `Wbox-0.6.9-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录并进行系统透明压缩。
+- `Wbox-0.6.9-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
+- `Wbox-0.6.9-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
 - `SHA256SUMS.txt`：以上文件的校验值。
 
 默认以 `clash.meta/1.19.33`（mihomo）UA 下载配置与节点订阅，根据返回内容识别内核。
@@ -40,7 +40,7 @@ Android 第一次连接需要授权系统 VPN。设置页可选择全部应用�
 
 两端支持配置重命名，更新远程配置后保留名称。Windows 代理页使用上游可折叠代理组卡片；Android 按配置顺序切换组标签，节点使用网格卡片；日志按级别与连接编号着色。代理组测速解析嵌套选择并按实际节点去重，Windows 和 Android 最多 4 个并发；独立节点测速 Windows 最多 2 个临时内核、Android 1 个，单次内核请求超时 4 秒。
 
-默认延迟测试 URL 为 `https://www.apple.com/library/test/success.html`。sing-box 1.14.4 上游 API 会替换 HTTP 测试地址，因此 Wbox 要求该内核自定义测速使用 HTTPS；mihomo 支持 HTTP 与 HTTPS。mihomo 运行副本启用原生 unified-delay 二次请求计时。两端的配置代理组和独立节点均支持未连接时选择节点和测速，临时内核不启用系统代理、TUN 或 VPN。Android 节点列表支持单击选中、双击启用、长按编辑／克隆／移除，外接键盘可用 Ctrl+V、Ctrl+D 和 Enter。
+默认延迟测试 URL 为 `https://www.apple.com/library/test/success.html`。sing-box 1.14.4 上游 API 会替换 HTTP 测试地址，因此 Wbox 要求该内核自定义测速使用 HTTPS；mihomo 支持 HTTP 与 HTTPS。mihomo 运行副本启用原生 unified-delay 二次请求计时；定制 sing-box 1.14.4-wbox.1 同样先建立连接再测第二次请求，不能复用时保留首次测量。两端的配置代理组和独立节点均支持未连接时选择节点和测速，临时内核不启用系统代理、TUN 或 VPN。Android 节点列表支持单击选中、双击启用、长按编辑／克隆／移除，外接键盘可用 Ctrl+V、Ctrl+D 和 Enter。
 
 未支持的分享格式或传输（例如 XHTTP、ECH 分享参数）会明确报错并保留原节点列表，可改用内核支持的完整配置。TLS SOCKS 需要 mihomo；WireGuard 分享链接的 dns 参数需使用 mihomo 或完整 sing-box 配置。NaiveProxy 仅 Windows 可用：当前官方 Android CLI 未编入该功能，不会把它标作可连接节点。订阅更新只替换该来源的节点，保留手动导入及其他订阅。原生节点不会跨内核做有损转换，Android 在纯原生订阅导入时自动选择对应内核；Windows 可在节点卡片中选择内核。
 
@@ -56,9 +56,11 @@ Android 已改为 Kotlin / Compose / Material 3，直接移植官方流量图并
 
 Android 由 VpnService 管理路由并排除自身 UID；sing-box 运行副本关闭无权限使用的 netlink 网卡探测，并移除桌面网卡绑定，保留源文件和代理规则。原 TUN 入站标签会映射到 Android 隧道使用的 mixed 入站。启动阶段错误保留在日志及本机诊断文件中。平台实现与官方参考来源见 `docs/UPSTREAM-ANDROID.md`。
 
-尚未做 Android 真机耗电与低内存设备测试。Android JNI 隧道与 mihomo 的 ELF 支持 16 KiB 页对齐；官方 sing-box Android CLI 使用 4 KiB LOAD 对齐，此版本尚未验证在 16 KiB 页设备上的运行。
+尚未做 Android 真机耗电与低内存设备测试。Android JNI 隧道、mihomo 和本次自编译 sing-box 的 ELF LOAD 均为 16 KiB 对齐，但尚未验证在 16 KiB 页设备上的运行。
 
 ## 验证范围
+
+0.6.9 本轮验证与构建说明见 [发布说明](docs/RELEASE-0.6.9.md)，Windows 及 Android 交互报告分别为 `docs/verification/0.6.9-desktop.json`、`docs/verification/0.6.9-android-runtime.json`。每个订阅可单独开启自动更新，间隔 15–10080 分钟；Android 后台任务由系统安排，省电或断网可能延后。
 
 0.6.8 回归记录见 `docs/verification/0.6.8-desktop.json` 和 `docs/verification/0.6.8-android-runtime.json`。此前 Windows 打包版交互回归记录见 `docs/verification/0.6.6-desktop.json`，包含托盘首次主题、启动按钮自然宽度、窗口释放、远程配置、节点编辑、代理切换与测速取消。本轮核心基础与转发回归见 `docs/verification/0.6.8-windows.json`；此前系统代理恢复回归保留在 0.5.2 验证记录中。
 
@@ -75,6 +77,8 @@ Android 本轮单元测试和 Lint 记录见 `docs/verification/0.6.8-android-un
 ./tools/native/fetch-cores.ps1
 # 编译 Android ARM64 JNI 隧道
 ./tools/native/build-tunnel.ps1 -NdkPath '<Android SDK>/ndk/28.0.13004108'
+# 编译包含 Wbox 测速修改的 sing-box（需 Go 1.25.5 与 NDK 28）
+./tools/native/build-singbox.ps1 -Go '<Go>/bin/go.exe' -NdkPath '<Android SDK>/ndk/28.0.13004108'
 # 构建客户端与安装包
 ./tools/build-desktop.ps1 -InnoCompiler '<Inno Setup>/ISCC.exe'
 ./tools/build-android.ps1 -JavaHome '<JDK 21>' -SdkPath '<Android SDK>'

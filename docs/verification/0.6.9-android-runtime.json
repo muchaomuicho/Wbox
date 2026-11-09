@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "failure": null,
+  "checks": [
+    "Untested cards show two lightning icons without placeholder text",
+    "Compact Android proxy cards stay below 130 dp",
+    "Compact group bottom sheet opens",
+    "Choosing a group closes the sheet",
+    "Offline selection persists without VPN",
+    "Android sing-box HTTPS second-request timing excludes 300 ms setup",
+    "Cancel stops the temporary core and removes its files",
+    "Connected status bar has no duplicate proxy shortcut",
+    "Remote subscription editor saves name, URL, independent switch and interval",
+    "Hidden-activity system job refreshes only the enabled due subscription",
+    "Repeated background tick respects the per-source interval",
+    "Node subscription editor changes source URL while preserving nodes",
+    "Removing node subscription also removes its scheduling metadata"
+  ],
+  "timing": {
+    "cardHeightDp": 110.9,
+    "singboxHttpsMs": [
+      65,
+      64
+    ]
+  }
+}

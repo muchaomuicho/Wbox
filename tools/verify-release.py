@@ -2,9 +2,21 @@
 import hashlib, json, lzma, pathlib, sys, zipfile
 
 root = pathlib.Path(__file__).resolve().parent.parent
-version = sys.argv[1] if len(sys.argv) > 1 else '0.6.7'
+version = sys.argv[1] if len(sys.argv) > 1 else '0.6.9'
 manifest = json.loads((root/'resources/geodata/manifest.json').read_text())
 checks = []
+cores = json.loads((root/'resources/cores/manifest.json').read_text())
+for entry in cores['files']:
+    source = root/'resources/cores'/entry['path']
+    assert hashlib.sha256(source.read_bytes()).hexdigest() == entry['sha256'], entry['path']
+    if entry['path'].startswith('windows/'):
+        packaged = root/'windows/desktop-publish/win-unpacked/resources/backend/cores'/source.name
+        assert packaged.read_bytes() == source.read_bytes(), source.name
+checks.append('Core manifest hashes match current binaries and packaged Windows cores')
+if version == '0.6.9':
+    assert cores['singboxVersion'] == '1.14.4-wbox.1'
+    assert cores['singboxBuild']['unifiedDelay'] is True
+    checks.append('Both platforms use the documented Wbox unified-delay core derivative')
 with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
     names = apk.namelist()
     assert {name.split('/')[1] for name in names if name.startswith('lib/')} == {'arm64-v8a'}
@@ -13,7 +25,7 @@ with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
         assert f'lib/arm64-v8a/{library}' in names
         assert hashlib.sha256(apk.read(f'lib/arm64-v8a/{library}')).digest() == hashlib.sha256((root/'resources/cores/android/arm64-v8a'/library).read_bytes()).digest(), library
     checks.append('APK includes both cores and native tunnel')
-    if version in ('0.6.7','0.6.8'):
+    if version in ('0.6.7','0.6.8','0.6.9'):
         assert 'assets/LICENSE-xz-java' in names
         assert 'assets/bundled/rules/mihomo-anti-ad.yaml' not in names
         checks.append('Compressed asset decoder license is included and superseded YAML is excluded')

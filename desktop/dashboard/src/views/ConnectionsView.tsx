@@ -95,6 +95,7 @@ export function ConnectionsView() {
   const detailActive = detailRow?.closedAt === null;
   const detail = detailRow && (
     <DetailShell
+      key={detailId}
       backLabel={t("Connections")}
       title={t("Connection")}
       accessory={
