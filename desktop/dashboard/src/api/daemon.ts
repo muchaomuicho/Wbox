@@ -424,6 +424,7 @@ export class DaemonApi {
 
   async selectOutbound(groupTag: string, outboundTag: string): Promise<void> {
     await this.client.selectOutbound({ groupTag, outboundTag });
+    await this.groups.refresh();
   }
 
   async setGroupExpand(groupTag: string, isExpand: boolean): Promise<void> {

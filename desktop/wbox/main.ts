@@ -60,7 +60,7 @@ async function quit() {
   try { await rpc('stop'); quitting = true; clearTimeout(releaseTimer); trayMenu.destroy(); window?.destroy(); window = null; for (const call of pending.values()) { clearTimeout(call.timer); call.reject(new Error('Wbox 正在退出。')); } pending.clear(); backend.stdin.end(); tray?.destroy(); app.quit(); }
   catch (error) { closing = false; dialog.showErrorBox('系统代理尚未恢复', String(error)); await showWindow(); }
 }
-const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','connections','mode','setMode','select','close','delay','delayNodes','testGroup','cancelTest','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile']);
+const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','connections','mode','setMode','select','close','delay','delayNodes','testGroup','cancelTest','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile','autoUpdate','refreshSubscriptions']);
 async function registerStartup(autoStart: boolean, silent: boolean) {
   if (app.isPackaged && !process.env.WBOX_DATA_DIR)
     await rpc('startup', { executable: process.execPath, enabled: autoStart, silent });
@@ -121,6 +121,10 @@ app.whenReady().then(async () => {
   // Re-register during shell startup; no permanent polling or hidden renderer.
   if(process.argv.includes('--autostart'))for(const delay of [3000,10000,30000])setTimeout(()=>ensureTray(true),delay).unref();
   startBackend();
+  void trayMenu.prepare(tray.getBounds()).catch(()=>{});
+  const updateSubscriptions=()=>{if(!closing&&!quitting)void rpc('autoUpdate').catch(()=>{});};
+  setInterval(updateSubscriptions,60000).unref();
+  updateSubscriptions();
   try {
     const state = await rpc('state');
     if (!process.argv.includes('--silent') && !(process.argv.includes('--autostart') && state.silent)) await showWindow();

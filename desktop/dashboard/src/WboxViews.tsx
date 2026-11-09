@@ -1,3 +1,4 @@
+import {SubscriptionSettings} from "./SubscriptionSettings";
 import { useEffect, useState } from 'react';
 import { navigate, type ThemePreference, type AccentPreference } from './app/context';
 import { showError } from './app/errorStore';
@@ -36,9 +37,10 @@ export function WboxSettingsView(props: {theme:ThemePreference;onThemeChange:(v:
   const set = (key:string,value:unknown) => void call('settings',{[key]:value}).catch(showError);
   const toggle = (key:keyof WboxState,label:string,detail?:string) => <div className="wbox-row"><span className="wbox-grow">{label}{detail && <small>{detail}</small>}</span><Switch label={label} value={Boolean(s[key])} onChange={value=>set(key,value)} /></div>;
   return <div className="page wbox-page"><PageHeader title="设置" /><Card title="外观" icon="palette"><DataLine label="主题" value={<Select value={props.theme} options={[{value:'auto',label:'跟随系统'},{value:'light',label:'浅色'},{value:'dark',label:'深色'}]} onChange={v=>props.onThemeChange(v as ThemePreference)} />} /></Card>
-    <Card title="启动与托盘" icon="settings">{toggle('autoStart','开机启动')}{toggle('silent','静默启动','启动后保留在托盘，不显示主界面')}{toggle('autoConnect','启动时自动连接')}<p className="wbox-hint">关闭窗口后继续代理。关闭主界面后释放其进程；托盘菜单空闲 60 秒后释放，从托盘重新打开。</p></Card>
+    <Card title="启动与托盘" icon="settings">{toggle('autoStart','开机启动')}{toggle('silent','静默启动','启动后保留在托盘，不显示主界面')}{toggle('autoConnect','启动时自动连接')}<p className="wbox-hint">关闭窗口后继续代理。关闭主界面后释放其进程；托盘菜单提前加载并保留，点击即可打开。</p></Card>
     <Card title="代理" icon="route">{toggle('systemProxy','连接时启用系统代理')}{toggle('nativeInbounds','保留配置中的原生入站','包括 TUN；TUN 配置需要以管理员身份运行 Wbox')}</Card>
-    <Card title="延迟测试" icon="speed"><Field label="测试地址"><input className="input" type="url" value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://www.apple.com/library/test/success.html" /></Field><p className="wbox-hint">通过各节点请求此地址，默认使用 Apple 连通性测试页面。sing-box 使用 HTTPS；mihomo 支持 HTTP / HTTPS。启用 unified-delay 的 mihomo 配置使用第二次请求计时，与 sing-box 的握手计时不同。</p><div className="row-actions"><Button disabled={url === 'https://www.apple.com/library/test/success.html'} onClick={()=>setUrl('https://www.apple.com/library/test/success.html')}>恢复默认</Button><Button variant="primary" disabled={url === s.delayUrl || !url.trim()} onClick={()=>set('delayUrl',url.trim())}>保存</Button></div></Card>
-    <Card title="关于 Wbox" icon="info"><DataLine label="版本" value="0.6.6" /><DataLine label="前端来源" value="SagerNet/sing-box-for-desktop" /><p className="wbox-hint">基于官方 desktop 与 dashboard 源码修改，保留原版页面、组件和样式。Wbox 是独立衍生项目。许可证：GPL-3.0-or-later，原项目附加命名条款见随附许可证。</p></Card>
+    <SubscriptionSettings />
+    <Card title="延迟测试" icon="speed"><Field label="测试地址"><input className="input" type="url" value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://www.apple.com/library/test/success.html" /></Field><p className="wbox-hint">通过各节点请求此地址，默认使用 Apple 连通性测试页面。sing-box 使用 HTTPS；mihomo 支持 HTTP / HTTPS。mihomo 使用复用连接后的实际请求延迟。比较其他客户端时，请使用相同测试地址。</p><div className="row-actions"><Button disabled={url === 'https://www.apple.com/library/test/success.html'} onClick={()=>setUrl('https://www.apple.com/library/test/success.html')}>恢复默认</Button><Button variant="primary" disabled={url === s.delayUrl || !url.trim()} onClick={()=>set('delayUrl',url.trim())}>保存</Button></div></Card>
+    <Card title="关于 Wbox" icon="info"><DataLine label="版本" value="0.6.8" /><DataLine label="前端来源" value="SagerNet/sing-box-for-desktop" /><p className="wbox-hint">基于官方 desktop 与 dashboard 源码修改，保留原版页面、组件和样式。Wbox 是独立衍生项目。许可证：GPL-3.0-or-later，原项目附加命名条款见随附许可证。</p></Card>
   </div>;
 }

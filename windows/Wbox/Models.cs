@@ -17,6 +17,11 @@ public sealed class Preferences
     public List<ConfigProfile> Configs { get; set; } = [];
     public string NodeCore { get; set; } = "";
     public string SubscriptionFilter { get; set; } = "";
+    public bool SubscriptionAutoUpdate { get; set; }
+    public int SubscriptionUpdateMinutes { get; set; } = 360;
+    public DateTime SubscriptionLastAttempt { get; set; }
+    public DateTime SubscriptionLastSuccess { get; set; }
+    public string SubscriptionUpdateError { get; set; } = "";
 }
 
 public sealed class ConfigProfile
@@ -27,6 +32,7 @@ public sealed class ConfigProfile
     public string Path { get; set; } = "";
     public string Url { get; set; } = "";
     public DateTime Updated { get; set; } = DateTime.Now;
+    public Dictionary<string, string> GroupSelections { get; set; } = [];
     public string Detail => $"{Core} · {(Url.Length == 0 ? "本地文件" : "远程配置")} · {Updated:MM-dd HH:mm}";
 }
 

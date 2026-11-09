@@ -13,7 +13,7 @@ with zipfile.ZipFile(root/f'dist/Wbox-{version}-android-arm64-v8a.apk') as apk:
         assert f'lib/arm64-v8a/{library}' in names
         assert hashlib.sha256(apk.read(f'lib/arm64-v8a/{library}')).digest() == hashlib.sha256((root/'resources/cores/android/arm64-v8a'/library).read_bytes()).digest(), library
     checks.append('APK includes both cores and native tunnel')
-    if version == '0.6.7':
+    if version in ('0.6.7','0.6.8'):
         assert 'assets/LICENSE-xz-java' in names
         assert 'assets/bundled/rules/mihomo-anti-ad.yaml' not in names
         checks.append('Compressed asset decoder license is included and superseded YAML is excluded')

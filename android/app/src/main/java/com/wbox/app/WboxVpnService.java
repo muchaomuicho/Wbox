@@ -123,6 +123,7 @@ public final class WboxVpnService extends VpnService {
                 }))return;
         if(p.engine().equals("sing-box"))api().request("PATCH","/configs",new JSONObject().put("mode","rule"));
         else {globalTarget=CoreApi.globalTarget(new String(Files.readAllBytes(config.toPath()),java.nio.charset.StandardCharsets.UTF_8));if(api().request("GET","/configs",null).optString("mode").equals("global"))api().setMode("global",globalTarget);}
+        ProxyCatalog.restore(p,controller);
         startStage="建立 VPN";
         if(shuttingDown)return;
         Builder b=new Builder().setSession("Wbox · "+p.engine()).setMtu(1500).addAddress("172.19.0.1",30).addRoute("0.0.0.0",0).addDnsServer("1.1.1.1");

@@ -93,6 +93,8 @@ public static class ConfigBuilder
                 foreach (var port in new[] { "port", "socks-port", "redir-port", "tproxy-port" }) root.Remove(port);
             }
             root["mixed-port"] = mixedPort; root["allow-lan"] = false; root["bind-address"] = "127.0.0.1";
+            // Use mihomo's native second-request timing, as Clash clients do.
+            root["unified-delay"] = true;
             root.Remove("authentication");
             root["ipv6"] ??= true;
         }

@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
         model = MobileModel(this)
+        SubscriptionUpdates.schedule(this)
         model.page = state?.getString("page") ?: "overview"
         exportContent = state?.getString("export") ?: ""
         setContent { WboxApp(model) }
@@ -65,6 +66,7 @@ internal data class RuntimeState(
 
 @Stable internal class MobileModel(val activity: MainActivity) {
     var profiles by mutableStateOf(Profiles(activity)); private set
+    private var profileStamp=profiles.file.lastModified()
     var nodes by mutableStateOf(profiles.nodes().toList()); private set
     var configs by mutableStateOf(profiles.configs().objects()); private set
     var page by mutableStateOf("overview")
@@ -96,7 +98,7 @@ internal data class RuntimeState(
     val workspace get() = profiles.mode()
     val currentName get() = if(workspace=="config") profiles.activeConfig()?.optString("name") ?: "选择配置" else profiles.data.optString("selected").ifEmpty { "选择节点" }
     val transition get() = runtime.starting || runtime.stopping
-    internal fun reload() { profiles=Profiles(activity); nodes=profiles.nodes().toList(); configs=profiles.configs().objects() }
+    internal fun reload() { profiles=Profiles(activity);profileStamp=profiles.file.lastModified(); nodes=profiles.nodes().toList(); configs=profiles.configs().objects() }
     fun work(action: suspend () -> Unit) { activity.lifecycleScope.launch { try { action() } catch(e: CancellationException){throw e} catch(e: Exception){ message=ErrorMessage.describe(e); WboxVpnService.log("ERROR $message") } } }
     suspend fun refreshDetails(){
         val target=if(page=="proxies")"groups" else sheet
@@ -109,7 +111,7 @@ internal data class RuntimeState(
                 val snapshot=profiles.copy()
                 val catalog=withContext(Dispatchers.IO){ProxyCatalog.offline(snapshot) to ProxyCatalog.order(ProxyCatalog.source(snapshot),snapshot.engine()=="sing-box")}
                 groupOrder=if(runtime.running)WboxVpnService.groupOrder else catalog.second
-                if(!runtime.running){groups=catalog.first;groupsLoading=false;groupsError="";return}
+                if(!runtime.running||workspace=="nodes"){groups=catalog.first;groupsLoading=false;groupsError="";return}
             }catch(e:Exception){groupsError=ErrorMessage.describe(e);return}
         }
         if(!runtime.running)return
@@ -121,6 +123,7 @@ internal data class RuntimeState(
         finally{if(target=="groups")groupsLoading=false else connectionsLoading=false}
     }
     suspend fun sample() {
+        if(!busy&&profiles.file.lastModified()!=profileStamp)reload()
         WboxVpnService.wantsGroups = page=="proxies" || sheet=="groups"
         WboxVpnService.wantsConnections = sheet=="connections"
         WboxVpnService.wantsOverview = page=="overview" && sheet.isEmpty()
@@ -131,7 +134,7 @@ internal data class RuntimeState(
             WboxVpnService.upload,WboxVpnService.download,WboxVpnService.upRate,WboxVpnService.downRate,WboxVpnService.inbound,WboxVpnService.outbound,WboxVpnService.coreMemory,mem)
         if(page=="overview") history=WboxVpnService.trafficSnapshot()
         if(runtime.running&&page=="overview"&&profiles.engine()=="mihomo"&&sampleCount%3==0) try{proxyMode=withContext(Dispatchers.IO){WboxVpnService.api().request("GET","/configs",null).optString("mode","rule")}}catch(_:Exception){}
-        if((page=="proxies"||sheet=="groups")&&runtime.running&&WboxVpnService.proxies.length()>0) groups=WboxVpnService.proxies
+        if((page=="proxies"||sheet=="groups")&&workspace=="config"&&runtime.running&&WboxVpnService.proxies.length()>0) groups=WboxVpnService.proxies
         if(sheet=="connections") connections=WboxVpnService.connectionRows else connections=emptyList()
         if(page=="logs" && !logsPaused) logs=WboxVpnService.logSnapshot()
     }
@@ -150,7 +153,7 @@ internal data class RuntimeState(
         finally { busy=false }
     }
     fun switchWorkspace(value: String) = work { change(true){it.setWorkspace(value)}; sheet="" }
-    fun setting(key: String, value: Any) = work { change(key=="engine") { it.data.put(key,value); if(key=="engine")it.data.put("node_engine",value) } }
+    fun setting(key: String, value: Any) = work { change(key=="engine") { it.data.put(key,value); if(key=="engine")it.data.put("node_engine",value) };if(key.startsWith("subscription_"))SubscriptionUpdates.schedule(activity) }
     suspend fun saveApps(mode:String, apps:List<String>) { require(mode!="include" || apps.isNotEmpty()){ "请选择至少一个应用" };change {it.data.put("app_mode",mode).put("apps",JSONArray(apps))} }
     fun toggle() = work {
         if(runtime.stopping)return@work
@@ -181,8 +184,30 @@ internal data class RuntimeState(
     suspend fun writeProfile(p: JSONObject, content: String) { change {it.importConfig(content,p.optString("url").ifEmpty{null},p.getString("id"),false)};message=if(WboxVpnService.running)"配置已保存，下次连接生效" else "配置已保存" }
     fun removeProfile(id: String) = work { change(true){p -> val kept=p.configs().objects().filter {it.optString("id")!=id};p.data.put("configs",JSONArray(kept));if(p.data.optString("active_config")==id){p.data.remove("active_config");p.data.remove("config_sing-box");p.data.remove("config_mihomo");if(kept.isNotEmpty())p.activateConfig(kept.first().getString("id"))}} }
     fun selectNode(name: String, group: String?=null) = work {
-        if(group==null) { check(workspace=="nodes"){"请先切换到节点工作区"};changeNodes{it.data.put("selected",name)} }
-        else if(WboxVpnService.running) { withContext(Dispatchers.IO){WboxVpnService.api().select(group,name);WboxVpnService.proxies=WboxVpnService.api().proxies()};groups=WboxVpnService.proxies }
+        latencyJob?.cancelAndJoin()
+        if(group==null || workspace=="nodes") {
+            check(workspace=="nodes"){"请先切换到节点工作区"}
+            val node=nodes.firstOrNull{it.name==name || BundledRules.nodeTag(it.name)==name}?:error("节点不存在")
+            changeNodes{it.data.put("selected",node.name)}
+        } else {
+            mutable();busy=true
+            try {
+                val candidate=JSONObject(groups.toString())
+                val target=candidate.optJSONObject(group)?:error("代理组不存在")
+                check(target.optString("type")=="Selector"){"该代理组不支持手动选择"}
+                check(ProxyCatalog.contains(target.optJSONArray("all"),name)){"节点不属于该代理组"}
+                target.put("now",name);ProxyCatalog.resolve(candidate,group)
+                withContext(Dispatchers.IO){
+                    if(WboxVpnService.running)WboxVpnService.api().select(group,name)
+                    val stored=Profiles(activity);val profile=stored.activeConfig()?:error("配置不存在")
+                    val saved=profile.optJSONObject("group_selections")?:JSONObject()
+                    profile.put("group_selections",saved.put(group,name));stored.save()
+                    if(WboxVpnService.running)WboxVpnService.proxies=WboxVpnService.api().proxies()
+                }
+                reload();groups=if(WboxVpnService.running)WboxVpnService.proxies else candidate
+                message=if(WboxVpnService.running)"已切换节点" else "已选择，下次连接生效"
+            } finally {busy=false}
+        }
     }
     suspend fun writeNode(index: Int, revision: String, fields: JSONObject) { changeNodes {NodeEditing.replace(it,index,revision,fields)} }
     fun cloneNode(index: Int) = work { changeNodes{NodeEditing.cloneNode(it,index)} }

@@ -35,6 +35,7 @@ void Check(bool condition, string label) { if (!condition) throw new Exception("
 if(args.Contains("--forwarding")){await ForwardingChecks.Run(Check);Console.WriteLine($"{checks} forwarding checks passed.");return;}
 if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
 BundledRuleChecks.Run(Check);
+SubscriptionChecks.Run(Check);
 await ReliabilityChecks.Run(Check);
 await ImportChecks.Run(Check);
 await IsolationChecks.Run(Check);

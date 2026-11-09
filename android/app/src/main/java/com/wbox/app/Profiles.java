@@ -11,6 +11,8 @@ import java.nio.file.*;
 import java.util.*;
 
 public final class Profiles {
+    static final Object STORE_LOCK=new Object();
+    private JSONObject baseline=new JSONObject();
     public static final String TEST_URL="https://www.apple.com/library/test/success.html";
     final File file;
     private final Geodata.Source bundled;
@@ -22,13 +24,46 @@ public final class Profiles {
     public Profiles(File directory) { this(directory,name->{InputStream in=Profiles.class.getResourceAsStream("/bundled/"+name);if(in==null)throw new FileNotFoundException(name);return in;}); }
     private Profiles(File directory,Geodata.Source source) { file=new File(directory,"profiles.json");bundled=source;load(); }
     public synchronized void load(){try{data=new JSONObject(new String(Files.readAllBytes(file.toPath()),StandardCharsets.UTF_8));}catch(Exception e){data=new JSONObject();}
+        try{baseline=new JSONObject(data.toString());}catch(JSONException ignored){}
         try {
             if(!data.has("node_engine"))data.put("node_engine",engine());
             if(!data.has("configs")){JSONArray a=new JSONArray();for(String core:List.of("sing-box","mihomo")){String content=data.optString("config_"+core);if(content.isEmpty())continue;JSONObject p=new JSONObject().put("id",UUID.randomUUID().toString()).put("name",core+" 配置").put("core",core).put("content",content).put("url",data.optString("config_url_"+core)).put("updated",System.currentTimeMillis());a.put(p);if(core.equals(engine()))data.put("active_config",p.getString("id"));}data.put("configs",a);}
             if(!data.optBoolean("source_migrated")){JSONArray old=data.optJSONArray("nodes");JSONObject subs=data.optJSONObject("subscriptions");if(old!=null&&subs!=null){JSONArray rebuilt=new JSONArray();for(int i=0;i<old.length();i++){Object value=old.get(i);String source="";if(value instanceof String){Iterator<String> keys=subs.keys();while(keys.hasNext()){String key=keys.next();JSONArray links=subs.optJSONArray(key);if(links!=null)for(int j=0;j<links.length();j++)if(value.equals(links.optString(j)))source=key;}}rebuilt.put(source.isEmpty()?value:new JSONObject().put("link",value).put("source",source));}data.put("nodes",rebuilt);}data.put("source_migrated",true);}
         } catch(Exception ignored){}
     }
-    public synchronized void save() throws Exception { if(!writeThrough)return;File tmp=new File(file.getParentFile(),"profiles.tmp");Files.write(tmp.toPath(),data.toString(2).getBytes(StandardCharsets.UTF_8));Files.move(tmp.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING); }
+    public synchronized void save() throws Exception {
+        if(!writeThrough)return;
+        synchronized(STORE_LOCK){
+            JSONObject current;try{current=new JSONObject(new String(Files.readAllBytes(file.toPath()),StandardCharsets.UTF_8));}catch(Exception e){current=new JSONObject();}
+            data=merge(baseline,data,current);
+            File tmp=new File(file.getParentFile(),"profiles.tmp");Files.write(tmp.toPath(),data.toString(2).getBytes(StandardCharsets.UTF_8));Files.move(tmp.toPath(),file.toPath(),StandardCopyOption.REPLACE_EXISTING);
+            baseline=new JSONObject(data.toString());
+        }
+    }
+    // Merge only the edited fields so a background subscription download cannot
+    // overwrite a simultaneous theme, selector, or unrelated profile change.
+    static JSONObject merge(JSONObject before,JSONObject next,JSONObject current)throws JSONException {
+        JSONObject result=new JSONObject(current.toString());Set<String> keys=new HashSet<>();before.keys().forEachRemaining(keys::add);next.keys().forEachRemaining(keys::add);
+        for(String key:keys){
+            Object a=before.opt(key),b=next.opt(key),c=current.opt(key);
+            if(Objects.equals(String.valueOf(a),String.valueOf(b)))continue;
+            if(!next.has(key)){result.remove(key);continue;}
+            if(a instanceof JSONObject ao && b instanceof JSONObject bo && c instanceof JSONObject co)result.put(key,merge(ao,bo,co));
+            else if(key.equals("configs")&&a instanceof JSONArray aa&&b instanceof JSONArray ba&&c instanceof JSONArray ca){
+                Map<String,JSONObject> originals=new LinkedHashMap<>(),updates=new LinkedHashMap<>(),latest=new LinkedHashMap<>();
+                for(int i=0;i<aa.length();i++)originals.put(aa.getJSONObject(i).optString("id"),aa.getJSONObject(i));
+                for(int i=0;i<ba.length();i++)updates.put(ba.getJSONObject(i).optString("id"),ba.getJSONObject(i));
+                for(int i=0;i<ca.length();i++)latest.put(ca.getJSONObject(i).optString("id"),ca.getJSONObject(i));
+                for(String id:originals.keySet())if(!updates.containsKey(id))latest.remove(id);
+                for(String id:updates.keySet()){
+                    if(!originals.containsKey(id))latest.put(id,updates.get(id));
+                    else if(latest.containsKey(id))latest.put(id,merge(originals.get(id),updates.get(id),latest.get(id)));
+                }
+                result.put(key,new JSONArray(latest.values()));
+            }else result.put(key,b);
+        }
+        return result;
+    }
     public Profiles copy()throws Exception {Profiles copy=new Profiles(file.getParentFile(),bundled);copy.data=new JSONObject(data.toString());copy.writeThrough=false;return copy;}
     public static boolean subscriptionAddress(String input) {try{URI uri=new URI(input.trim());return List.of("http","https").contains(uri.getScheme())&&uri.getHost()!=null&&uri.getUserInfo()==null&&uri.getFragment()==null&&!input.contains("\n");}catch(Exception e){return false;}}
     public String engine(){return data.optString("engine","sing-box");}
@@ -135,6 +170,7 @@ public final class Profiles {
         if(mode().equals("config")){String cfg=data.optString("config_mihomo");if(cfg.isBlank())throw new IllegalArgumentException("请导入 mihomo YAML 配置");m=yamlMap(cfg);}
         else {JSONObject j=BundledRules.nodes(false,active,bundled);j.put("ipv6",data.optBoolean("ipv6",true));j.getJSONObject("dns").put("ipv6",data.optBoolean("ipv6",true));if(transientConfig)prepareProbe(j,false);m=yamlMap(j.toString());}
         m.put("mixed-port",mixedPort);m.put("allow-lan",false);m.put("bind-address","127.0.0.1");m.put("external-controller","127.0.0.1:"+controllerPort);m.put("secret",secret);m.put("tun",Map.of("enable",false));m.putIfAbsent("ipv6",true);
+        m.put("unified-delay",true);
         AndroidConfig.adaptMihomo(m);
         if(transientConfig){for(String key:List.of("listeners","port","socks-port","redir-port","tproxy-port","external-controller-tls","external-controller-unix"))m.remove(key);Object dns=m.get("dns");if(dns instanceof Map)((Map<?,?>)dns).remove("listen");m.put("profile",Map.of("store-selected",false,"store-fake-ip",false));}
         JSONObject localized=new JSONObject(m);if(transientConfig&&mode().equals("config"))relocateResources(localized,working);BundledRules.apply(localized,false,working,bundled,new File(file.getParentFile(),"bundled-cache"));

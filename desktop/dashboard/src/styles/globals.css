@@ -4,6 +4,7 @@
   font-weight: 400;
   src: url("@fontsource/noto-color-emoji/files/noto-color-emoji-emoji-400-normal.woff2") format("woff2");
   font-display: swap;
+  unicode-range: U+200D, U+20E3, U+2300-23FF, U+2600-27BF, U+FE0F, U+1F000-1FAFF;
 }
 
 :root {

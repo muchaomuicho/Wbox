@@ -32,7 +32,8 @@ final class LatencySession implements AutoCloseable {
             while(System.nanoTime()<deadline){
                 if(Thread.currentThread().isInterrupted())throw new InterruptedException();
                 if(!process.isAlive())throw new IOException("测速内核启动失败："+new String(Files.readAllBytes(log.toPath()),StandardCharsets.UTF_8).replaceAll("\\x1b\\[[0-9;]*m", "").trim());
-                try{api.checkReady(1000,mixed,rules);return;}catch(IOException ignored){Thread.sleep(100);}
+                try{api.checkReady(1000,mixed,rules);}catch(IOException ignored){Thread.sleep(100);continue;}
+                ProxyCatalog.restore(source,api);return;
             }
             throw new IOException("测速内核启动超时");
         }catch(Exception e){close();throw e;}

@@ -16,7 +16,7 @@ public static class ProxyCatalog
         if (p.Mode == "nodes") {
             if (p.Nodes.Count == 0) return [];
             var details = p.Nodes.Select((n,i) => new ProxyNode(ConfigBuilder.Tag(n,i), n.Protocol, int.TryParse(n.DelayText.Split(' ')[0],out var ms)?ms:n.DelayText=="失败"?0:null)).ToList();
-            return [new("节点", ConfigBuilder.Tag(p.Nodes[Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1)],Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1)), details.Select(n=>n.Name).ToList(), false) { Details=details }];
+            return [new("节点", ConfigBuilder.Tag(p.Nodes[Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1)],Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1)), details.Select(n=>n.Name).ToList(), true) { Details=details }];
         }
         if (!File.Exists(p.ConfigPath)) return [];
         var root=Read(p);bool sb=p.Core=="sing-box";
@@ -29,7 +29,8 @@ public static class ProxyCatalog
             var g=entries.First(e=>e[sb?"tag":"name"]?.ToString()==tag);
             var names=(g[sb?"outbounds":"proxies"] as JsonArray)?.Select(n=>n!.ToString()).ToList() ?? [];
             var type=g["type"]?.ToString() ?? "select";
-            return new GroupItem(tag,g["default"]?.ToString() ?? names.FirstOrDefault() ?? "",names,false) {
+            var saved=p.Configs.FirstOrDefault(c=>c.Path==p.ConfigPath)?.GroupSelections.GetValueOrDefault(tag);
+            return new GroupItem(tag,saved!=null&&names.Contains(saved)?saved:g["default"]?.ToString() ?? names.FirstOrDefault() ?? "",names,type is "select" or "selector") {
                 Type=type switch {"select" or "selector"=>"Selector","url-test" or "urltest"=>"URLTest","fallback"=>"Fallback","load-balance"=>"LoadBalance",_=>type},
                 Details=names.Select(n=>new ProxyNode(n,types.GetValueOrDefault(n,"—"),null)).ToList()
             };

@@ -43,7 +43,32 @@ final class ProxyCatalog {
                 result.put(name,entry);
             }
         }
+        applySelections(p,result);
         return result;
+    }
+    static JSONObject selections(Profiles p) {
+        JSONObject profile=p.activeConfig();
+        JSONObject saved=profile==null?null:profile.optJSONObject("group_selections");
+        return saved==null?new JSONObject():saved;
+    }
+    static void applySelections(Profiles p,JSONObject groups)throws JSONException {
+        JSONObject saved=selections(p);
+        for(Iterator<String> it=saved.keys();it.hasNext();) {
+            String name=it.next(),node=saved.optString(name);JSONObject group=groups.optJSONObject(name);
+            if(group!=null&&group.optString("type").equals("Selector")&&contains(group.optJSONArray("all"),node))group.put("now",node);
+        }
+    }
+    static boolean contains(JSONArray all,String node) {
+        if(all!=null)for(int i=0;i<all.length();i++)if(node.equals(all.optString(i)))return true;
+        return false;
+    }
+    static void restore(Profiles p,CoreApi api)throws Exception {
+        if(!p.mode().equals("config")||selections(p).length()==0)return;
+        JSONObject groups=api.proxies(),saved=selections(p);
+        for(Iterator<String> it=saved.keys();it.hasNext();) {
+            String name=it.next(),node=saved.optString(name);JSONObject group=groups.optJSONObject(name);
+            if(group!=null&&group.optString("type").equals("Selector")&&contains(group.optJSONArray("all"),node))api.select(name,node);
+        }
     }
     static String resolve(JSONObject groups,String name) {
         Set<String> seen=new HashSet<>();

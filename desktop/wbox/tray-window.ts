@@ -5,18 +5,29 @@ import { join } from 'node:path';
 // TrayMenu.tsx and CSS render the panel, cascading groups, and node menu.
 export function createTrayController() {
   let menu: BrowserWindow | null = null;
-  let release: ReturnType<typeof setTimeout> | undefined;
+  let preparing: Promise<void> | undefined;
+  let disposed = false;
   let opening = false;
-  function destroy() { clearTimeout(release); menu?.destroy(); menu = null; }
+  function destroy() { disposed = true; menu?.destroy(); menu = null; }
   function hide() {
     menu?.hide();
-    clearTimeout(release);
-    release = setTimeout(destroy, 60000);
+
+  }
+  async function prepare(anchor: Rectangle) {
+    if (disposed || menu) return;
+    if (preparing) return preparing;
+    preparing = open(anchor, true).finally(() => { preparing = undefined; });
+    return preparing;
   }
   async function show(anchor: Rectangle) {
+    if (disposed) return;
+    await preparing;
+    return open(anchor, false);
+  }
+  async function open(anchor: Rectangle, warming: boolean) {
     if (opening) return;
     if (menu?.isVisible()) { hide(); return; }
-    clearTimeout(release);
+
     opening = true;
     try {
       const display = screen.getDisplayMatching(anchor), area = display.workArea;
@@ -27,11 +38,12 @@ export function createTrayController() {
       const x = Math.max(area.x, Math.min(area.x + area.width - width, Math.round(cx - (side === 'right' ? 170 : width - 170))));
       const y = align === 'top' ? area.y : align === 'center' ? Math.max(area.y, Math.min(area.y + area.height - height, Math.round(cy - height / 2))) : area.y + area.height - height;
       if(menu && !menu.isDestroyed()) {
+        if(warming)return;
         menu.setBounds({x,y,width,height});
         await menu.webContents.executeJavaScript(`document.documentElement.dataset.trayCascadeSide=${JSON.stringify(side)};document.documentElement.dataset.trayVerticalAlignment=${JSON.stringify(align)}`);
         menu.show();menu.focus();return;
       }
-      const current = new BrowserWindow({ x, y, width, height, title: 'Wbox Tray', frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, alwaysOnTop: true, show: false, webPreferences: { preload: join(import.meta.dirname, '../preload/index.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false } });
+      const current = new BrowserWindow({ x, y, width, height, title: 'Wbox Tray', frame: false, transparent: true, backgroundColor: '#00000000', hasShadow: false, resizable: false, movable: false, minimizable: false, maximizable: false, fullscreenable: false, skipTaskbar: true, alwaysOnTop: true, show: false, webPreferences: { preload: join(import.meta.dirname, '../preload/index.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, backgroundThrottling: false } });
       menu = current;
       current.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
       current.webContents.on('will-navigate', event => event.preventDefault());
@@ -43,9 +55,9 @@ export function createTrayController() {
       else await current.loadFile(join(import.meta.dirname, '../renderer/tray.html'), { query });
       // A completed navigation is not a painted, themed React menu. Keep it
       // hidden until fonts and the first themed frames have been committed.
-      await current.webContents.executeJavaScript(`new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`);
-      if (!current.isDestroyed()) { current.show(); current.focus(); }
+      await current.webContents.executeJavaScript(`document.fonts.ready.then(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))`);
+      if (!current.isDestroyed()) { current.webContents.setBackgroundThrottling(true); if(!warming){current.show(); current.focus();} }
     } finally { opening = false; }
   }
-  return { show, hide, destroy, get window() { return menu; } };
+  return { show, hide, destroy, prepare, get window() { return menu; } };
 }

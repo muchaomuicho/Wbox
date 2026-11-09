@@ -11,6 +11,8 @@ var outputLock = new object();
 void Write(object value) { lock (outputLock) Console.WriteLine(JsonSerializer.Serialize(value, json)); }
 var core = new CoreManager();
 var prefs = Store.Load();
+Task<List<SubscriptionResult>>? subscriptionTask = null;
+bool subscriptionManual = false;
 long coreGeneration = 0;
 bool delayTesting = false;
 CancellationTokenSource nodeTestCancellation = new();
@@ -23,7 +25,7 @@ string GroupContext() => $"{coreGeneration}|{prefs.Mode}|{prefs.Core}|{prefs.Con
 void CheckGroupContext() {var key=GroupContext();if(key!=groupContext){groupContext=key;groupDelays.Clear();probeGroups=null;}}
 async Task<List<GroupItem>> Groups() {
     CheckGroupContext();
-    var groups=core.Ready?await core.GroupsAsync():probeGroups??ProxyCatalog.Offline(prefs);
+    var groups=prefs.Mode=="nodes"?ProxyCatalog.Offline(prefs):core.Ready?await core.GroupsAsync():probeGroups??ProxyCatalog.Offline(prefs);
     return groups.Select(g=>g with {Details=g.Details.Select(n=>{
         string leaf;try{leaf=ProxyCatalog.Resolve(groups,n.Name);}catch{leaf=n.Name;}
         return groupDelays.TryGetValue(leaf,out var value)?n with {Delay=value}:n with {Delay=prefs.Mode=="nodes"?n.Delay:null};
@@ -40,7 +42,7 @@ async Task TestGroup(Preferences snapshot,string tag,string context,Cancellation
             await starting;token.ThrowIfCancellationRequested();target=tester;
         }
         var groups=await target.GroupsAsync();
-        if(context==GroupContext() && target==tester)probeGroups=groups.Select(g=>g with {Selectable=false}).ToList();
+        if(context==GroupContext() && target==tester)probeGroups=groups;
         var group=groups.FirstOrDefault(g=>g.Name==tag);
         var names=(group?.Nodes ?? [tag]).Select(n=>ProxyCatalog.Resolve(groups,n)).Distinct().ToArray();
         Write(new{changed=true});
@@ -98,6 +100,7 @@ object State() => new {
     configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
     prefs.Subscriptions, running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
+    ,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null
 };
 async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation) {
     using var starts = new SemaphoreSlim(1);
@@ -128,6 +131,16 @@ async Task<object?> Handle(string method, JsonElement a) {
     int I(string name) => a.GetProperty(name).GetInt32();
     switch (method) {
         case "state": return State();
+        case "autoUpdate":
+        case "refreshSubscriptions": {
+            bool manual=method=="refreshSubscriptions";
+            if(subscriptionTask!=null||core.Starting||delayTesting||(!manual&&!SubscriptionRefresh.Due(prefs,DateTime.UtcNow)))return null;
+            if(prefs.Subscriptions.Count==0&&!prefs.Configs.Any(c=>c.Url.Length>0))return null;
+            prefs.SubscriptionLastAttempt=DateTime.UtcNow;subscriptionManual=manual;
+            subscriptionTask=SubscriptionRefresh.FetchAsync(CopyPreferences());
+            _=subscriptionTask.ContinueWith(_=>Write(new{changed=true}),TaskScheduler.Default);
+            Save();return null;
+        }
         case "startup": return StartupRegistration.Configure(S("executable"), a.GetProperty("enabled").GetBoolean(), a.GetProperty("silent").GetBoolean());
         case "service": return new { running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
         case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.PrivateMemorySize64;
@@ -149,10 +162,24 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "connections": return core.Ready ? await core.RequestAsync("GET", "/connections") : null;
         case "mode": return core.Ready && prefs.Core=="mihomo" ? await core.RequestAsync("GET", "/configs") : null;
         case "setMode": await core.SetModeAsync(S("mode")); return null;
-        case "select":
-            await core.SelectAsync(S("group"), S("node"));
-            if (prefs.Mode == "nodes" && S("group") == "Wbox") { var idx = prefs.Nodes.FindIndex(n => ConfigBuilder.Tag(n, prefs.Nodes.IndexOf(n)) == S("node")); if (idx >= 0) { prefs.SelectedNode = idx; Save(); } }
-            return null;
+        case "select": {
+            if(delayTesting) {nodeTestCancellation.Cancel();await nodeTests;}
+            if(prefs.Mode=="nodes") {
+                var index=prefs.Nodes.FindIndex(n=>ConfigBuilder.Tag(n,prefs.Nodes.IndexOf(n))==S("node"));
+                if(index<0)throw new ArgumentException("节点不存在。");
+                var next=CopyPreferences();next.SelectedNode=index;await CommitNodes(next);return null;
+            }
+            var group=(await Groups()).FirstOrDefault(g=>g.Name==S("group"));
+            if(group==null||!group.Selectable)throw new ArgumentException("该代理组不支持手动选择。");
+            if(!group.Nodes.Contains(S("node")))throw new ArgumentException("节点不属于该代理组。");
+            var candidate=(await Groups()).Select(g=>g.Name==group.Name?g with {Selected=S("node")}:g).ToList();
+            ProxyCatalog.Resolve(candidate,group.Name);
+            if(core.Ready)await core.SelectAsync(group.Name,S("node"));
+            var profile=prefs.Configs.First(c=>c.Path==prefs.ConfigPath);
+            profile.GroupSelections[group.Name]=S("node");
+            if(probeGroups!=null)probeGroups=probeGroups.Select(g=>g.Name==group.Name?g with {Selected=S("node")}:g).ToList();
+            Save();return null;
+        }
         case "close": await core.RequestAsync("DELETE", "/connections" + (S("id").Length > 0 ? "/" + Uri.EscapeDataString(S("id")) : "")); return null;
         case "delay": return await core.DelayAsync(S("tag"), prefs.DelayUrl);
         case "delayNodes": {
@@ -168,6 +195,11 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "proxyStatus": return new { available = core.Running, enabled = core.Running && SystemProxy.Enabled };
         case "proxy": if (a.GetProperty("enabled").GetBoolean()) { if (!core.Running) throw new InvalidOperationException("请先启动内核。"); SystemProxy.Install(core.ProxyPort); } else SystemProxy.Restore(); prefs.SystemProxy = a.GetProperty("enabled").GetBoolean(); Save(); return null;
         case "settings":
+            if(a.TryGetProperty("subscriptionUpdateMinutes",out var interval)) {
+                int minutes=interval.GetInt32();if(minutes<15||minutes>10080)throw new ArgumentException("更新间隔需为 15–10080 分钟。");
+                prefs.SubscriptionUpdateMinutes=minutes;
+            }
+            if(a.TryGetProperty("subscriptionAutoUpdate",out var updates))prefs.SubscriptionAutoUpdate=updates.GetBoolean();
             if (a.TryGetProperty("mode", out var mode)) { Idle(); prefs.Mode = mode.GetString() == "config" ? "config" : "nodes"; if (prefs.Mode == "nodes") prefs.Core = prefs.NodeCore.Length > 0 ? prefs.NodeCore : "mihomo"; else { var c = prefs.Configs.FirstOrDefault(c => c.Path == prefs.ConfigPath); if (c != null) prefs.Core = c.Core; } }
             if (a.TryGetProperty("core", out var engine)) { Idle(); if (prefs.Mode == "config") throw new InvalidOperationException("配置工作区自动匹配配置的内核。"); prefs.Core = engine.GetString() == "sing-box" ? "sing-box" : "mihomo"; prefs.NodeCore = prefs.Core; }
             if (a.TryGetProperty("delayUrl", out var delayUrl)) { if (!Uri.TryCreate(delayUrl.GetString(), UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")) throw new ArgumentException("测速链接需要是 HTTP / HTTPS 地址。"); prefs.DelayUrl = uri.ToString(); }
@@ -276,6 +308,15 @@ async Task ReplyDelay(long id, string tag, long generation, string url) {
 while ((line = await Console.In.ReadLineAsync()) != null) {
     long id = 0;
     try {
+        if(subscriptionTask is {IsCompleted:true}&&!core.Starting&&!delayTesting) {
+            var completed=subscriptionTask;subscriptionTask=null;
+            if(subscriptionManual||prefs.SubscriptionAutoUpdate) {
+                prefs.SubscriptionUpdateError=SubscriptionRefresh.Apply(prefs,await completed,core.Running);
+                if(prefs.SubscriptionUpdateError.Length==0)prefs.SubscriptionLastSuccess=DateTime.UtcNow;
+                else Log("WARN 订阅自动更新："+prefs.SubscriptionUpdateError);
+                Save();
+            }
+        }
         using var request = JsonDocument.Parse(line);
         id = request.RootElement.GetProperty("id").GetInt64();
         string method = request.RootElement.GetProperty("method").GetString()!;

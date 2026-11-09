@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class,androidx.compose.foundation.ExperimentalFoundationApi::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class,androidx.compose.foundation.ExperimentalFoundationApi::class,androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.wbox.app
 
 import androidx.compose.foundation.*
@@ -40,12 +40,7 @@ import androidx.compose.ui.unit.dp
             ScrollableTabRow(selectedTabIndex=groups.indexOf(active),modifier=Modifier.weight(1f),edgePadding=16.dp,containerColor=MaterialTheme.colorScheme.surface){
                 groups.forEach{tag->Tab(selected=active==tag,onClick={m.activeGroup=tag},text={Text(tag,maxLines=1)})}
             }
-            Box{
-                IconButton(onClick={choosing=true}){Icon(Icons.Outlined.ExpandMore,"选择代理组")}
-                DropdownMenu(expanded=choosing,onDismissRequest={choosing=false},modifier=Modifier.heightIn(max=400.dp)){
-                    groups.forEach{tag->DropdownMenuItem(text={Text(tag)},onClick={m.activeGroup=tag;choosing=false},trailingIcon={if(tag==active)Icon(Icons.Outlined.Check,null)})}
-                }
-            }
+            IconButton(onClick={choosing=true}){Icon(Icons.Outlined.ExpandMore,"选择代理组")}
         }
         Row(Modifier.fillMaxWidth().padding(start=20.dp,end=8.dp),verticalAlignment=Alignment.CenterVertically){
             Text(group.optString("type")+" · "+group.getJSONArray("all").length()+" 个节点"+if(m.runtime.running)"" else " · 未连接",Modifier.weight(1f),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -62,7 +57,7 @@ import androidx.compose.ui.unit.dp
                         val number=value.substringBefore(" ").toIntOrNull()
                         val color=when{value=="Timeout"||value=="失败"->MaterialTheme.colorScheme.error;number==null->MaterialTheme.colorScheme.onSurfaceVariant;number<800->Color(0xff539675);number<1500->Color(0xffbd9747);else->Color(0xffce6e63)}
                         Surface(modifier=Modifier.weight(1f),shape=RoundedCornerShape(20.dp),border=BorderStroke(1.dp,if(selected)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant){
-                            Column(Modifier.fillMaxWidth().heightIn(min=132.dp).combinedClickable(onClick={if(m.runtime.running&&group.optString("type")=="Selector")m.selectNode(name,active)},onLongClick={fullName=name}).padding(14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
+                            Column(Modifier.fillMaxWidth().heightIn(min=132.dp).combinedClickable(onClick={m.selectNode(name,active)},onLongClick={fullName=name}).padding(14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
                                 Text(name,style=MaterialTheme.typography.bodyLarge,fontWeight=FontWeight.Medium,maxLines=2,overflow=TextOverflow.Ellipsis)
                                 Spacer(Modifier.weight(1f))
                                 Text(m.groups.optJSONObject(name)?.optString("type").orEmpty(),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
@@ -74,6 +69,16 @@ import androidx.compose.ui.unit.dp
                 }
             }
         }
+    }
+    if(choosing)ModalBottomSheet(onDismissRequest={choosing=false},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true)){
+        Box(Modifier.fillMaxWidth().padding(horizontal=16.dp)){
+            Text("策略组",Modifier.align(Alignment.Center),style=MaterialTheme.typography.headlineSmall)
+            FilledTonalIconButton(onClick={choosing=false},modifier=Modifier.align(Alignment.CenterEnd)){Icon(Icons.Outlined.Close,"关闭策略组")}
+        }
+        FlowRow(Modifier.fillMaxWidth().heightIn(max=520.dp).verticalScroll(rememberScrollState()).padding(20.dp),horizontalArrangement=Arrangement.spacedBy(10.dp,Alignment.CenterHorizontally),verticalArrangement=Arrangement.spacedBy(8.dp)){
+            groups.forEach{tag->FilterChip(selected=tag==active,onClick={m.activeGroup=tag;choosing=false},label={Text(tag,Modifier.padding(vertical=12.dp),style=MaterialTheme.typography.bodyLarge)},shape=RoundedCornerShape(16.dp))}
+        }
+        Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
     }
     fullName?.let{name->AlertDialog(onDismissRequest={fullName=null},title={Text("节点名称")},text={SelectionContainer{Text(name,Modifier.heightIn(max=360.dp).verticalScroll(rememberScrollState()))}},confirmButton={TextButton(onClick={fullName=null}){Text("关闭")}})}
 }

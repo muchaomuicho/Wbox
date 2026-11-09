@@ -12,6 +12,9 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context context,Intent intent){
         PendingResult pending=goAsync();new Thread(()->{try{
             String action=intent.getStringExtra("operation");
+            if("groups".equals(action)){
+                Files.write(new File(context.getFilesDir(),"probe-groups.json").toPath(),WboxVpnService.api().proxies().toString().getBytes());return;
+            }
             if("details".equals(action)){
                 WboxVpnService.wantsConnections=true;WboxVpnService.refreshDetails(false).get(10,TimeUnit.SECONDS);
                 JSONArray rows=new JSONArray();for(ConnectionRecord row:WboxVpnService.connectionRows)rows.put(new JSONObject().put("source",row.source).put("destination",row.destination).put("network",row.network).put("package",row.packageName));

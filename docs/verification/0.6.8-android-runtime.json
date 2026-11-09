@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "failure": null,
+  "checks": [
+    "mihomo offline card selection is persisted without a VPN",
+    "Group picker opens a bottom sheet",
+    "Choosing a sheet chip closes the sheet",
+    "mihomo startup restores the saved selector",
+    "mihomo card switches the running core",
+    "sing-box offline card selection is persisted without a VPN",
+    "Group picker opens a bottom sheet",
+    "Choosing a sheet chip closes the sheet",
+    "sing-box startup restores the saved selector",
+    "sing-box card switches the running core",
+    "Subscription has not refreshed before hiding the activity",
+    "System background job updates remote configuration with the activity hidden",
+    "Background refresh preserves the configured name"
+  ]
+}

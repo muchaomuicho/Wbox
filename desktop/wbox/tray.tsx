@@ -1,4 +1,6 @@
 import { StrictMode } from 'react';
+import '@fontsource-variable/schibsted-grotesk/index.css';
+import '@fontsource/ibm-plex-mono/400.css';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import { applyTheme, loadThemePreference, applyAccent, loadAccentPreference } from '@dashboard/app/context';

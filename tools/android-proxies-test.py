@@ -9,8 +9,11 @@ import time
 import xml.etree.ElementTree as ET
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+VERSION = '0.6.8'
 ADB = 'C:/Users/hw/AppData/Local/Android/Sdk/platform-tools/adb.exe'
 checks = []
+timing = {}
+failure = None
 slow = False
 
 def adb(*args, data=None, timeout=30):
@@ -21,8 +24,8 @@ def adb(*args, data=None, timeout=30):
     return result.stdout
 
 def tree():
-    adb('shell', 'uiautomator', 'dump', '/sdcard/wbox-proxies-067.xml')
-    return ET.fromstring(adb('shell', 'cat', '/sdcard/wbox-proxies-067.xml'))
+    adb('shell', 'uiautomator', 'dump', '/sdcard/wbox-proxies-test.xml')
+    return ET.fromstring(adb('shell', 'cat', '/sdcard/wbox-proxies-test.xml'))
 
 def text_values():
     return [n.get('text', '') for n in tree().iter('node')]
@@ -31,7 +34,7 @@ def tap(label, attr='text'):
     for _ in range(8):
         nodes = [n for n in tree().iter('node') if n.get(attr) == label]
         if nodes:
-            x1, y1, x2, y2 = map(int, re.findall(r'\d+', nodes[0].get('bounds')))
+            x1, y1, x2, y2 = map(int, re.findall(r'\d+', nodes[-1].get('bounds')))
             adb('shell', 'input', 'tap', str((x1+x2)//2), str((y1+y2)//2))
             return ((x1+x2)//2, (y1+y2)//2)
         time.sleep(.25)
@@ -58,14 +61,22 @@ def seed(engine, config, url):
              'configs': [{'id': 'proxy-regression', 'name': 'Proxy regression', 'core': engine, 'content': content}]}
     adb('shell', 'run-as', 'com.wbox.app', 'mkdir', '-p', 'files')
     adb('shell', 'run-as', 'com.wbox.app', 'sh', '-c', "'cat > files/profiles.json'", data=json.dumps(prefs).encode())
-    adb('shell', 'am', 'start', '-n', 'com.wbox.app/.MainActivity')
+    adb('shell', 'am', 'start', '-W', '-n', 'com.wbox.app/.MainActivity')
+    wait(lambda: '概览' in text_values())
     tap('代理')
+    wait(lambda: 'Z 外层' in text_values())
 
 class Server(http.server.BaseHTTPRequestHandler):
+    # unified-delay measures a second request on the same connection. HTTP/1.0
+    # closes that connection and exercises the core's fallback instead.
+    protocol_version = 'HTTP/1.1'
+    def do_HEAD(self):
+        self.do_GET()
     def do_GET(self):
         time.sleep(12 if slow else .08)
         try:
             self.send_response(204)
+            self.send_header('Content-Length', '0')
             self.end_headers()
         except OSError:
             pass
@@ -88,10 +99,13 @@ try:
     wait(lambda: 'Timeout' in text_values())
     values = text_values()
     assert any(re.fullmatch(r'[1-9]\d* ms', value) for value in values), values
+    timing['mihomoLocalRequestMs'] = [int(value.split()[0]) for value in values if re.fullmatch(r'[1-9]\d* ms', value)]
+    assert all(60 <= delay < 500 for delay in timing['mihomoLocalRequestMs']), timing
     assert not state()['running']
     wait(lambda: not adb('shell', 'run-as', 'com.wbox.app', 'ls', '-A', 'cache/latency').strip())
     checks.append('Mihomo resolves a nested group to measured HTTP delay and shows Timeout for failure without VPN')
-    (ROOT/'docs/previews/0.6.7-android-proxies.png').write_bytes(adb('exec-out', 'screencap', '-p'))
+    checks.append('Mihomo keeps local HTTP request timing below 500 ms with an 80 ms response and connection reuse')
+    (ROOT/f'docs/previews/{VERSION}-android-proxies.png').write_bytes(adb('exec-out', 'screencap', '-p'))
     slow = True
     point = tap('延迟测试', 'content-desc')
     time.sleep(.25)
@@ -108,9 +122,12 @@ try:
     wait(lambda: not adb('shell', 'run-as', 'com.wbox.app', 'ls', '-A', 'cache/latency').strip())
     assert not state()['running']
     checks.append('Sing-box nested-node failures display Timeout and finish without VPN or leftover files')
+except Exception as error:
+    failure = str(error)
+    raise
 finally:
     adb('shell', 'am', 'force-stop', 'com.wbox.app')
     server.shutdown()
     server.server_close()
-    (ROOT/'docs/verification/0.6.7-android-proxies.json').write_text(json.dumps({'checks': checks}, indent=2), encoding='utf-8')
-print(json.dumps({'checks': checks}, indent=2))
+    (ROOT/f'docs/verification/{VERSION}-android-proxies.json').write_text(json.dumps({'passed': failure is None, 'failure': failure, 'checks': checks, 'timing': timing}, indent=2), encoding='utf-8')
+print(json.dumps({'checks': checks, 'timing': timing}, indent=2))

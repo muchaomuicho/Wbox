@@ -9,6 +9,8 @@ export interface WboxState {
   configs: {id: string; name: string; core: string; path: string; url: string; updated: string}[];
   nodes: {index: number; name: string; protocol: string; server: string; port: number; tag: string; sourceSubscription: string; delayText: string}[];
   subscriptions: string[];
+  subscriptionAutoUpdate: boolean; subscriptionUpdateMinutes: number;
+  subscriptionLastAttempt: string; subscriptionLastSuccess: string; subscriptionUpdateError: string; subscriptionUpdating: boolean;
 }
 export function useWboxState() {
   const [state, setState] = useState<WboxState | null>(null);

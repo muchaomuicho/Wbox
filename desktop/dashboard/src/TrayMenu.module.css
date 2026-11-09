@@ -210,7 +210,9 @@
 
 .delay {
   flex-shrink: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
   font-size: var(--text-xs);
   text-align: end;
 }
