@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "failure": null,
+  "checks": [
+    "Android URL import stores subscription headers",
+    "Configuration card displays traffic quota",
+    "Overflow opens a full editor with subscription and config actions",
+    "Configuration code editor is reachable from subscription page",
+    "Manual update refreshes subscription traffic",
+    "Download failure preserves quota and configuration",
+    "Missing response header removes stale traffic",
+    "mihomo node workspace uses the independent node list",
+    "Single-node latency click leaves selection unchanged",
+    "mihomo double-tap forwards through Node1 only",
+    "mihomo double-tap forwards through Node0 only",
+    "mihomo VPN enables IPv6 despite legacy false preference",
+    "IPv6 switch is absent for mihomo",
+    "sing-box node workspace uses the independent node list",
+    "sing-box double-tap forwards through Node1 only",
+    "sing-box double-tap forwards through Node0 only",
+    "sing-box VPN enables IPv6 despite legacy false preference",
+    "IPv6 switch is absent for sing-box"
+  ]
+}

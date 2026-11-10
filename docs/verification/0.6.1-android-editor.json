@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Full-screen code editor keeps toolbar on screen with IME open",
+    "Native code editor accepts long press and copy action; menu screenshot saved for review"
+  ],
+  "visualAndTouchChecks": [
+    "Long press displays cut, copy, paste and select all",
+    "Select all highlights the entire URL",
+    "Cut removes the selected URL",
+    "Paste button restores the exact original URL"
+  ]
+}

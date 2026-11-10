@@ -1,0 +1,6 @@
+{
+  "passed": true,
+  "checks": 145,
+  "build": "Release",
+  "isolation": "Temporary app data, fixture proxies and available local ports; existing proxy was left running."
+}

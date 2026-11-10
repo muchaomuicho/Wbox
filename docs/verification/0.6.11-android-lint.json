@@ -1,0 +1,26 @@
+{
+  "errors": 0,
+  "warnings": 4,
+  "issues": [
+    {
+      "id": "ExportedReceiver",
+      "severity": "Warning",
+      "message": "Exported receiver does not require permission"
+    },
+    {
+      "id": "DataExtractionRules",
+      "severity": "Warning",
+      "message": "The attribute `android:allowBackup` is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute `android:dataExtractionRules` specifying an `@xml` resource which configures cloud backups and device transfers on Android 12 and higher."
+    },
+    {
+      "id": "ObsoleteSdkInt",
+      "severity": "Warning",
+      "message": "This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 26. Merge all the resources in this folder into `mipmap-anydpi`."
+    },
+    {
+      "id": "UnusedResources",
+      "severity": "Warning",
+      "message": "The resource `R.style.AppThemeDark` appears to be unused"
+    }
+  ]
+}

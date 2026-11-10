@@ -1,0 +1,11 @@
+{
+  "version": "0.6.6",
+  "basicChecks": 102,
+  "forwardingChecks": 14,
+  "nativeLoginTask": "generated XML accepted and isolated executable started",
+  "elevatedTaskTested": false,
+  "rebootTested": false,
+  "installer": "Simplified Chinese resources compiled, ShellExecute launch enabled; UAC interaction not tested",
+  "installerWindowTitle": "安装 - Wbox 版本 0.6.6",
+  "installerVisualCheck": "window capture unavailable"
+}

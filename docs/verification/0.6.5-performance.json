@@ -1,0 +1,62 @@
+{
+  "version": "0.6.5",
+  "visible": [
+    {
+      "type": "Browser",
+      "privateBytes": 75862016,
+      "cpu": 0
+    },
+    {
+      "type": "GPU",
+      "privateBytes": 30023680,
+      "cpu": 0
+    },
+    {
+      "type": "Utility",
+      "privateBytes": 12554240,
+      "cpu": 0
+    },
+    {
+      "type": "Tab",
+      "privateBytes": 67403776,
+      "cpu": 0
+    }
+  ],
+  "coldTrayMs": 368,
+  "repeatTrayMs": 2246,
+  "reusedTray": false,
+  "hiddenWithTrayCache": [
+    {
+      "type": "Browser",
+      "privateBytes": 76660736,
+      "cpu": 0.23140047689575172
+    },
+    {
+      "type": "GPU",
+      "privateBytes": 30195712,
+      "cpu": 0.1052317291410279
+    },
+    {
+      "type": "Utility",
+      "privateBytes": 12611584,
+      "cpu": 0.004544355555599993
+    }
+  ],
+  "hiddenAfterRelease": [
+    {
+      "type": "Browser",
+      "privateBytes": 76660736,
+      "cpu": 0.010351289201532912
+    },
+    {
+      "type": "GPU",
+      "privateBytes": 30195712,
+      "cpu": 0
+    },
+    {
+      "type": "Utility",
+      "privateBytes": 12619776,
+      "cpu": 0.00036731090807041273
+    }
+  ]
+}

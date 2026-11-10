@@ -1,0 +1,47 @@
+{
+  "suites": [
+    {
+      "suite": "com.wbox.app.ComposeUiTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.wbox.app.NodeEditingTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "com.wbox.app.ProfilesTest",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1
+    },
+    {
+      "suite": "com.wbox.app.RuntimeDataTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "tests": 41,
+  "passed": 40,
+  "skipped": 1,
+  "failures": 0,
+  "lintErrors": 0,
+  "lintWarnings": 4,
+  "releaseApk": {
+    "versionName": "0.6.0",
+    "versionCode": 8,
+    "abi": "arm64-v8a",
+    "signatureVerified": true,
+    "certificateSha256": "774e7eef8410a54c9d80fe18ebd3980d07701afb176d7e94ddfee5b796c7b026",
+    "debuggable": false,
+    "runtimeProbeReceiverIncluded": false
+  }
+}

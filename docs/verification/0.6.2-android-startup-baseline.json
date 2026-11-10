@@ -1,0 +1,27 @@
+{
+  "baseline": true,
+  "checks": [
+    "Old APK killed slow startup before rule response"
+  ],
+  "slow": {
+    "elapsed": 10.223593199858442,
+    "state": {
+      "running": false,
+      "starting": false,
+      "status": "连接失败",
+      "error": "启动 sing-box：内核控制接口启动超时",
+      "upload": 0,
+      "download": 0,
+      "logs": [
+        "06:23:13  WARN[0000] network: initialize package manager: read packages list: open /data/system/packages.xml: permission denied",
+        "06:23:13  WARN[0000] legacy `download_detour` remote rule-set option is deprecated in sing-box 1.14.0 and will be removed in sing-box 1.16.0.",
+        "06:23:13  INFO[0000] outbound/direct[DIRECT]: outbound connection to 127.0.0.1:4273",
+        "06:23:21  ERROR 启动失败 · 启动 sing-box：内核控制接口启动超时",
+        "06:23:21  连接已关闭"
+      ]
+    },
+    "requests": [
+      "/slow.json"
+    ]
+  }
+}

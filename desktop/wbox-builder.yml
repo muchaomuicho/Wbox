@@ -1,0 +1,28 @@
+appId: org.wbox.desktop
+productName: Wbox
+executableName: Wbox
+electronVersion: 43.7.7
+electronDist: node_modules/electron/dist
+npmRebuild: false
+asar: true
+electronLanguages: [en-US, zh-CN, zh-TW]
+directories:
+  output: ../windows/desktop-publish
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: ../windows/backend-publish
+    to: backend
+    filter: ["**/*", "!**/*.pdb"]
+  - from: ../resources/wbox.ico
+    to: wbox.ico
+  - from: LICENSE
+    to: licenses/sing-box-for-desktop-LICENSE
+  - from: dashboard/LICENSE
+    to: licenses/sing-box-dashboard-LICENSE
+  - from: dashboard/vendor/iterm2-color-schemes/LICENSE
+    to: licenses/iTerm2-Color-Schemes-LICENSE
+win:
+  icon: ../resources/wbox.ico
+  target: dir

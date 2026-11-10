@@ -1,0 +1,22 @@
+{
+  "checks": [
+    "Manual launch opens a window even with silent login enabled",
+    "Disconnected tabs preserve config declaration order",
+    "Browsing proxies does not start the core",
+    "Offline core resolves nested group to measured HTTP latency",
+    "Failed node is Timeout, never 0 ms",
+    "Offline test leaves connection stopped",
+    "Temporary core directory is released after testing",
+    "TUN, DNS listener and source config are not modified by offline testing",
+    "Tabs switch the visible proxy group",
+    "Changing test URL clears previous results",
+    "Cancel leaves no active connection",
+    "Sing-box nested groups keep configuration order while disconnected",
+    "Sing-box failed nested-node tests return Timeout and leave connection stopped",
+    "Both cores release temporary files after completion and cancellation",
+    "Close releases main window into tray",
+    "Existing tray instance can reopen the main window",
+    "No renderer exceptions"
+  ],
+  "errors": []
+}

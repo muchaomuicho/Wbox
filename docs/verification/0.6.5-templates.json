@@ -1,0 +1,15 @@
+{
+  "snapshotDate": "2026-11-02",
+  "ruleSets": 26,
+  "singBox": 13,
+  "mihomo": 13,
+  "totalBytes": 4649197,
+  "remoteConfigRuleUrlsMatchedJsonTemplate": true,
+  "originalNodeFieldsAbsent": true,
+  "checks": [
+    "Original proxy entries, credentials and node-specific domain/address rules removed from both templates",
+    "Only current node and same-subscription explicit dependencies injected",
+    "Exact remote rule URL/format/behavior matches use verified local snapshots",
+    "Unknown custom URLs and stored source configurations preserved"
+  ]
+}

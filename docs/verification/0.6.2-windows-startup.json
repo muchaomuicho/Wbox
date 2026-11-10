@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "35-second remote rule startup succeeds",
+    "Add remote config, edit and update during connection preserve core, selection, uptime and traffic",
+    "Cached rules avoid repeat download on reconnect",
+    "Stop remains responsive during startup and joins cancellation",
+    "Actual core failure reports diagnostic immediately"
+  ],
+  "slowSeconds": 35.95299999997951,
+  "cancelSeconds": 5.077999999979511
+}

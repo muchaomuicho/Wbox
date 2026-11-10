@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "failure": null,
+  "checks": [
+    "Workspace selector has only balanced 12 px padding",
+    "New subscriptions have independent manual schedules",
+    "Per-subscription editor saves name, URL, switch and minutes",
+    "Automatic refresh fetches only the enabled due source",
+    "Repeated timer tick respects each source interval",
+    "Windows untested nodes show no placeholder",
+    "Modified sing-box HTTPS test excludes 300 ms proxy setup and TLS handshake",
+    "Connection details open at the top",
+    "Statistics refresh preserves the user scroll position",
+    "Reopening a connection resets the scroll position",
+    "Opening the tray shows only the root menu",
+    "Reopening the preloaded tray clears expanded groups",
+    "No renderer errors"
+  ],
+  "timing": {
+    "singboxHttpsMs": [
+      80,
+      80
+    ]
+  },
+  "errors": [],
+  "packaged": true
+}

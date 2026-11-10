@@ -1,0 +1,47 @@
+.wbox-controls { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.wbox-workspace-picker .select { width:auto; padding-inline:12px; }
+.wbox-workspace-picker .select-value { flex:initial; }
+.wbox-controls input { flex:1; min-width:0; }
+.wbox-row { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
+.wbox-row:last-child { border-bottom:0; }
+.wbox-row-main { display:flex; align-items:center; gap:12px; flex:1; min-width:0; text-align:start; background:transparent; color:var(--text); border:0; padding:0; cursor:pointer; font:inherit; }
+.wbox-row-main strong { font-weight:500; overflow-wrap:anywhere; }
+.wbox-row small,.wbox-grow small { display:block; color:var(--text-secondary); font-size:12px; margin-top:5px; }
+.wbox-grow { flex:1; min-width:0; overflow-wrap:anywhere; }
+.wbox-hint { font-size:12px; color:var(--text-secondary); line-height:1.7; }
+.wbox-page > .card + .card { margin-top:var(--space-20); }
+.wbox-editor.input { height:auto; min-height:260px; width:100%; padding:12px; resize:vertical; font-family:var(--font-mono); font-size:12px; line-height:1.7; }
+.wbox-editor.compact { min-height:140px; }
+.wbox-table-scroll { overflow:auto; margin:0 -8px; }
+.wbox-node-table { width:100%; border-collapse:collapse; text-align:start; font-size:13px; }
+.wbox-node-table th { color:var(--text-secondary); font-weight:500; font-size:12px; }
+.wbox-node-table th,.wbox-node-table td { padding:11px 10px; text-align:start; white-space:nowrap; border-bottom:1px solid var(--border); }
+.wbox-node-table td:nth-child(2) { max-width:280px; overflow:hidden; text-overflow:ellipsis; }
+.wbox-node-table td:nth-child(4) { max-width:230px; overflow:hidden; text-overflow:ellipsis; color:var(--text-secondary); }
+.wbox-node-table td:last-child { color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+.wbox-node-table tbody tr { cursor:default; }
+.wbox-node-table tbody tr:hover { background:var(--hover); }
+.wbox-node-table tbody tr.selected { background:var(--accent-soft); }
+.wbox-node-table tbody tr:focus-visible { outline:1px solid var(--accent); outline-offset:-1px; }
+.wbox-node-current { width:22px; color:var(--accent-strong); }
+.wbox-node-dialog { width:540px; }
+.wbox-dialog-body { max-height:calc(90vh - 160px); overflow:auto; padding:3px; margin:-3px; }
+.wbox-form-grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; }
+.wbox-advanced { margin-top:16px; }
+.wbox-advanced summary { cursor:pointer; color:var(--text-secondary); padding-bottom:12px; font-size:13px; }
+.wbox-error { color:var(--danger); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.menu-item kbd { margin-inline-start:auto; padding-inline-start:20px; font:inherit; font-size:11px; color:var(--text-faint); }
+.wbox-notice { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:200; padding:12px 20px; color:var(--text); background:var(--card); border:1px solid var(--border); border-radius:var(--radius-control); box-shadow:var(--shadow-overlay); font-size:13px; pointer-events:none; }
+@media (max-width:700px) { .wbox-controls { flex-wrap:wrap; } .wbox-controls input { flex-basis:100%; } }
+.wbox-subscription-url.input { height:auto; padding:10px 12px; resize:vertical; overflow-wrap:anywhere; }
+
+.wbox-subscription-traffic { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; color: var(--text-faint); font-size: var(--text-xs); }
+.wbox-subscription-traffic progress { appearance: none; width: 100%; max-width: 420px; height: 4px; border: 0; border-radius: 2px; overflow: hidden; }
+.wbox-subscription-traffic progress::-webkit-progress-bar { background: var(--accent-soft); }
+.wbox-subscription-traffic progress::-webkit-progress-value { background: var(--accent); }
+.wbox-node-delay { display: inline-flex; align-items: center; justify-content: flex-end; min-width: 32px; min-height: 28px; padding: 3px 5px; color: var(--text-faint); background: transparent; border: 0; border-radius: 0; font-family: inherit; font-size: var(--text-xs); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; cursor: pointer; }
+.wbox-node-delay:hover,.wbox-node-delay:active,.wbox-node-delay:disabled { background: transparent; box-shadow: none; }
+.wbox-node-delay:hover { color: var(--text); }
+.wbox-node-delay:focus-visible { outline: 2px solid var(--accent); }
+.wbox-node-delay:disabled { cursor: default; }
+.wbox-delay-action.icon-button:hover,.wbox-delay-action.icon-button:active { background: transparent; }

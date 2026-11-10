@@ -1,0 +1,30 @@
+{
+  "checks": [
+    "Preloaded tray first open completes within 500 ms",
+    "Windows proxy page uses upstream cards without mobile tabs",
+    "Offline node selection saves without starting a core",
+    "Offline choice is persisted per configuration",
+    "Offline test restores the selected node",
+    "Native unified-delay excludes the 240 ms proxy handshake",
+    "Starting mihomo restores the offline selection",
+    "Connected proxy card switches the live core",
+    "Restart restores the live selection",
+    "Timing adaptation does not overwrite source configuration",
+    "Tray latency digits use the loaded text font at normal width",
+    "Sing-box restores offline selection too",
+    "Sing-box online node selection succeeds",
+    "Background download does not block controller commands",
+    "Scheduled update preserves concurrent profile rename",
+    "Scheduled remote configuration was applied",
+    "Repeated timer tick respects the configured interval",
+    "No renderer exceptions"
+  ],
+  "timing": {
+    "firstTrayMs": 98,
+    "offlineDelayMs": [
+      78,
+      78
+    ]
+  },
+  "errors": []
+}

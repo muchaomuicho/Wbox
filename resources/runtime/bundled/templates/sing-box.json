@@ -1,0 +1,351 @@
+{
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "store_fakeip": true,
+      "store_dns": true
+    }
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "google",
+        "type": "https",
+        "server": "8.8.8.8",
+        "detour": "节点选择"
+      },
+      {
+        "tag": "ali",
+        "type": "https",
+        "server": "223.5.5.5"
+      },
+      {
+        "tag": "fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
+      }
+    ],
+    "rules": [
+      {
+        "clash_mode": "Direct",
+        "server": "ali"
+      },
+      {
+        "clash_mode": "Global",
+        "server": "google"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "server": "fakeip"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "server": "ali"
+      }
+    ]
+  },
+  "inbounds": [],
+  "outbounds": [
+    {
+      "tag": "节点选择",
+      "type": "selector",
+      "outbounds": [
+        "__WBOX_SELECTED__",
+        "直连"
+      ],
+      "default": "__WBOX_SELECTED__",
+      "interrupt_exist_connections": true
+    },
+    {
+      "tag": "Microsoft",
+      "type": "selector",
+      "outbounds": [
+        "直连",
+        "节点选择"
+      ],
+      "default": "直连",
+      "interrupt_exist_connections": true
+    },
+    {
+      "tag": "AI",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "直连"
+      ],
+      "default": "节点选择",
+      "interrupt_exist_connections": true
+    },
+    {
+      "tag": "Steam",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "直连"
+      ],
+      "default": "节点选择",
+      "interrupt_exist_connections": true
+    },
+    {
+      "tag": "Steam Download",
+      "type": "selector",
+      "outbounds": [
+        "直连",
+        "节点选择"
+      ],
+      "default": "直连",
+      "interrupt_exist_connections": true
+    },
+    {
+      "tag": "国内",
+      "type": "selector",
+      "outbounds": [
+        "直连",
+        "节点选择"
+      ],
+      "default": "直连",
+      "interrupt_exist_connections": true
+    },
+    {
+      "tag": "直连",
+      "type": "direct"
+    }
+  ],
+  "route": {
+    "default_domain_resolver": {
+      "server": "ali"
+    },
+    "auto_detect_interface": true,
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "直连"
+      },
+      {
+        "rule_set": "anti-ad",
+        "clash_mode": "Rule",
+        "action": "reject"
+      },
+      {
+        "clash_mode": "Direct",
+        "outbound": "直连"
+      },
+      {
+        "clash_mode": "Global",
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": "geosite-github",
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": [
+          "geoip-google",
+          "geosite-google"
+        ],
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": "geosite-microsoft",
+        "outbound": "Microsoft"
+      },
+      {
+        "domain_suffix": [
+          "steamserver.net",
+          "cm.steampowered.com"
+        ],
+        "outbound": "Steam Download"
+      },
+      {
+        "domain_keyword": [
+          "steampipe",
+          "steamcontent"
+        ],
+        "outbound": "直连"
+      },
+      {
+        "domain_suffix": [
+          "steampipe-kr.akamaized.net",
+          "steampipe-partner.akamaized.net",
+          "steampipe.akamaized.net",
+          "steamcontent.com",
+          "csgo.wmsj.cn",
+          "dota2.wmsj.cn",
+          "wmsjsteam.com",
+          "dl.steam.clngaa.com",
+          "dl.steam.ksyna.com",
+          "st.dl.bscstorage.net",
+          "st.dl.eccdnx.com",
+          "st.dl.pinyuncloud.com",
+          "steampipe.steamcontent.tnkjmec.com",
+          "steampowered.com.8686c.com",
+          "steamstatic.com.8686c.com",
+          "steamchina.com",
+          "qtlglb.com",
+          "queniuqe.com"
+        ],
+        "outbound": "直连"
+      },
+      {
+        "domain": [
+          "steambroadcast.akamaized.net",
+          "steamcdn-a.akamaihd.net",
+          "steamcommunity-a.akamaihd.net",
+          "steampipe.akamaized.net",
+          "steamstore-a.akamaihd.net",
+          "steamusercontent-a.akamaihd.net",
+          "steamuserimages-a.akamaihd.net"
+        ],
+        "outbound": "Steam"
+      },
+      {
+        "domain_suffix": [
+          "fanatical.com",
+          "humblebundle.com",
+          "playartifact.com",
+          "steam-chat.com",
+          "steamcommunity.com",
+          "steamgames.com",
+          "steampowered.com",
+          "steamstat.us",
+          "steamstatic.com",
+          "underlords.com",
+          "valvesoftware.com",
+          "steamusercontent.com"
+        ],
+        "outbound": "Steam"
+      },
+      {
+        "rule_set": [
+          "geoip-telegram",
+          "geosite-telegram"
+        ],
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": [
+          "geoip-twitter",
+          "geosite-twitter"
+        ],
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": "geosite-youtube",
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": "geosite-ai",
+        "outbound": "AI"
+      },
+      {
+        "rule_set": [
+          "geoip-cn",
+          "geosite-cn"
+        ],
+        "outbound": "国内"
+      }
+    ],
+    "rule_set": [
+      {
+        "tag": "anti-ad",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://anti-ad.net/anti-ad-sing-box.srs"
+      },
+      {
+        "tag": "geosite-github",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/github.srs"
+      },
+      {
+        "tag": "geoip-google",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/google.srs"
+      },
+      {
+        "tag": "geosite-google",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/google.srs"
+      },
+      {
+        "tag": "geosite-microsoft",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/microsoft.srs"
+      },
+      {
+        "tag": "geoip-telegram",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/telegram.srs"
+      },
+      {
+        "tag": "geosite-telegram",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/telegram.srs"
+      },
+      {
+        "tag": "geoip-twitter",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/twitter.srs"
+      },
+      {
+        "tag": "geosite-twitter",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/twitter.srs"
+      },
+      {
+        "tag": "geosite-youtube",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/youtube.srs"
+      },
+      {
+        "tag": "geosite-ai",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/category-ai-!cn.srs"
+      },
+      {
+        "tag": "geosite-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/cn.srs"
+      },
+      {
+        "tag": "geoip-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/cn.srs"
+      }
+    ],
+    "default_http_client": "rule-set-client",
+    "final": "节点选择"
+  },
+  "http_clients": [
+    {
+      "tag": "rule-set-client"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "platform": "Android 15 x86_64 emulator, minified debug",
+  "userAgent": "clash.meta/1.19.33",
+  "source": "User-provided subscription; URL, token and nodes omitted",
+  "downloadedCharacters": 41589,
+  "before": {
+    "dependency": "SnakeYAML 2.3",
+    "stage": "parse",
+    "exception": "java.lang.IndexOutOfBoundsException",
+    "frames": ["java.io.StringReader.read", "org.yaml.snakeyaml.reader.StreamReader.update", "com.wbox.app.Profiles.yamlMap"]
+  },
+  "after": {"dependency": "SnakeYAML 2.4", "importSucceeded": true, "core": "mihomo"},
+  "upstreamFix": "StreamReader.update reserves one buffer character for the low surrogate",
+  "syntheticRegressionOffsets": [1023, 2047, 3071, 4095]
+}

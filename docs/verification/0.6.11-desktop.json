@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "failure": null,
+  "checks": [
+    "Remote import preserves subscription traffic and expiry headers",
+    "Configuration card renders quota and progress",
+    "Subscription editor also displays quota",
+    "Manual refresh replaces quota counters",
+    "Failed refresh preserves previous traffic",
+    "Successful response without a header clears stale traffic",
+    "Clicking B lightning tests only B",
+    "Single test shows a pending spinner",
+    "Hovered pending latency control has a transparent background",
+    "Latency click does not change selected node",
+    "Delay uses the upstream configuration workspace small typography",
+    "Measured delay remains clickable for a single-node retry",
+    "Nested group latency tests only its selected leaf",
+    "Connected single test preserves current connection",
+    "Node workspace has its own node list instead of a synthetic Selector page",
+    "Node-library lightning measures one node without selecting it",
+    "mihomo activation forwards through Node1 only",
+    "mihomo activation forwards through Node0 only",
+    "sing-box activation forwards through Node1 only",
+    "sing-box activation forwards through Node0 only",
+    "Node subscriptions also retain traffic headers",
+    "No renderer errors"
+  ],
+  "errors": [],
+  "packaged": true
+}

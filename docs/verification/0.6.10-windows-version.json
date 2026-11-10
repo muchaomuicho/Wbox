@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "version": "0.6.10",
+  "checks": [
+    "Packaged app version",
+    "Sidebar version",
+    "Settings version"
+  ]
+}

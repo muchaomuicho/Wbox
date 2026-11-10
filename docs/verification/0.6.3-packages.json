@@ -1,0 +1,13 @@
+{
+  "version": "0.6.3",
+  "checks": [
+    "APK includes only ARM64 native libraries",
+    "APK includes both cores and native tunnel",
+    "Release APK has no emulator diagnostic receiver",
+    "Both packages contain verified geoip.metadb",
+    "Both packages contain verified GeoSite.dat",
+    "Both packages contain verified GeoIP.dat",
+    "Release version matches and debuggable flag is absent",
+    "APK retains the existing release signing certificate"
+  ]
+}

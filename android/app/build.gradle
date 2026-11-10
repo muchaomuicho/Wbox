@@ -1,0 +1,78 @@
+plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+android {
+    namespace 'com.wbox.app'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'com.wbox.app'
+        minSdk 26
+        targetSdk 34
+        versionCode 19
+        versionName '0.6.11'
+        ndk { abiFilters(project.findProperty('wboxTestAbi') ?: 'arm64-v8a') }
+    }
+    signingConfigs {
+        release {
+            storeFile file('../../signing/wbox-release.jks')
+            storePassword System.getenv('WBOX_KEYSTORE_PASSWORD') ?: ''
+            keyAlias 'wbox'
+            keyPassword System.getenv('WBOX_KEYSTORE_PASSWORD') ?: ''
+        }
+    }
+    buildTypes {
+        debug {
+            minifyEnabled project.hasProperty('wboxMinifyDebug')
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions { coreLibraryDesugaringEnabled true; sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    kotlinOptions { jvmTarget = '17' }
+    buildFeatures { compose true }
+    composeOptions { kotlinCompilerExtensionVersion '1.5.14' }
+    sourceSets {
+        main { jniLibs.srcDirs = ['../../resources/cores/android']; assets.srcDirs = ['../../resources/cores/licenses',"$buildDir/generated/wboxGeodata","$buildDir/generated/wboxRuntime"] }
+        test { resources.srcDirs += ['../../resources/runtime'] }
+        debug { jniLibs.srcDirs += ['../../.tools/android-test-cores'] }
+    }
+    packagingOptions { jniLibs { useLegacyPackaging true; keepDebugSymbols += ['**/libmihomo.so', '**/libsingbox.so'] } }
+    testOptions { unitTests.includeAndroidResources = true; unitTests.all { systemProperty 'wbox.root', rootProject.projectDir.parentFile.absolutePath } }
+}
+def prepareGeodata = tasks.register('prepareGeodata', Exec) {
+    inputs.dir '../../resources/geodata'
+    inputs.file '../../tools/compress-geodata.py'
+    outputs.dir "$buildDir/generated/wboxGeodata"
+    commandLine 'python', '../../tools/compress-geodata.py', "$buildDir/generated/wboxGeodata"
+}
+tasks.named('preBuild').configure { dependsOn prepareGeodata }
+def prepareRuntimeAssets = tasks.register('prepareRuntimeAssets', Sync) {
+    from '../../resources/runtime'
+    exclude 'bundled/rules/mihomo-anti-ad.yaml'
+    into "$buildDir/generated/wboxRuntime"
+}
+tasks.named('preBuild').configure { dependsOn prepareRuntimeAssets }
+if (project.hasProperty('wboxTestAbi') && gradle.startParameter.taskNames.any { it.toLowerCase().contains('release') }) {
+    throw new GradleException('wboxTestAbi is for emulator debug builds only; releases must be ARM64.')
+}
+dependencies {
+    implementation platform('androidx.compose:compose-bom:2024.06.00')
+    implementation 'androidx.activity:activity-compose:1.9.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.3'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material:material-icons-extended'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    testImplementation platform('androidx.compose:compose-bom:2024.06.00')
+    testImplementation 'androidx.compose.ui:ui-test-junit4'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+    implementation 'org.yaml:snakeyaml:2.4'
+    implementation 'org.tukaani:xz:1.10'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
+    testImplementation 'org.robolectric:robolectric:4.14.1'
+}

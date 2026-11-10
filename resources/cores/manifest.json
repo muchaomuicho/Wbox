@@ -1,0 +1,70 @@
+{
+  "mihomoVersion": "1.19.33",
+  "singboxVersion": "1.14.4-wbox.1",
+  "architectureWindows": "amd64",
+  "architectureAndroid": "arm64-v8a",
+  "sourceMihomo": "https://github.com/MetaCubeX/mihomo/tree/v1.19.33",
+  "sourceSingbox": "https://github.com/SagerNet/sing-box/tree/v1.14.4",
+  "officialReleaseAssets": [
+    {
+      "sha256": "7aaf636a4f2172dcd8ec34ac4f52797b059195e5afd6409508c963e545f8864d",
+      "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.33/mihomo-windows-amd64-compatible-v1.19.33.zip",
+      "archive": "mihomo-windows.zip"
+    },
+    {
+      "sha256": "2ddbd3aaa884f52b4568f406876ec81dddeef9f1bb67b90d4004d356e2c6a708",
+      "url": "https://github.com/MetaCubeX/mihomo/releases/download/v1.19.33/mihomo-android-arm64-v8-v1.19.33.gz",
+      "archive": "mihomo-android.gz"
+    },
+    {
+      "sha256": "99185d75d314a07dbba4a130c8ad986cbeb629a07927975636b341ca61f991df",
+      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.4/sing-box-1.14.4-windows-amd64.zip",
+      "archive": "singbox-windows.zip"
+    },
+    {
+      "sha256": "fb3a6c5197f4044f82c8fd75e01ce14c28b6abdd4c3df84bb987d41a962a320f",
+      "url": "https://github.com/SagerNet/sing-box/releases/download/v1.14.4/sing-box-1.14.4-android-arm64.tar.gz",
+      "archive": "singbox-android.tgz"
+    }
+  ],
+  "files": [
+    {
+      "path": "windows/libcronet.dll",
+      "size": 9529344,
+      "sha256": "3217c6260fbca5f16072e0b79735742f40109a63bb0ff88fd6b96dd6b54a2928"
+    },
+    {
+      "path": "windows/mihomo.exe",
+      "size": 61304320,
+      "sha256": "926bfea2ce48a247d6a7ce4cf641980e416202d5e40fe4ee5c949089ace0e197"
+    },
+    {
+      "path": "windows/sing-box.exe",
+      "size": 82099712,
+      "sha256": "0f94bf583425241d6bbd5f938c008a1ccb0a4cbc39e7bb3edb5f2ad589d1df44"
+    },
+    {
+      "path": "android/arm64-v8a/libmihomo.so",
+      "size": 64075448,
+      "sha256": "cfa0be78846bfef7272fe5a73089f8cf0e1f15a6ffb601f5cc809f457f712f67"
+    },
+    {
+      "path": "android/arm64-v8a/libsingbox.so",
+      "size": 83177664,
+      "sha256": "14ef442f41cb9b94975cdbc63ccfaf99e86cbeea8ac86238a00dba63f46fd2b6"
+    },
+    {
+      "path": "android/arm64-v8a/libwboxtun.so",
+      "size": 241208,
+      "sha256": "d01495a76f9f8bf368854e72d22d29ef2bcee3d2c4482cbb1725adb5391d1641"
+    }
+  ],
+  "singboxBuild": {
+    "baseVersion": "1.14.4",
+    "baseCommit": "c005f35300ce76427dc285481ec5695f5b179cd2",
+    "goVersion": "1.25.5",
+    "patchDirectory": "native/singbox",
+    "buildScript": "tools/native/build-singbox.ps1",
+    "unifiedDelay": true
+  }
+}

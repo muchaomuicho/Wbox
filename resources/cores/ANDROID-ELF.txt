@@ -1,0 +1,243 @@
+=== libmihomo.so ===
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Shared object file)
+  Machine:                           AArch64
+  Version:                           0x1
+  Entry point address:               0x1A335E0
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          64073464 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         12
+  Size of section headers:           64 (bytes)
+  Number of section headers:         31
+  Section header string table index: 30
+
+Elf file type is DYN (Shared object file)
+Entry point 0x1a335e0
+There are 12 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x0002a0 0x0002a0 R   0x8
+  INTERP         0x0002e0 0x00000000000002e0 0x00000000000002e0 0x000015 0x000015 R   0x1
+      [Requesting program interpreter: /system/bin/linker64]
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x1a2f5dc 0x1a2f5dc R   0x4000
+  LOAD           0x1a2f5e0 0x0000000001a335e0 0x0000000001a335e0 0x142a6a0 0x142a6a0 R E 0x4000
+  LOAD           0x2e59c80 0x0000000002e61c80 0x0000000002e61c80 0x7087f8 0x709380 RW  0x4000
+  LOAD           0x3562480 0x000000000356e480 0x000000000356e480 0x7b8801 0x2e519e0 RW  0x4000
+  TLS            0x2e59c80 0x0000000002e61c80 0x0000000002e61c80 0x000000 0x000000 R   0x40
+  DYNAMIC        0x35620e8 0x000000000356a0e8 0x000000000356a0e8 0x000170 0x000170 RW  0x8
+  GNU_RELRO      0x2e59c80 0x0000000002e61c80 0x0000000002e61c80 0x7087f8 0x709380 R   0x1
+  GNU_EH_FRAME   0x1a2eba4 0x0000000001a2eba4 0x0000000001a2eba4 0x0001bc 0x0001bc R   0x4
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x0
+  NOTE           0x0002f8 0x00000000000002f8 0x00000000000002f8 0x000098 0x000098 R   0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .interp 
+   02     .interp .note.android.ident .dynsym .gnu.version .gnu.version_r .gnu.hash .dynstr .rela.dyn .rela.plt .rodata .gopclntab .eh_frame_hdr .eh_frame 
+   03     .text .plt 
+   04     .tdata .data.rel.ro .dynamic .got .got.plt .relro_padding 
+   05     .data .go.buildinfo .go.fipsinfo .go.module .noptrdata .bss .noptrbss 
+   06     
+   07     .dynamic 
+   08     .tdata .data.rel.ro .dynamic .got .got.plt .relro_padding 
+   09     .eh_frame_hdr 
+   10     
+   11     .note.android.ident 
+   None   .comment .shstrtab 
+Dynamic section at offset 0x35620e8 contains 23 entries:
+  Tag                Type         Name/Value
+  0x0000000000000001 (NEEDED)     Shared library: [liblog.so]
+  0x0000000000000001 (NEEDED)     Shared library: [libdl.so]
+  0x0000000000000001 (NEEDED)     Shared library: [libc.so]
+  0x000000000000001e (FLAGS)      BIND_NOW 
+  0x000000006ffffffb (FLAGS_1)    NOW PIE 
+  0x0000000000000015 (DEBUG)      0x0
+  0x0000000000000007 (RELA)       0xd98
+  0x0000000000000008 (RELASZ)     6992112 (bytes)
+  0x0000000000000009 (RELAENT)    24 (bytes)
+  0x000000006ffffff9 (RELACOUNT)  291337
+  0x0000000000000017 (JMPREL)     0x6abe88
+  0x0000000000000002 (PLTRELSZ)   1392 (bytes)
+  0x0000000000000003 (PLTGOT)     0x356a290
+  0x0000000000000014 (PLTREL)     RELA
+  0x0000000000000006 (SYMTAB)     0x390
+  0x000000000000000b (SYMENT)     24 (bytes)
+  0x0000000000000005 (STRTAB)     0xa7c
+  0x000000000000000a (STRSZ)      794 (bytes)
+  0x000000006ffffef5 (GNU_HASH)   0xa50
+  0x000000006ffffff0 (VERSYM)     0x990
+  0x000000006ffffffe (VERNEED)    0xa10
+  0x000000006fffffff (VERNEEDNUM) 2
+  0x0000000000000000 (NULL)       0x0
+
+=== libsingbox.so ===
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Shared object file)
+  Machine:                           AArch64
+  Version:                           0x1
+  Entry point address:               0xE206F0
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          83175872 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         11
+  Size of section headers:           64 (bytes)
+  Number of section headers:         28
+  Section header string table index: 27
+
+Elf file type is DYN (Shared object file)
+Entry point 0xe206f0
+There are 11 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x000268 0x000268 R   0x8
+  INTERP         0x0002a8 0x00000000000002a8 0x00000000000002a8 0x000015 0x000015 R   0x1
+      [Requesting program interpreter: /system/bin/linker64]
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0xe1c6e8 0xe1c6e8 R   0x4000
+  LOAD           0xe1c6f0 0x0000000000e206f0 0x0000000000e206f0 0x1d52c70 0x1d52c70 R E 0x4000
+  LOAD           0x2b6f360 0x0000000002b77360 0x0000000002b77360 0x22ce978 0x22ceca0 RW  0x4000
+  LOAD           0x4e3dce0 0x0000000004e49ce0 0x0000000004e49ce0 0x114a61 0x395e20 RW  0x4000
+  DYNAMIC        0x4e3d948 0x0000000004e45948 0x0000000004e45948 0x000170 0x000170 RW  0x8
+  GNU_RELRO      0x2b6f360 0x0000000002b77360 0x0000000002b77360 0x22ce978 0x22ceca0 R   0x1
+  GNU_EH_FRAME   0xe1bc18 0x0000000000e1bc18 0x0000000000e1bc18 0x0001c4 0x0001c4 R   0x4
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x0
+  NOTE           0x0002c0 0x00000000000002c0 0x00000000000002c0 0x000098 0x000098 R   0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .interp 
+   02     .interp .note.android.ident .dynsym .gnu.version .gnu.version_r .gnu.hash .dynstr .rela.dyn .rela.plt .rodata .eh_frame_hdr .eh_frame 
+   03     .text .plt 
+   04     .data.rel.ro .dynamic .got .got.plt .relro_padding 
+   05     .data .go.buildinfo .go.fipsinfo .noptrdata .bss .noptrbss 
+   06     .dynamic 
+   07     .data.rel.ro .dynamic .got .got.plt .relro_padding 
+   08     .eh_frame_hdr 
+   09     
+   10     .note.android.ident 
+   None   .comment .shstrtab 
+Dynamic section at offset 0x4e3d948 contains 23 entries:
+  Tag                Type         Name/Value
+  0x0000000000000001 (NEEDED)     Shared library: [liblog.so]
+  0x0000000000000001 (NEEDED)     Shared library: [libdl.so]
+  0x0000000000000001 (NEEDED)     Shared library: [libc.so]
+  0x000000000000001e (FLAGS)      BIND_NOW 
+  0x000000006ffffffb (FLAGS_1)    NOW PIE 
+  0x0000000000000015 (DEBUG)      0x0
+  0x0000000000000007 (RELA)       0x18e0
+  0x0000000000000008 (RELASZ)     8964744 (bytes)
+  0x0000000000000009 (RELAENT)    24 (bytes)
+  0x000000006ffffff9 (RELACOUNT)  373530
+  0x0000000000000017 (JMPREL)     0x88e368
+  0x0000000000000002 (PLTRELSZ)   1392 (bytes)
+  0x0000000000000003 (PLTGOT)     0x4e45af0
+  0x0000000000000014 (PLTREL)     RELA
+  0x0000000000000006 (SYMTAB)     0x358
+  0x000000000000000b (SYMENT)     24 (bytes)
+  0x0000000000000005 (STRTAB)     0x112c
+  0x000000000000000a (STRSZ)      1971 (bytes)
+  0x000000006ffffef5 (GNU_HASH)   0xf80
+  0x000000006ffffff0 (VERSYM)     0xe50
+  0x000000006ffffffe (VERNEED)    0xf3c
+  0x000000006fffffff (VERNEEDNUM) 2
+  0x0000000000000000 (NULL)       0x0
+
+=== libwboxtun.so ===
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Shared object file)
+  Machine:                           AArch64
+  Version:                           0x1
+  Entry point address:               0x0
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          239544 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         9
+  Size of section headers:           64 (bytes)
+  Number of section headers:         26
+  Section header string table index: 25
+
+Elf file type is DYN (Shared object file)
+Entry point 0x0
+There are 9 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  PHDR           0x000040 0x0000000000000040 0x0000000000000040 0x0001f8 0x0001f8 R   0x8
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x039cc0 0x039cc0 R E 0x4000
+  LOAD           0x039cc0 0x000000000003dcc0 0x000000000003dcc0 0x000680 0x002340 RW  0x4000
+  LOAD           0x03a340 0x0000000000042340 0x0000000000042340 0x000208 0x022298 RW  0x4000
+  DYNAMIC        0x039d60 0x000000000003dd60 0x000000000003dd60 0x0001b0 0x0001b0 RW  0x8
+  GNU_RELRO      0x039cc0 0x000000000003dcc0 0x000000000003dcc0 0x000680 0x002340 R   0x1
+  GNU_EH_FRAME   0x005bb0 0x0000000000005bb0 0x0000000000005bb0 0x00117c 0x00117c R   0x4
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x0
+  NOTE           0x000238 0x0000000000000238 0x0000000000000238 0x0000bc 0x0000bc R   0x4
+
+ Section to Segment mapping:
+  Segment Sections...
+   00     
+   01     .note.android.ident .note.gnu.build-id .dynsym .gnu.version .gnu.version_r .gnu.hash .dynstr .rela.dyn .rela.plt .rodata .eh_frame_hdr .eh_frame .text .plt 
+   02     .data.rel.ro .fini_array .init_array .dynamic .got .got.plt .relro_padding 
+   03     .data .bss 
+   04     .dynamic 
+   05     .data.rel.ro .fini_array .init_array .dynamic .got .got.plt .relro_padding 
+   06     .eh_frame_hdr 
+   07     
+   08     .note.android.ident .note.gnu.build-id 
+   None   .comment .shstrtab 
+Dynamic section at offset 0x39d60 contains 27 entries:
+  Tag                Type           Name/Value
+  0x0000000000000001 (NEEDED)       Shared library: [libc.so]
+  0x0000000000000001 (NEEDED)       Shared library: [libm.so]
+  0x0000000000000001 (NEEDED)       Shared library: [libdl.so]
+  0x000000000000000e (SONAME)       Library soname: [libwboxtun.so]
+  0x000000000000001e (FLAGS)        BIND_NOW 
+  0x000000006ffffffb (FLAGS_1)      NOW 
+  0x0000000000000007 (RELA)         0x12b8
+  0x0000000000000008 (RELASZ)       1296 (bytes)
+  0x0000000000000009 (RELAENT)      24 (bytes)
+  0x000000006ffffff9 (RELACOUNT)    53
+  0x0000000000000017 (JMPREL)       0x17c8
+  0x0000000000000002 (PLTRELSZ)     2424 (bytes)
+  0x0000000000000003 (PLTGOT)       0x3e000
+  0x0000000000000014 (PLTREL)       RELA
+  0x0000000000000006 (SYMTAB)       0x2f8
+  0x000000000000000b (SYMENT)       24 (bytes)
+  0x0000000000000005 (STRTAB)       0xe24
+  0x000000000000000a (STRSZ)        1170 (bytes)
+  0x000000006ffffef5 (GNU_HASH)     0xdf8
+  0x0000000000000019 (INIT_ARRAY)   0x3dd50
+  0x000000000000001b (INIT_ARRAYSZ) 16 (bytes)
+  0x000000000000001a (FINI_ARRAY)   0x3dd40
+  0x000000000000001c (FINI_ARRAYSZ) 16 (bytes)
+  0x000000006ffffff0 (VERSYM)       0xd00
+  0x000000006ffffffe (VERNEED)      0xdd8
+  0x000000006fffffff (VERNEEDNUM)   1
+  0x0000000000000000 (NULL)         0x0

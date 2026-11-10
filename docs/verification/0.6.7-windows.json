@@ -1,0 +1,9 @@
+{
+  "baseChecksPassed": 102,
+  "forwardingChecksPassed": 14,
+  "geodataChecksPassed": 13,
+  "buildWarnings": "Existing trim analysis warnings; application and YamlDotNet remain rooted.",
+  "packagedUiEvidence": "0.6.7-desktop-proxies.json",
+  "silentStartupEvidence": "0.6.7-silent-startup.json",
+  "actualRebootTested": false
+}
