@@ -1,5 +1,5 @@
 import type { DesktopHost } from '@dashboard/app/desktop';
-import { transport, call } from './transport';
+import { createTransport, call } from './transport';
 
 const listeners = new Set<(key: string) => void>();
 const noopSubscribe = () => () => {};
@@ -9,7 +9,7 @@ export function createDesktopHost(trayMode = false): DesktopHost {
   // Native windows/daemon installation from upstream is deliberately isolated:
   // Wbox owns its process and never connects to the user's sing-box service.
   return {
-    platform: 'win32', appVersion: async () => '0.6.11', transport,
+    platform: 'win32', appVersion: async () => '0.7.0', transport: createTransport(trayMode),
     preferences: { get: (key: string) => { try { return JSON.parse(localStorage.getItem('wbox.'+key) || 'null'); } catch { return null; } }, set: (key: string, value: unknown) => { localStorage.setItem('wbox.'+key, JSON.stringify(value)); listeners.forEach(l => l(key)); }, remove: (key: string) => { localStorage.removeItem('wbox.'+key); listeners.forEach(l => l(key)); }, subscribe: (listener: (key: string) => void) => { listeners.add(listener); const changed = (event: StorageEvent) => { if (event.key?.startsWith('wbox.')) listener(event.key.slice(5)); }; window.addEventListener('storage', changed); return () => { listeners.delete(listener); window.removeEventListener('storage', changed); }; } },
     daemon: { getState: async () => { await call('service'); return { phase: 'connected' }; }, onStateChanged: noopSubscribe, retryConnection() {} },
     service: { start: () => call('start'), stop: () => call('stop'), takeOver: unsupported },

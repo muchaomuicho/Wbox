@@ -23,15 +23,18 @@ string groupContext = "";
 string groupTestError = "";
 string GroupContext() => $"{coreGeneration}|{prefs.Mode}|{prefs.Core}|{prefs.ConfigPath}|{(File.Exists(prefs.ConfigPath)?File.GetLastWriteTimeUtc(prefs.ConfigPath).Ticks:0)}|{prefs.DelayUrl}";
 void CheckGroupContext() {var key=GroupContext();if(key!=groupContext){groupContext=key;groupDelays.Clear();probeGroups=null;}}
-async Task<List<GroupItem>> Groups() {
+async Task<List<GroupItem>> Groups(bool tray=false) {
     CheckGroupContext();
-    var groups=prefs.Mode=="nodes"?ProxyCatalog.Offline(prefs):core.Ready?await core.GroupsAsync():probeGroups??ProxyCatalog.Offline(prefs);
+    var groups=tray&&core.Ready?await core.GroupsAsync():prefs.Mode=="nodes"?ProxyCatalog.Offline(prefs):core.Ready?await core.GroupsAsync():probeGroups??ProxyCatalog.Offline(prefs);
+    var active=prefs.Mode=="nodes"?prefs.Nodes.ElementAtOrDefault(prefs.SelectedNode):null;
+    var activeTag=active==null?null:ConfigBuilder.Tag(active,prefs.SelectedNode);
     return groups.Select(g=>g with {Details=g.Details.Select(n=>{
         string leaf;try{leaf=ProxyCatalog.Resolve(groups,n.Name);}catch{leaf=n.Name;}
+        if(active!=null&&leaf==activeTag)return n with {Delay=int.TryParse(active.DelayText.Split(' ')[0],out var ms)?ms:active.DelayText is "timeout" or "Timeout" or "失败"?0:null};
         return groupDelays.TryGetValue(leaf,out var value)?n with {Delay=value}:n with {Delay=prefs.Mode=="nodes"?n.Delay:null};
     }).ToList()}).ToList();
 }
-async Task TestGroup(Preferences snapshot,string tag,string context,CancellationToken token,bool expand=true) {
+async Task TestGroup(Preferences snapshot,string tag,string context,CancellationToken token,bool expand=true,bool all=false) {
     using var tester=new CoreManager(()=>true);
     try {
         var target=core;
@@ -44,14 +47,22 @@ async Task TestGroup(Preferences snapshot,string tag,string context,Cancellation
         var groups=await target.GroupsAsync();
         if(context==GroupContext() && target==tester)probeGroups=groups;
         var group=groups.FirstOrDefault(g=>g.Name==tag);
-        var names=(expand ? group?.Nodes ?? [tag] : [tag]).Select(n=>ProxyCatalog.Resolve(groups,n)).Distinct().ToArray();
+        IEnumerable<string> requested=all?groups.Where(g=>g.Selectable).SelectMany(g=>g.Nodes):expand ? group?.Nodes ?? [tag] : [tag];
+        var names=requested.Select(n=>ProxyCatalog.Resolve(groups,n)).Distinct().ToArray();
         Write(new{changed=true});
         await Parallel.ForEachAsync(names,new ParallelOptions{MaxDegreeOfParallelism=4,CancellationToken=token},async(name,ct)=>{
             int value;
             try {value=await target.DelayAsync(name,snapshot.DelayUrl,ct);}
             catch(OperationCanceledException) when(ct.IsCancellationRequested){return;}
             catch{value=0;}
-            if(context==GroupContext()){groupDelays[name]=value;Write(new{changed=true});}
+            if(context==GroupContext()){
+                groupDelays[name]=value;
+                if(prefs.Mode=="nodes") {
+                    var index=prefs.Nodes.FindIndex(n=>ConfigBuilder.Tag(n,prefs.Nodes.IndexOf(n))==name);
+                    if(index>=0)prefs.Nodes[index].DelayText=value>0?$"{value} ms":"timeout";
+                }
+                Write(new{changed=true});
+            }
         });
     }catch(OperationCanceledException) when(token.IsCancellationRequested){}
     catch(Exception error){Log("ERROR 代理组测速失败："+error.Message);groupTestError=error.Message;}
@@ -119,7 +130,7 @@ async Task TestNodes(Preferences test, NodeRecord[] records, long generation, Ca
                     result=(await tester.DelayAsync(ConfigBuilder.Tag(records[i],i),test.DelayUrl,token))+" ms";
                 }
             } catch (OperationCanceledException) when (token.IsCancellationRequested) { return; }
-            catch { result="失败"; }
+            catch { result="timeout"; }
             if(generation==coreGeneration && prefs.Nodes.Contains(records[i])) {records[i].DelayText=result;Write(new {changed=true});}
         });
     } catch(OperationCanceledException) { }
@@ -155,6 +166,7 @@ async Task<object?> Handle(string method, JsonElement a) {
         case "clearLogs": logs.Clear(); return null;
         case "stats": return core.Ready ? await core.StatsAsync(false) : null;
         case "groups": return await Groups();
+        case "trayGroups": return await Groups(true);
         case "cancelTest": nodeTestCancellation.Cancel();return null;
         case "testOne": {
             if(delayTesting)throw new InvalidOperationException("正在测速，请稍候。");
@@ -172,32 +184,39 @@ async Task<object?> Handle(string method, JsonElement a) {
             }
             Write(new{changed=true});return null;
         }
+        case "trayTestGroup":
         case "testGroup": {
             if(delayTesting)return null;
-            if(prefs.Mode=="nodes")return await Handle("delayNodes",a);
+            if(method=="trayTestGroup"&&!core.Ready)throw new InvalidOperationException("请先连接，再测试托盘中的运行组。");
+            if(method=="testGroup"&&prefs.Mode=="nodes")return await Handle("delayNodes",a);
             CheckGroupContext();groupTestError="";
             nodeTestCancellation.Dispose();nodeTestCancellation=new();delayTesting=true;
-            nodeTests=TestGroup(CopyPreferences(),S("tag"),GroupContext(),nodeTestCancellation.Token);
+            nodeTests=TestGroup(CopyPreferences(),S("tag"),GroupContext(),nodeTestCancellation.Token,all:method=="trayTestGroup"&&S("tag")=="");
             Write(new{changed=true});return null;
         }
         case "connections": return core.Ready ? await core.RequestAsync("GET", "/connections") : null;
         case "mode": return core.Ready && prefs.Core=="mihomo" ? await core.RequestAsync("GET", "/configs") : null;
         case "setMode": await core.SetModeAsync(S("mode")); return null;
+        case "traySelect":
         case "select": {
             if(delayTesting) {nodeTestCancellation.Cancel();await nodeTests;}
-            if(prefs.Mode=="nodes") {
+            if(prefs.Mode=="nodes"&&method=="select") {
                 var index=prefs.Nodes.FindIndex(n=>ConfigBuilder.Tag(n,prefs.Nodes.IndexOf(n))==S("node"));
                 if(index<0)throw new ArgumentException("节点不存在。");
                 var next=CopyPreferences();next.SelectedNode=index;await CommitNodes(next);return null;
             }
-            var group=(await Groups()).FirstOrDefault(g=>g.Name==S("group"));
+            if(method=="traySelect"&&!core.Ready)throw new InvalidOperationException("运行组已关闭，请重新连接。");
+            var groups=await Groups(method=="traySelect");
+            var group=groups.FirstOrDefault(g=>g.Name==S("group"));
             if(group==null||!group.Selectable)throw new ArgumentException("该代理组不支持手动选择。");
             if(!group.Nodes.Contains(S("node")))throw new ArgumentException("节点不属于该代理组。");
-            var candidate=(await Groups()).Select(g=>g.Name==group.Name?g with {Selected=S("node")}:g).ToList();
+            var candidate=groups.Select(g=>g.Name==group.Name?g with {Selected=S("node")}:g).ToList();
             ProxyCatalog.Resolve(candidate,group.Name);
             if(core.Ready)await core.SelectAsync(group.Name,S("node"));
-            var profile=prefs.Configs.First(c=>c.Path==prefs.ConfigPath);
-            profile.GroupSelections[group.Name]=S("node");
+            if(prefs.Mode=="nodes") {
+                var active=ConfigBuilder.Tag(prefs.Nodes[prefs.SelectedNode],prefs.SelectedNode);
+                prefs.NodeGroupSelections[$"{prefs.Core}:{group.Name}"]=S("node")==active?NodeTemplate.Selected:S("node");
+            } else prefs.Configs.First(c=>c.Path==prefs.ConfigPath).GroupSelections[group.Name]=S("node");
             if(probeGroups!=null)probeGroups=probeGroups.Select(g=>g.Name==group.Name?g with {Selected=S("node")}:g).ToList();
             Save();return null;
         }
@@ -208,7 +227,7 @@ async Task<object?> Handle(string method, JsonElement a) {
             if (core.Running && prefs.Mode != "nodes") throw new InvalidOperationException("请先停止配置工作区的连接。");
             var test = CopyPreferences(); test.Mode = "nodes"; test.Core = prefs.NodeCore.Length > 0 ? prefs.NodeCore : prefs.Core; test.SystemProxy = false;
             if (test.Core == "sing-box" && !test.DelayUrl.StartsWith("https://")) throw new ArgumentException("sing-box 测速需要 HTTPS 地址。");
-            nodeTestCancellation.Dispose(); nodeTestCancellation = new(); delayTesting = true;
+            groupTestError="";nodeTestCancellation.Dispose(); nodeTestCancellation = new(); delayTesting = true;
             var records = prefs.Nodes.ToArray(); foreach (var n in records) n.DelayText = "测试中";
             nodeTests = TestNodes(test, records, coreGeneration, nodeTestCancellation.Token); Write(new { changed = true });
             return null;
@@ -351,7 +370,7 @@ while ((line = await Console.In.ReadLineAsync()) != null) {
             startTask=ReplyStart(id,arguments.Clone());continue;
         }
         if(method=="stop") {core.CancelStartup();await startTask;}
-        if(!startTask.IsCompleted && method is not ("state" or "service" or "memory" or "logs" or "clearLogs" or "stats" or "groups" or "connections" or "mode" or "profiles" or "trayProfiles" or "readProfile" or "createProfile" or "writeProfile" or "updateProfile" or "renameProfile"))
+        if(!startTask.IsCompleted && method is not ("state" or "service" or "memory" or "logs" or "clearLogs" or "stats" or "groups" or "trayGroups" or "connections" or "mode" or "profiles" or "trayProfiles" or "readProfile" or "createProfile" or "writeProfile" or "updateProfile" or "renameProfile"))
             throw new InvalidOperationException("内核正在启动，请稍候或点击停止取消。");
         // Network tests must not prevent the tray or main window from stopping
         // the service. Only these read-only requests run concurrently.

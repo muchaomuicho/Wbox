@@ -1,0 +1,6 @@
+{
+  "passed": true,
+  "checks": 117,
+  "command": "dotnet run --project windows/Wbox.Tests -c Release",
+  "scope": "Configuration, subscription, node isolation and lifecycle checks. Live tray and dual-core forwarding are covered separately by regressions-070.mjs."
+}

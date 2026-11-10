@@ -15,7 +15,7 @@ public static class ProxyCatalog
     {
         if (p.Mode == "nodes") {
             if (p.Nodes.Count == 0) return [];
-            var details = p.Nodes.Select((n,i) => new ProxyNode(ConfigBuilder.Tag(n,i), n.Protocol, int.TryParse(n.DelayText.Split(' ')[0],out var ms)?ms:n.DelayText=="失败"?0:null)).ToList();
+            var details = p.Nodes.Select((n,i) => new ProxyNode(ConfigBuilder.Tag(n,i), n.Protocol, int.TryParse(n.DelayText.Split(' ')[0],out var ms)?ms:n.DelayText is "失败" or "timeout" or "Timeout"?0:null)).ToList();
             return [new("节点", ConfigBuilder.Tag(p.Nodes[Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1)],Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1)), details.Select(n=>n.Name).ToList(), true) { Details=details }];
         }
         if (!File.Exists(p.ConfigPath)) return [];

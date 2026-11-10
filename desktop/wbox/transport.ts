@@ -15,21 +15,21 @@ function connection(c: any) {
   const parts = String(m.type || '').split('/');
   return { id: c.id, inbound: m.inboundName || parts.slice(1).join('/') || '本地代理', inboundType: parts[0], ipVersion: String(m.destinationIP || '').includes(':') ? 6 : 4, network: m.network || 'tcp', source: `${m.sourceIP || ''}:${m.sourcePort || ''}`, destination: `${m.destinationIP || m.host || ''}:${m.destinationPort || ''}`, domain: m.host || '', protocol: m.sniffHost || '', createdAt: Date.parse(c.start) || Date.now(), uplinkTotal: c.upload || 0, downlinkTotal: c.download || 0, rule: [c.rule, c.rulePayload].filter(Boolean).join(' · '), outbound: c.chains?.[0] || '', chainList: c.chains || [], processInfo: { processId: m.pid || 0, processPath: m.processPath || m.process || '' } };
 }
-async function unary(name: string, input: any): Promise<any> {
+async function unary(name: string, input: any, tray: boolean): Promise<any> {
   switch (name) {
-    case 'GetVersion': return { version: '0.6.11', apiVersion: 1 };
+    case 'GetVersion': return { version: '0.7.0', apiVersion: 1 };
     case 'GetStartedAt': return { startedAt: (await call('service')).startedAt };
     case 'GetDefaultLogLevel': return { level: 4 };
     case 'GetDeprecatedWarnings': return { warnings: [] };
     case 'GetClashModeStatus': { const c = await call('mode'); return { modeList: c ? ['rule','global','direct'] : [], currentMode: c?.mode || 'rule' }; }
     case 'SetClashMode': await call('setMode', { mode: input.mode }); break;
-    case 'SelectOutbound': await call('select', { group: input.groupTag, node: input.outboundTag }); break;
+    case 'SelectOutbound': await call(tray?'traySelect':'select', { group: input.groupTag, node: input.outboundTag }); break;
     case 'SetGroupExpand': expanded.set(input.groupTag, input.isExpand); break;
     case 'CloseConnection': await call('close', { id: input.id }); break;
     case 'CloseAllConnections': await call('close'); break;
     case 'ClearLogs': await call('clearLogs'); break;
     case 'URLTest': {
-      await call('testGroup',{tag:input.outboundTag});
+      await call(tray?'trayTestGroup':'testGroup',{tag:input.outboundTag});
       let state;do {await pause(200);state=await call('state');}while(state.delayTesting);
       if(state.groupTestError)throw new Error(state.groupTestError);
       break;
@@ -38,7 +38,7 @@ async function unary(name: string, input: any): Promise<any> {
   }
   return {};
 }
-async function* stream(name: string, signal?: AbortSignal): AsyncGenerator<any> {
+async function* stream(name: string, signal: AbortSignal | undefined, tray: boolean): AsyncGenerator<any> {
   let logCursor = -1; let resetLogs = true;
   let previous = new Map<string, any>(); let firstConnections = true;
   while (!signal?.aborted) {
@@ -50,7 +50,7 @@ async function* stream(name: string, signal?: AbortSignal): AsyncGenerator<any> 
     switch (name) {
       case 'SubscribeServiceStatus': { const s = await call('service'); yield { status: s.starting ? 1 : s.running ? 2 : 0 }; break; }
       case 'SubscribeStatus': { const s = await call('stats'); yield s ? { memory: s.coreMemory, connectionsIn: s.inbound, connectionsOut: s.outbound, trafficAvailable: true, uplink: s.uploadRate, downlink: s.downloadRate, uplinkTotal: s.uploaded, downlinkTotal: s.downloaded } : {}; break; }
-      case 'SubscribeGroups': { const groups = await call('groups'); yield { group: groups.map((g: any,index:number) => ({ tag: g.name, type: g.type.toLowerCase(), selected: g.selected, selectable: g.selectable, isExpand: expanded.get(g.name) ?? index===0, items: g.details.map((n: any) => ({tag: n.name, type: n.type.toLowerCase(), urlTestDelay: n.delay ?? 0, urlTestTime: n.delay!=null?1:0})) })) }; break; }
+      case 'SubscribeGroups': { const groups = await call(tray?'trayGroups':'groups'); yield { group: groups.map((g: any,index:number) => ({ tag: g.name, type: g.type.toLowerCase(), selected: g.selected, selectable: g.selectable, isExpand: expanded.get(g.name) ?? index===0, items: g.details.map((n: any) => ({tag: n.name, type: n.type.toLowerCase(), urlTestDelay: n.delay ?? 0, urlTestTime: n.delay!=null?1:0})) })) }; break; }
       case 'SubscribeClashMode': { const s = await call('mode'); yield {mode: s?.mode || 'rule'}; break; }
       case 'SubscribeLog': { const logs = await call('logs'); if (!logs.length && logCursor >= 0) { resetLogs = true; logCursor = -1; } const fresh = logs.filter((l: any) => l.id > logCursor); if (fresh.length || resetLogs) { yield { reset: resetLogs, messages: fresh.map((l: any) => ({level: l.level, message: l.message})) }; resetLogs = false; if (fresh.length) logCursor = fresh[fresh.length-1].id; } break; }
       case 'SubscribeConnections': {
@@ -69,14 +69,14 @@ async function* stream(name: string, signal?: AbortSignal): AsyncGenerator<any> 
     await pause(name === 'SubscribeClashMode' ? 3000 : 1000, signal);
   }
 }
-export const transport: Transport = {
+export function createTransport(tray = false): Transport { return {
   async unary(method, signal, _timeout, _header, input) {
     if (signal?.aborted) throw new ConnectError('Cancelled', Code.Canceled);
-    const result = await unary(method.name, input);
+    const result = await unary(method.name, input, tray);
     return { stream: false, service: method.parent, method, header: new Headers(), trailer: new Headers(), message: fromJson(method.output, result) };
   },
   async stream(method, signal) {
-    async function* messages() { for await (const data of stream(method.name, signal)) { if (signal?.aborted) return; yield fromJson(method.output, data); } }
+    async function* messages() { for await (const data of stream(method.name, signal, tray)) { if (signal?.aborted) return; yield fromJson(method.output, data); } }
     return { stream: true, service: method.parent, method, header: new Headers(), trailer: new Headers(), message: messages() };
   }
-};
+}; }

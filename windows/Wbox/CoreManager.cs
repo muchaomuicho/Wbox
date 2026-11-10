@@ -127,11 +127,15 @@ public sealed class CoreManager : IDisposable
                 var reason = process.HasExited ? $"内核退出（代码 {process.ExitCode}）" : $"内核初始化超过 120 秒，控制接口仍未就绪。{lastProbe}";
                 throw new InvalidOperationException(reason + "。\n" + string.Join("\n", startupLog.TakeLast(8)));
             }
-            var selections=p.Configs.FirstOrDefault(c=>c.Path==p.ConfigPath)?.GroupSelections;
-            if(p.Mode=="config" && selections is {Count:>0}) {
+            var selections=p.Mode=="nodes" && !transient ? p.NodeGroupSelections : p.Mode=="config" ? p.Configs.FirstOrDefault(c=>c.Path==p.ConfigPath)?.GroupSelections : null;
+            if(selections is {Count:>0}) {
                 var available=await GroupsAsync();
-                foreach(var group in available.Where(g=>g.Selectable))
-                    if(selections.TryGetValue(group.Name,out var node)&&group.Nodes.Contains(node))await SelectAsync(group.Name,node);
+                foreach(var group in available.Where(g=>g.Selectable)) {
+                    var key=p.Mode=="nodes"?$"{p.Core}:{group.Name}":group.Name;
+                    if(!selections.TryGetValue(key,out var node))continue;
+                    if(p.Mode=="nodes" && node==NodeTemplate.Selected){var index=Math.Clamp(p.SelectedNode,0,p.Nodes.Count-1);node=ConfigBuilder.Tag(p.Nodes[index],index);}
+                    if(group.Nodes.Contains(node))await SelectAsync(group.Name,node);
+                }
             }
             if (!transient) {
                 if (p.Core == "sing-box") await RequestAsync("PATCH", "/configs", new JsonObject { ["mode"] = "rule" });

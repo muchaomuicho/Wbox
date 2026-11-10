@@ -175,7 +175,7 @@ function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: ()
           <span className={styles.itemTag}>{item.tag}</span>
           <span className={styles.itemMeta}>{proxyDisplayType(item.type)}</span>
         </button>
-        <NodeDelay tag={item.tag} value={item.urlTestDelay>0?`${item.urlTestDelay} ms`:item.urlTestTime>0?'Timeout':undefined}/>
+        <NodeDelay tag={item.tag} value={item.urlTestDelay>0?`${item.urlTestDelay} ms`:item.urlTestTime>0?'timeout':undefined}/>
       </div>
       {menu.element}
     </>

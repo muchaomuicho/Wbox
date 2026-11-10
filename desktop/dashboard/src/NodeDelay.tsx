@@ -21,14 +21,15 @@ export function NodeDelay({tag,value,disabled=false,index}:{tag:string;value?:st
       else {
         const groups=await call('groups');
         const result=groups.flatMap((g:any)=>g.details).find((n:any)=>n.name===tag)?.delay;
-        setMeasured(result==null?null:result>0?`${result} ms`:'Timeout');
+        setMeasured(result==null?null:result>0?`${result} ms`:'timeout');
       }
       api.groups.retryNow();
     }catch(e){showError(e);}finally{setPending(false);}
   };
-  const text=value==='测试中'?'测试中':measured??value;
+  const result=value==='测试中'?'测试中':measured??value;
+  const text=result&&['失败','超时','Timeout','timeout'].includes(result)?'timeout':result;
   const busy=pending||text==='测试中';
-  const tone=text==='Timeout'||text==='超时'?'bad':text&&/^\d+\s*ms$/.test(text)?urlTestDelayTone(Number.parseInt(text)):undefined;
+  const tone=text==='timeout'?'danger':text&&/^\d+\s*ms$/.test(text)?urlTestDelayTone(Number.parseInt(text)):undefined;
   return <button type="button" className="wbox-node-delay" aria-label={`测试节点 ${tag} 的延迟`} title="测试此节点延迟" disabled={disabled||busy}
     onClick={e=>{e.stopPropagation();void test();}} onDoubleClick={e=>e.stopPropagation()} onKeyDown={e=>e.stopPropagation()}>
     {busy?<Spinner/>:!text||text==='未测试'?<Icon name="bolt"/>:<span style={tone?{color:`var(--${tone})`}:undefined}>{text}</span>}

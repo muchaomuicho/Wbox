@@ -456,7 +456,7 @@ function GroupsSubmenu(props: {
         onMouseEnter={props.onClose}
         onClick={() => {
           setTestingAll(true);
-          Promise.all(props.groups.map((group) => props.api.urlTest(group.tag)))
+          props.api.urlTest("")
             .catch(showError)
             .finally(() => setTestingAll(false));
         }}
@@ -570,6 +570,7 @@ function GroupNodes(props: { group: Group; api: DaemonApi; onClose: () => void }
                 {item.urlTestDelay}ms
               </span>
             )}
+            {item.urlTestTime > 0 && item.urlTestDelay <= 0 && <span className={cx(styles.delay, styles.timeout)}>timeout</span>}
           </button>
         ))}
       </div>
@@ -590,6 +591,7 @@ function GroupNodesPlaceholder(props: { group: Group }) {
             <span className={styles.rowIcon} />
             <span className={styles.rowLabel}>{item.tag}</span>
             {item.urlTestDelay > 0 && <span className={styles.delay}>{item.urlTestDelay}ms</span>}
+            {item.urlTestTime > 0 && item.urlTestDelay <= 0 && <span className={styles.delay}>timeout</span>}
           </div>
         ))}
       </div>

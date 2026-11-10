@@ -2,19 +2,21 @@
 
 # Wbox
 
-Wbox 是 Windows / Android 双内核代理客户端。当前版本为 0.6.11。Windows 基于官方 sing-box desktop / dashboard 前端源码改造；Android 使用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与定制 sing-box 1.14.4-wbox.1，品牌图标为黑底白色 W。
+Wbox 是 Windows / Android 双内核代理客户端。当前版本为 0.7.0。Windows 基于官方 sing-box desktop / dashboard 前端源码改造；Android 使用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与定制 sing-box 1.14.4-wbox.1，品牌图标为黑底白色 W。
+
+0.7.0 修正 Windows 托盘交互：左键打开／恢复主界面，右键显示菜单；测速失败显示红色 `timeout`。节点工作区运行时，真实模板策略组仅在托盘中显示，可切换分流、测速和关闭连接，仍只加载当前节点及依赖。Android 功能不变，同步版本号和原签名安装包。见 [0.7.0 发布说明](docs/RELEASE-0.7.0.md)。
 
 0.6.11 恢复独立的单节点工作区：双击或 Enter 连接当前节点，只加载该节点及显式依赖，保留现有分流模板、离线规则、内核测速和界面优化。Windows 支持点击闪电／延迟数值单独测速；Android 的订阅与配置管理集中到独立编辑页。两端显示订阅已用／总量、剩余流量及到期时间，Android 移除 IPv6 开关并默认启用。见 [发布说明](docs/RELEASE-0.6.11.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
 
-[下载最新安装包](https://github.com/muchaomuicho/Wbox/releases/latest) · [0.6.11 发布](https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.11)
+[下载最新安装包](https://github.com/muchaomuicho/Wbox/releases/latest) · [0.7.0 发布](https://github.com/muchaomuicho/Wbox/releases/tag/v0.7.0)
 
 ## 安装与使用
 
 交付文件在 `dist/`：
 
-- `Wbox-0.6.11-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录并进行系统透明压缩。
-- `Wbox-0.6.11-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
-- `Wbox-0.6.11-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
+- `Wbox-0.7.0-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录并进行系统透明压缩。
+- `Wbox-0.7.0-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
+- `Wbox-0.7.0-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
 - `SHA256SUMS.txt`：以上文件的校验值。
 
 默认以 `clash.meta/1.19.33`（mihomo）UA 下载配置与节点订阅，根据返回内容识别内核。
@@ -34,7 +36,7 @@ Windows 0.6.6 在配置／节点卡片内使用 `+` 添加。节点工作区可�
 
 Android 0.6.6 同步卡片内添加、统一订阅地址／节点链接入口、剪贴板导入、节点编辑及测试地址恢复默认；修改节点时仍保持原生界面与列表复用。两端保持同一功能方向，触屏使用长按菜单对应鼠标右键。
 
-Windows 支持开机自启、静默启动、自动连接和托盘菜单；开关在“设置”中保存。关闭主窗口收起到托盘，退出请使用托盘菜单。托盘直接复用官方级联菜单，支持连接开关、代理组与节点选择、配置切换、测速及关闭所有连接。
+Windows 左键单击托盘图标打开／恢复主界面，右键显示托盘菜单。支持开机自启、静默启动、自动连接和托盘菜单；开关在“设置”中保存。关闭主窗口收起到托盘，退出请使用托盘菜单。托盘直接复用官方级联菜单，支持连接开关、代理组与节点选择、配置切换、测速及关闭所有连接。
 
 Windows 默认使用系统代理，只接管遵循 Windows 系统代理设置的应用。默认在运行副本中用 Wbox 受管 mixed 入站替换原配置入站，保留首个 mixed 标签。需要原生入站或全流量接管时，在设置中启用“保留配置中的原生入站”，再以管理员身份运行 Wbox；配置本身需要包含 TUN 入站。受管端口冲突时自动改用空闲端口，原生入站冲突会说明具体端口。停止连接会根据持久备份恢复系统代理；若其它软件已经修改这些设置，Wbox 不覆盖它们。
 
@@ -67,6 +69,8 @@ Android 由 VpnService 管理路由并排除自身 UID；sing-box 运行副本�
 尚未做 Android 真机耗电与低内存设备测试。Android JNI 隧道、mihomo 和本次自编译 sing-box 的 ELF LOAD 均为 16 KiB 对齐，但尚未验证在 16 KiB 页设备上的运行。
 
 ## 验证范围
+
+0.7.0 托盘与双内核运行回归见 `docs/verification/0.7.0-desktop.json` 和 `0.7.0-packaged.json`，覆盖左右键、最小化恢复、真实模板组、分流选择持久化、单节点隔离、批量测速和红色 timeout；发布包校验见 `0.7.0-packages.json`。Android 本轮只同步版本号并重建原签名包。
 
 0.6.11 已通过 Windows 145 项核心检查、双端订阅流量与独立节点工作区交互回归。两种内核均验证了连接单节点、在线切换与实际转发；Android 验证了旧版关闭 IPv6 的设置不再阻止 VPN IPv6 路由。Windows 闪电测速保持当前选择，背景透明，延迟文字沿用配置工作区的 11px 字体。报告见 `docs/verification/0.6.11-*.json`。
 

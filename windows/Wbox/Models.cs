@@ -18,6 +18,7 @@ public sealed class Preferences
     public bool SubscriptionSettingsMigrated { get; set; }
     public List<ConfigProfile> Configs { get; set; } = [];
     public string NodeCore { get; set; } = "";
+    public Dictionary<string, string> NodeGroupSelections { get; set; } = [];
     public string SubscriptionFilter { get; set; } = "";
     public bool SubscriptionAutoUpdate { get; set; }
     public int SubscriptionUpdateMinutes { get; set; } = 360;

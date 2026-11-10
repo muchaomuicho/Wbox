@@ -44,7 +44,7 @@ function startBackend() {
 async function showWindow() {
   trayMenu.hide();
   clearTimeout(releaseTimer);
-  if (window && !window.isDestroyed()) { window.show(); window.focus(); return; }
+  if (window && !window.isDestroyed()) { if(window.isMinimized())window.restore(); window.show(); window.focus(); return; }
   window = new BrowserWindow({ width: 1100, height: 760, minWidth: 800, minHeight: 560, title: 'Wbox', icon: iconPath, show: false, backgroundColor: '#fafafa', titleBarStyle: 'hidden', titleBarOverlay: { color: '#fafafa', symbolColor: '#181818', height: 38 }, webPreferences: { preload: join(import.meta.dirname, '../preload/index.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', event => event.preventDefault());
@@ -60,7 +60,7 @@ async function quit() {
   try { await rpc('stop'); quitting = true; clearTimeout(releaseTimer); trayMenu.destroy(); window?.destroy(); window = null; for (const call of pending.values()) { clearTimeout(call.timer); call.reject(new Error('Wbox 正在退出。')); } pending.clear(); backend.stdin.end(); tray?.destroy(); app.quit(); }
   catch (error) { closing = false; dialog.showErrorBox('系统代理尚未恢复', String(error)); await showWindow(); }
 }
-const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','connections','mode','setMode','select','close','delay','delayNodes','testOne','testGroup','cancelTest','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile','autoUpdate','refreshSubscriptions','editSubscription']);
+const methods = new Set(['state','service','start','stop','logs','clearLogs','stats','groups','trayGroups','traySelect','trayTestGroup','connections','mode','setMode','select','close','delay','delayNodes','testOne','testGroup','cancelTest','proxyStatus','proxy','settings','selectNode','removeNode','removeSubscription','importNodes','importInput','readNode','writeNode','cloneNode','profiles','trayProfiles','traySelectProfile','createProfile','selectProfile','removeProfile','updateProfile','readProfile','writeProfile','renameProfile','autoUpdate','refreshSubscriptions','editSubscription']);
 async function registerStartup(autoStart: boolean, silent: boolean) {
   if (app.isPackaged && !process.env.WBOX_DATA_DIR)
     await rpc('startup', { executable: process.execPath, enabled: autoStart, silent });
@@ -111,7 +111,7 @@ function ensureTray(recreate=false) {
   const icon=nativeImage.createFromPath(iconPath);
   tray = process.env.WBOX_DATA_DIR?new Tray(icon):new Tray(icon,'a425bc0c-d46d-4cc9-9f0c-b0788d4e53c5'); tray.setToolTip('Wbox');
   const showTray = () => { void trayMenu.show(tray.getBounds()).catch(() => tray.popUpContextMenu(Menu.buildFromTemplate([{label:'打开 Wbox',click:()=>void showWindow()},{label:'退出',click:()=>void quit()}]))); };
-  tray.on('click', showTray);
+  tray.on('click', () => void showWindow());
   tray.on('right-click', showTray);
   tray.on('double-click', () => void showWindow());
 }

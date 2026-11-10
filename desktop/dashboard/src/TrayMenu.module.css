@@ -232,3 +232,6 @@
 .delay.neutral {
   color: var(--text-faint);
 }
+.delay.timeout {
+  color: var(--danger);
+}
