@@ -17,7 +17,7 @@ function connection(c: any) {
 }
 async function unary(name: string, input: any): Promise<any> {
   switch (name) {
-    case 'GetVersion': return { version: '0.6.9', apiVersion: 1 };
+    case 'GetVersion': return { version: '0.6.10', apiVersion: 1 };
     case 'GetStartedAt': return { startedAt: (await call('service')).startedAt };
     case 'GetDefaultLogLevel': return { level: 4 };
     case 'GetDeprecatedWarnings': return { warnings: [] };

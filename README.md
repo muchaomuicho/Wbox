@@ -1,16 +1,16 @@
 # Wbox
 
-Wbox 是 Windows / Android 双内核代理客户端。当前版本为 0.6.9。Windows 基于官方 sing-box desktop / dashboard 前端源码改造；Android 使用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与定制 sing-box 1.14.4-wbox.1，品牌图标为黑底白色 W。
+Wbox 是 Windows / Android 双内核代理客户端。当前版本为 0.6.10。Windows 基于官方 sing-box desktop / dashboard 前端源码改造；Android 使用 Compose / Material 3，实现同样的灰白／深色主题和两个独立工作区。运行时只启动所选内核，固定集成 mihomo 1.19.33 与定制 sing-box 1.14.4-wbox.1，品牌图标为黑底白色 W。
 
-0.6.9 支持逐订阅编辑名称、URL、自动更新开关与间隔；缩小 Android 代理卡片和策略组面板，未测速改用闪电；修复 Windows 连接详情滚动、工作区空白和托盘自动展开。两端集成支持二次请求计时的定制 sing-box 内核。见 [发布说明](docs/RELEASE-0.6.9.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
+0.6.10 在 Android 支持点击闪电或延迟数值单独测速，测速时显示圆圈。仅节点协议名统一大写，策略组保留 Selector、Fallback 等写法，直连显示 Direct。Windows 仅同步版本号。见 [发布说明](docs/RELEASE-0.6.10.md) 和 [上游来源及构建说明](docs/UPSTREAM-DESKTOP.md)。
 
 ## 安装与使用
 
 交付文件在 `dist/`：
 
-- `Wbox-0.6.9-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录并进行系统透明压缩。
-- `Wbox-0.6.9-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
-- `Wbox-0.6.9-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
+- `Wbox-0.6.10-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron 与 .NET 运行库，安装到当前用户目录并进行系统透明压缩。
+- `Wbox-0.6.10-android-arm64-v8a.apk`：Android 8.0+ ARM64 签名安装包。
+- `Wbox-0.6.10-source.zip`：Wbox 完整源码、上游前端、原生隧道、固定版本内核源码与构建脚本。
 - `SHA256SUMS.txt`：以上文件的校验值。
 
 默认以 `clash.meta/1.19.33`（mihomo）UA 下载配置与节点订阅，根据返回内容识别内核。
@@ -59,6 +59,8 @@ Android 由 VpnService 管理路由并排除自身 UID；sing-box 运行副本�
 尚未做 Android 真机耗电与低内存设备测试。Android JNI 隧道、mihomo 和本次自编译 sing-box 的 ELF LOAD 均为 16 KiB 对齐，但尚未验证在 16 KiB 页设备上的运行。
 
 ## 验证范围
+
+0.6.10 的单节点测速、点击不切换节点、协议与策略组文字稳定性验证见 `docs/verification/0.6.10-android-runtime.json`；此版本未修改内核。
 
 0.6.9 本轮验证与构建说明见 [发布说明](docs/RELEASE-0.6.9.md)，Windows 及 Android 交互报告分别为 `docs/verification/0.6.9-desktop.json`、`docs/verification/0.6.9-android-runtime.json`。每个订阅可单独开启自动更新，间隔 15–10080 分钟；Android 后台任务由系统安排，省电或断网可能延后。
 

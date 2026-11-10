@@ -54,14 +54,11 @@ import androidx.compose.ui.unit.dp
                         val selected=group.optString("now")==name
                         val leaf=try{ProxyCatalog.resolve(m.groups,name)}catch(_:Exception){name}
                         val value=m.delays[leaf]?:"未测试"
-                        val number=value.substringBefore(" ").toIntOrNull()
-                        val color=when{value=="Timeout"||value=="失败"->MaterialTheme.colorScheme.error;number==null->MaterialTheme.colorScheme.onSurfaceVariant;number<800->Color(0xff539675);number<1500->Color(0xffbd9747);else->Color(0xffce6e63)}
                         Surface(modifier=Modifier.weight(1f),shape=RoundedCornerShape(16.dp),border=BorderStroke(1.dp,if(selected)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),color=if(selected)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant){
                             Column(Modifier.fillMaxWidth().combinedClickable(onClick={m.selectNode(name,active)},onLongClick={fullName=name}).padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
                                 Text(name,style=MaterialTheme.typography.bodyMedium,fontWeight=FontWeight.Medium,minLines=2,maxLines=2,overflow=TextOverflow.Ellipsis)
-                                Text(m.groups.optJSONObject(name)?.optString("type").orEmpty(),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                if(value=="未测试")Icon(Icons.Outlined.Bolt,"未测试",Modifier.size(18.dp),tint=MaterialTheme.colorScheme.primary)
-                                else Text(value,color=color,style=MaterialTheme.typography.labelMedium)
+                                Text(proxyTypeLabel(m.groups.optJSONObject(name)?.optString("type").orEmpty(),m.groups.optJSONObject(name)?.has("all")==true),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                NodeDelay(name,value,!m.busy&&!m.testing&&!m.transition,{m.latency(listOf(name),expandGroup=false)},Modifier.fillMaxWidth())
                             }
                         }
                     }

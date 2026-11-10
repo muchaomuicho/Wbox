@@ -218,16 +218,18 @@ internal data class RuntimeState(
     fun removeNode(name: String) = work { changeNodes {p -> val keep=p.nodes().filter{it.name!=name};p.data.put("nodes",JSONArray(keep.map{it.storage()}));if(p.data.optString("selected")==name)p.data.put("selected",keep.firstOrNull()?.name ?: "")} }
     fun refreshSubscriptions(only: String?=null) = work { changeNodes { p -> val addresses=only?.let{listOf(it)} ?: p.data.optJSONObject("subscriptions")?.keys()?.asSequence()?.toList().orEmpty();for(url in addresses)p.importNodes(Profiles.fetch(url,true),url) };message="订阅已更新" }
     fun removeSubscription(url: String) = work { changeNodes { p -> val kept=p.nodes().filter{it.source!=url};p.data.put("nodes",JSONArray(kept.map{it.storage()}));p.data.optJSONObject("subscriptions")?.remove(url);p.data.optJSONObject("subscription_settings")?.remove(url);if(kept.none{it.name==p.data.optString("selected")})p.data.put("selected",kept.firstOrNull()?.name ?: "") };SubscriptionUpdates.schedule(activity) }
-    fun latency(names: List<String>) {
-        if(testing){latencyJob?.cancel();return}
+    fun latency(names: List<String>,expandGroup:Boolean=true) {
+        if(testing){if(expandGroup)latencyJob?.cancel();return}
         latencyJob=activity.lifecycleScope.launch {
             try { mutable();testing=true;val snapshot=profiles.copy();val context=groupsContext
+                val initial=if(snapshot.mode()=="config")NodeLatencyTester.targets(groups,names,expandGroup)else names
+                initial.forEach{delays[it]="测试中"}
                 val updates=kotlinx.coroutines.channels.Channel<Pair<String,String>>(kotlinx.coroutines.channels.Channel.UNLIMITED)
                 val snapshots=kotlinx.coroutines.channels.Channel<JSONObject>(kotlinx.coroutines.channels.Channel.CONFLATED)
                 coroutineScope {
                     val collect=launch {for((name,value) in updates)if(context==groupsContext)delays[name]=value}
                     val catalogs=launch {for(value in snapshots)if(context==groupsContext)groups=value}
-                    try {runInterruptible(Dispatchers.IO){NodeLatencyTester.run(activity,snapshot,names,{name,value->updates.trySend(name to value)},{value->snapshots.trySend(value)})}}
+                    try {runInterruptible(Dispatchers.IO){NodeLatencyTester.run(activity,snapshot,names,{name,value->updates.trySend(name to value)},{value->snapshots.trySend(value)},expandGroup)}}
                     finally {updates.close();snapshots.close();collect.join();catalogs.join()}
                 }
             } catch(e:CancellationException){throw e} catch(e:Exception){message=e.message ?: "测速失败"}

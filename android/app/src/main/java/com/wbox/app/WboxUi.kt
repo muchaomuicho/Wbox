@@ -238,7 +238,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
                     Surface(shape=RoundedCornerShape(14.dp),color=if(active)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,border=if(selected==node.name)BorderStroke(1.dp,MaterialTheme.colorScheme.outline) else null){
                         Column(Modifier.fillMaxWidth().combinedClickable(onClick={m.selectedRow=node.name},onDoubleClick={m.selectNode(node.name)},onLongClick={nodeMenu=node}).padding(start=14.dp,end=6.dp,top=8.dp,bottom=10.dp)){
                             Row(verticalAlignment=Alignment.CenterVertically){if(active){Icon(Icons.Outlined.CheckCircle,null,Modifier.size(17.dp));Spacer(Modifier.width(8.dp))};Text(node.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall,maxLines=2,overflow=TextOverflow.Ellipsis);IconButton(onClick={nodeMenu=node},Modifier.size(40.dp)){Icon(Icons.Outlined.MoreVert,"节点操作",Modifier.size(20.dp))}}
-                            Row(Modifier.padding(end=8.dp)){Muted(node.protocol.uppercase()+" · "+node.server+":"+node.port,Modifier.weight(1f));DelayText(m.delays[node.name])}
+                            Row(Modifier.padding(end=8.dp)){Muted(proxyTypeLabel(node.protocol)+" · "+node.server+":"+node.port,Modifier.weight(1f));NodeDelay(node.name,m.delays[node.name],!m.busy&&!m.testing&&!m.transition,{m.latency(listOf(node.name),expandGroup=false)})}
                         }
                     }
                 }
@@ -263,9 +263,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
 private fun host(url:String):String=try{URI(url).host ?: "订阅"}catch(_:Exception){"订阅"}
 
 @Composable private fun ProfilePicker(m:MobileModel) {Column{Text("选择配置",Modifier.padding(20.dp),style=MaterialTheme.typography.titleLarge);LazyColumn{items(m.configs,key={it.optString("id")}){p->ListItem(headlineContent={Text(p.optString("name"))},supportingContent={Muted(p.optString("core"))},trailingContent={if(p.optString("id")==m.profiles.data.optString("active_config"))Icon(Icons.Outlined.Check,null)},modifier=Modifier.clickable{m.selectProfile(p.getString("id"));m.sheet=""})}}} }
-@Composable private fun DelayText(value:String?) {if(value==null||value=="未测试")Icon(Icons.Outlined.Bolt,"未测试",Modifier.size(18.dp),tint=MaterialTheme.colorScheme.primary)else Text(value,fontFamily=FontFamily.Monospace,fontSize=11.sp,color=delayColor(value))}
 @Composable private fun LoadingPanel(text:String){Row(Modifier.fillMaxWidth().padding(24.dp),horizontalArrangement=Arrangement.Center,verticalAlignment=Alignment.CenterVertically){CircularProgressIndicator(Modifier.size(20.dp),strokeWidth=2.dp);Spacer(Modifier.width(12.dp));Muted(text)}}
-@Composable private fun delayColor(value:String?):Color {val n=value?.substringBefore(" ")?.toLongOrNull();return when{value=="失败"||value=="Timeout"->MaterialTheme.colorScheme.error;n==null->MaterialTheme.colorScheme.onSurfaceVariant;n<800->Color(0xff539675);n<1500->Color(0xffbd9747);else->Color(0xffce6e63)}}
 @Composable private fun Connections(m:MobileModel) {
     var query by remember{mutableStateOf("")};var detail by remember{mutableStateOf<ConnectionRecord?>(null)}
     Column(Modifier.fillMaxSize()) {Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.CenterVertically){Text("连接",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge);TextButton(onClick={m.closeConnection(null)}){Text("关闭全部")}}

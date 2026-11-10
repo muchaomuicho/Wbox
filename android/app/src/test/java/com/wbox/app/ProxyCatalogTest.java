@@ -7,6 +7,13 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class ProxyCatalogTest {
+    @Test public void singleNodeDelayDoesNotExpandNestedGroup()throws Exception {
+        var groups=new JSONObject("{\"Main\":{\"all\":[\"Nested\",\"B\"],\"now\":\"Nested\"},\"Nested\":{\"all\":[\"A\",\"B\"],\"now\":\"A\"}}");
+        assertEquals(Set.of("A"),NodeLatencyTester.targets(groups,List.of("Nested"),false));
+        assertEquals(Set.of("A"),NodeLatencyTester.targets(groups,List.of("A"),false));
+        assertEquals(Set.of("A","B"),NodeLatencyTester.targets(groups,List.of("Main"),true));
+        assertEquals(Set.of("A"),NodeLatencyTester.targets(groups,List.of("Nested","A"),false));
+    }
     @Test public void configuredOrderWinsOverApiObjectOrder()throws Exception {
         var root=new JSONObject("{\"proxy-groups\":[{\"name\":\"Z\"},{\"name\":\"2\"},{\"name\":\"A\"}]}");
         var api=new JSONObject("{\"A\":{\"all\":[]},\"GLOBAL\":{\"all\":[]},\"2\":{\"all\":[]},\"Z\":{\"all\":[]},\"direct\":{}}");

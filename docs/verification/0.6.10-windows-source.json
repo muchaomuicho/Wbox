@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "check": "All Windows source changes are limited to replacing version 0.6.9 with 0.6.10",
+  "changedFiles": [
+    "desktop/dashboard/src/WboxViews.tsx",
+    "desktop/package.json",
+    "desktop/wbox/host.ts",
+    "desktop/wbox/transport.ts",
+    "windows/Wbox.Backend/Wbox.Backend.csproj"
+  ]
+}

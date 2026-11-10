@@ -11,6 +11,9 @@ final class NodeLatencyTester {
         run(context,source,names,result,snapshot->{});
     }
     static void run(Context context,Profiles source,List<String> names,BiConsumer<String,String> result,Consumer<JSONObject> snapshot)throws Exception {
+        run(context,source,names,result,snapshot,true);
+    }
+    static void run(Context context,Profiles source,List<String> names,BiConsumer<String,String> result,Consumer<JSONObject> snapshot,boolean expandGroup)throws Exception {
         String url=source.data.optString("test_url",Profiles.TEST_URL);validateUrl(source.engine(),url);
         ExecutorService workers=Executors.newFixedThreadPool(source.mode().equals("config")?4:1);
         LatencySession session=null;
@@ -21,13 +24,7 @@ final class NodeLatencyTester {
                 if(!running)session=new LatencySession(context,source);
                 CoreApi api=running?new CoreApi(secret):session.api;
                 JSONObject groups=api.proxies();snapshot.accept(groups);
-                LinkedHashSet<String> targets=new LinkedHashSet<>();
-                for(String name:names){
-                    JSONObject group=groups.optJSONObject(name);
-                    if(names.size()==1&&group!=null&&group.optJSONArray("all")!=null){var all=group.getJSONArray("all");for(int i=0;i<all.length();i++)targets.add(ProxyCatalog.resolve(groups,all.getString(i)));}
-                    else targets.add(ProxyCatalog.resolve(groups,name));
-                }
-                for(String target:targets)pending.add(workers.submit(()->{
+                for(String target:targets(groups,names,expandGroup))pending.add(workers.submit(()->{
                     if(Thread.currentThread().isInterrupted())return;
                     if(running&&(!WboxVpnService.running||!secret.equals(WboxVpnService.secret)))return;
                     result.accept(target,"测试中");String value;
@@ -45,6 +42,15 @@ final class NodeLatencyTester {
             }
             for(Future<?> task:pending)task.get();
         } finally {workers.shutdownNow();try{workers.awaitTermination(9,TimeUnit.SECONDS);}finally{if(session!=null)session.close();}}
+    }
+    static Set<String> targets(JSONObject groups,List<String> names,boolean expandGroup)throws Exception {
+        LinkedHashSet<String> targets=new LinkedHashSet<>();
+        for(String name:names){
+            JSONObject group=groups.optJSONObject(name);
+            if(expandGroup&&names.size()==1&&group!=null&&group.optJSONArray("all")!=null){var all=group.getJSONArray("all");for(int i=0;i<all.length();i++)targets.add(ProxyCatalog.resolve(groups,all.getString(i)));}
+            else targets.add(ProxyCatalog.resolve(groups,name));
+        }
+        return targets;
     }
     static void validateUrl(String engine,String url) {
         if(!url.startsWith("https://")&&!url.startsWith("http://"))throw new IllegalArgumentException("测试地址必须是 HTTP / HTTPS");

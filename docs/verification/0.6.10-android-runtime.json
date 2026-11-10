@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "failure": null,
+  "checks": [
+    "Offline protocol labels are uppercase while Direct and Selector keep their spelling",
+    "Pending single-node test has no testing text",
+    "Clicking B latency starts only B, without testing A",
+    "Tapping the latency region does not select its card",
+    "Protocol and group labels remain stable after the core catalog refresh",
+    "Clicking a measured latency retests only that node",
+    "Nested group card tests only its selected leaf",
+    "Failed-node latency remains clickable for retry",
+    "Connected single-node test uses the running core and preserves the VPN",
+    "Fallback group label preserves its original capitalization",
+    "Mihomo card also tests only the tapped node",
+    "Node-workspace list latency supports a single-node tap"
+  ]
+}
