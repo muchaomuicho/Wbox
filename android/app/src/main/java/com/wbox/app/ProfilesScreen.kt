@@ -46,17 +46,17 @@ import org.json.JSONObject
     } else BoxWithConstraints(Modifier.fillMaxSize()) {
         val columns=((maxWidth.value-32f+8f)/(300f+8f)).toInt().coerceIn(1,3)
         LazyVerticalGrid(columns=GridCells.Fixed(columns),modifier=Modifier.fillMaxSize().testTag("profiles-grid"),
-            contentPadding=PaddingValues(start=16.dp,end=16.dp,top=12.dp,bottom=20.dp),
+            contentPadding=PaddingValues(start=16.dp,end=16.dp,top=12.dp,bottom=if(!m.runtime.running&&!m.runtime.stopping)96.dp else 20.dp),
             verticalArrangement=Arrangement.spacedBy(8.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             if(config) items(profiles,key={it.getString("id")}) { profile ->
                 val id=profile.getString("id");val url=profile.optString("url");val name=profile.optString("name")
                 LibraryCard(name,profile.optString("core")+" · "+if(url.isEmpty())"本地配置" else "远程配置",
                     profile.optLong("updated"),profile.optJSONObject("subscription")?.optJSONObject("usage"),url.isNotEmpty(),
                     active=id==m.profiles.data.optString("active_config"),updating=m.isUpdating(id),onClick={m.selectProfile(id)},
+                    onUpdate=if(url.isNotEmpty())({m.updateProfile(profile)})else null,
                     actions=buildList {
                         add(LibraryAction("编辑",Icons.Outlined.Edit){edit(Editor("config",profile))})
                         add(LibraryAction("预览",Icons.Outlined.Visibility){preview(profile)})
-                        if(url.isNotEmpty())add(LibraryAction("同步",Icons.Outlined.Sync,enabled=!m.isUpdating(id)){m.updateProfile(profile)})
                         add(LibraryAction("更多",Icons.Outlined.Tune){editSubscription(SubscriptionEdit(id,url,name))})
                         add(LibraryAction("导出文件",Icons.Outlined.FileUpload){m.activity.export(profile)})
                         add(LibraryAction("删除",Icons.Outlined.DeleteOutline,destructive=true){removing=name to {m.removeProfile(id)}})
@@ -66,10 +66,9 @@ import org.json.JSONObject
                 val open={editSubscription(SubscriptionEdit(url=url,name=name))}
                 LibraryCard(name,"${m.nodes.count{it.source==url}} 个节点 · "+if(options?.optBoolean("auto_update")==true)"自动更新" else "手动更新",
                     options?.optLong("last_success")?:0,options?.optJSONObject("usage"),true,
-                    updating=m.isUpdating(url),onClick=open,actions=listOf(
+                    updating=m.isUpdating(url),onClick=open,onUpdate={m.refreshSubscriptions(url)},actions=listOf(
                         LibraryAction("编辑",Icons.Outlined.Edit,run=open),
                         LibraryAction("预览",Icons.Outlined.Visibility){showNodes(url)},
-                        LibraryAction("同步",Icons.Outlined.Sync,enabled=!m.isUpdating(url)){m.refreshSubscriptions(url)},
                         LibraryAction("更多",Icons.Outlined.Tune,run=open),
                         LibraryAction("复制订阅地址",Icons.Outlined.ContentCopy){
                             (m.activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(android.content.ClipData.newPlainText("订阅地址",url));m.message="订阅地址已复制"

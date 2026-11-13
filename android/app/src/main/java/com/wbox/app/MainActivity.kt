@@ -100,6 +100,8 @@ internal data class RuntimeState(
     private var latencyJob: Job? = null
     private val mutations=Mutex()
     val updatingSources=mutableStateListOf<String>()
+    var updatingAllProfiles by mutableStateOf(false); private set
+    var updatingAllSubscriptions by mutableStateOf(false); private set
     fun isUpdating(key:String)=key in updatingSources
     private var sampleCount = 0
     val workspace get() = profiles.mode()
@@ -208,26 +210,35 @@ internal data class RuntimeState(
     }
     fun selectProfile(id: String) = work { change{it.activateConfig(id)};message="已切换配置" }
     suspend fun renameProfile(id: String, name: String) { require(name.isNotBlank()){ "请填写配置名称" }; change { p -> p.configs().objects().first {it.optString("id")==id}.put("name",name.trim().take(100)) } }
-    private suspend fun refreshProfile(p:JSONObject) {
+    private suspend fun downloadProfile(p:JSONObject) {
         val id=p.getString("id");val url=p.getString("url")
+        val download=withContext(Dispatchers.IO){SubscriptionFetch.download(url)}
+        change {next ->
+            val latest=next.configs().objects().firstOrNull{it.optString("id")==id && it.optString("url")==url}?:error("配置已移除或订阅地址已变化")
+            check(latest.optString("content")==p.optString("content")){"配置已编辑，请重新更新"}
+            next.importConfig(download.content(),url,id,false);SubscriptionUsage.apply(next,id,url,download.usage())
+        }
+    }
+    fun updateProfile(p: JSONObject) {
+        val id=p.getString("id")
         if(isUpdating(id))return
         updatingSources.add(id)
-        try {
-            val download=withContext(Dispatchers.IO){SubscriptionFetch.download(url)}
-            change {next ->
-                val latest=next.configs().objects().firstOrNull{it.optString("id")==id && it.optString("url")==url}?:error("配置已移除或订阅地址已变化")
-                check(latest.optString("content")==p.optString("content")){"配置已编辑，请重新更新"}
-                next.importConfig(download.content(),url,id,false);SubscriptionUsage.apply(next,id,url,download.usage())
-            }
-        }finally{updatingSources.remove(id)}
+        work {try{downloadProfile(p);message="配置已更新"}finally{updatingSources.remove(id)}}
     }
-    fun updateProfile(p: JSONObject) = work {refreshProfile(p);message="配置已更新"}
-    fun updateAllProfiles() = work {
+    fun updateAllProfiles() {
+        if(updatingAllProfiles)return
         val targets=configs.filter{it.optString("url").isNotEmpty() && !isUpdating(it.optString("id"))}
-        if(targets.isEmpty())return@work
-        var success=0;val errors=mutableListOf<String>()
-        for(p in targets)try{refreshProfile(p);success++}catch(e:CancellationException){throw e}catch(e:Exception){errors.add(p.optString("name")+"："+ErrorMessage.describe(e))}
-        message=if(errors.isEmpty())"已更新 $success 份配置" else "已更新 $success 份配置；"+errors.joinToString("；")
+        if(targets.isEmpty())return
+        val ids=targets.map{it.getString("id")}
+        val pending=ids.toMutableSet()
+        updatingAllProfiles=true;updatingSources.addAll(ids)
+        work {
+            try {
+                var success=0;val errors=mutableListOf<String>()
+                for(p in targets)try{downloadProfile(p);success++}catch(e:CancellationException){throw e}catch(e:Exception){errors.add(p.optString("name")+"："+ErrorMessage.describe(e))}finally{val id=p.getString("id");pending.remove(id);updatingSources.remove(id)}
+                message=if(errors.isEmpty())"已更新 $success 份配置" else "已更新 $success 份配置；"+errors.joinToString("；")
+            }finally{updatingSources.removeAll(pending);updatingAllProfiles=false}
+        }
     }
     suspend fun writeProfile(p: JSONObject, content: String) { change {next ->check(next.configs().objects().any{it.optString("id")==p.getString("id")}){"配置已移除"};next.importConfig(content,p.optString("url").ifEmpty{null},p.getString("id"),false)};message="配置已保存并应用" }
     fun removeProfile(id: String) = work { change{p -> val kept=p.configs().objects().filter {it.optString("id")!=id};p.data.put("configs",JSONArray(kept));if(p.data.optString("active_config")==id){p.data.remove("active_config");p.data.remove("config_sing-box");p.data.remove("config_mihomo");if(kept.isNotEmpty())p.activateConfig(kept.first().getString("id"))}} }
@@ -263,19 +274,23 @@ internal data class RuntimeState(
     suspend fun writeNode(index: Int, revision: String, fields: JSONObject) { changeNodes {NodeEditing.replace(it,index,revision,fields)} }
     fun cloneNode(index: Int) = work { changeNodes{NodeEditing.cloneNode(it,index)} }
     fun removeNode(name: String) = work { changeNodes {p -> val keep=p.nodes().filter{it.name!=name};p.data.put("nodes",JSONArray(keep.map{it.storage()}));if(p.data.optString("selected")==name)p.data.put("selected",keep.firstOrNull()?.name ?: "")} }
-    fun refreshSubscriptions(only: String?=null) = work {
-        val addresses=only?.let{listOf(it)} ?: profiles.data.optJSONObject("subscriptions")?.keys()?.asSequence()?.toList().orEmpty()
-        var success=0;val errors=mutableListOf<String>()
-        for(url in addresses) {
-            if(isUpdating(url))continue
-            updatingSources.add(url)
+    fun refreshSubscriptions(only: String?=null) {
+        if(only==null&&updatingAllSubscriptions)return
+        val addresses=(only?.let{listOf(it)} ?: profiles.data.optJSONObject("subscriptions")?.keys()?.asSequence()?.toList().orEmpty()).filterNot{isUpdating(it)}
+        if(addresses.isEmpty())return
+        val pending=addresses.toMutableSet()
+        updatingSources.addAll(addresses);if(only==null)updatingAllSubscriptions=true
+        work {
             try {
-                val revision=withContext(Dispatchers.IO){SubscriptionUpdates.revision(Profiles(activity),url)}
-                val download=withContext(Dispatchers.IO){SubscriptionFetch.download(url)}
-                changeNodes {p ->check(p.data.optJSONObject("subscriptions")?.has(url)==true && SubscriptionUpdates.revision(p,url)==revision){"订阅已编辑或移除，请重新更新"};p.importNodes(download.content(),url);SubscriptionUsage.apply(p,"",url,download.usage())};success++
-            }catch(e:CancellationException){throw e}catch(e:Exception){errors.add(SubscriptionUpdates.name(profiles,url)+"："+ErrorMessage.describe(e))}finally{updatingSources.remove(url)}
+                var success=0;val errors=mutableListOf<String>()
+                for(url in addresses)try {
+                    val revision=withContext(Dispatchers.IO){SubscriptionUpdates.revision(Profiles(activity),url)}
+                    val download=withContext(Dispatchers.IO){SubscriptionFetch.download(url)}
+                    changeNodes {p ->check(p.data.optJSONObject("subscriptions")?.has(url)==true && SubscriptionUpdates.revision(p,url)==revision){"订阅已编辑或移除，请重新更新"};p.importNodes(download.content(),url);SubscriptionUsage.apply(p,"",url,download.usage())};success++
+                }catch(e:CancellationException){throw e}catch(e:Exception){errors.add(SubscriptionUpdates.name(profiles,url)+"："+ErrorMessage.describe(e))}finally{pending.remove(url);updatingSources.remove(url)}
+                message=if(errors.isEmpty())"已更新 $success 个订阅" else "已更新 $success 个订阅；"+errors.joinToString("；")
+            }finally{updatingSources.removeAll(pending);if(only==null)updatingAllSubscriptions=false}
         }
-        message=if(errors.isEmpty())"已更新 $success 个订阅" else "已更新 $success 个订阅；"+errors.joinToString("；")
     }
     fun removeSubscription(url: String) = work { changeNodes { p -> val kept=p.nodes().filter{it.source!=url};p.data.put("nodes",JSONArray(kept.map{it.storage()}));p.data.optJSONObject("subscriptions")?.remove(url);p.data.optJSONObject("subscription_settings")?.remove(url);if(kept.none{it.name==p.data.optString("selected")})p.data.put("selected",kept.firstOrNull()?.name ?: "") };SubscriptionUpdates.schedule(activity) }
     fun latency(names: List<String>,expandGroup:Boolean=true) {

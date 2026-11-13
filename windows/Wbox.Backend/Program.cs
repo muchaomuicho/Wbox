@@ -14,6 +14,10 @@ var prefs = Store.Load();
 Task<List<SubscriptionResult>>? subscriptionTask = null;
 bool subscriptionManual = false;
 bool subscriptionApplying = false;
+// UI progress follows downloads through the queued application transaction.
+var subscriptionDownloads = new ConcurrentDictionary<long,string>();
+string[] subscriptionBatchSources = [];
+string SubscriptionSource(string id,string url) => id.Length>0 ? "config:"+id : "subscription:"+url;
 long coreGeneration = 0;
 long stopEpoch = 0;
 int stopRequested = 0;
@@ -147,7 +151,8 @@ object State() => new {
     configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated, c.Subscription }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
     prefs.Subscriptions, running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
-    ,prefs.SubscriptionSettings,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null||subscriptionApplying
+    ,prefs.SubscriptionSettings,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null||subscriptionApplying||!subscriptionDownloads.IsEmpty,
+    subscriptionUpdatingSources=subscriptionBatchSources.Concat(subscriptionDownloads.Values).Distinct().ToArray()
 };
 async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation, int[]? indexes=null) {
     using var starts = new SemaphoreSlim(1);
@@ -190,7 +195,7 @@ async Task<object?> Handle(string method, JsonElement a,long? intentEpoch=null) 
                 next.SubscriptionUpdateError=SubscriptionRefresh.Apply(next,results,false);
                 if(next.SubscriptionUpdateError.Length==0)next.SubscriptionLastSuccess=DateTime.UtcNow;
                 else Log("WARN 订阅更新："+next.SubscriptionUpdateError);
-            });}catch(Exception error){prefs.SubscriptionUpdateError=error.Message;Log("ERROR 订阅更新已恢复原配置："+error.Message);Save();}finally{subscriptionApplying=false;Write(new{changed=true});}
+            });}catch(Exception error){prefs.SubscriptionUpdateError=error.Message;Log("ERROR 订阅更新已恢复原配置："+error.Message);Save();}finally{subscriptionApplying=false;subscriptionBatchSources=[];Write(new{changed=true});}
             return null;
         }
         case "autoUpdate":
@@ -198,7 +203,9 @@ async Task<object?> Handle(string method, JsonElement a,long? intentEpoch=null) 
             bool manual=method=="refreshSubscriptions";
             if(subscriptionTask!=null||subscriptionApplying||(!manual&&!SubscriptionRefresh.Due(prefs,DateTime.UtcNow)))return null;
             if(prefs.Subscriptions.Count==0&&!prefs.Configs.Any(c=>c.Url.Length>0))return null;
-            var snapshot=CopyPreferences();SubscriptionRefresh.MarkAttempts(prefs,manual,DateTime.UtcNow);
+            var snapshot=CopyPreferences();
+            subscriptionBatchSources=SubscriptionRefresh.Targets(snapshot).Where(t=>manual||SubscriptionRefresh.Due(t.Options,DateTime.UtcNow)).Select(t=>SubscriptionSource(t.Id,t.Url)).ToArray();
+            SubscriptionRefresh.MarkAttempts(prefs,manual,DateTime.UtcNow);
             prefs.SubscriptionLastAttempt=DateTime.UtcNow;subscriptionManual=manual;
             subscriptionTask=SubscriptionRefresh.FetchAsync(snapshot,manual);
             _=subscriptionTask.ContinueWith(_=>Write(new{changed=true}),TaskScheduler.Default);
@@ -414,20 +421,22 @@ var downloads=new List<Task>();
 void QueueOperation(long id,string method,JsonElement arguments){lock(operationLock)operationTask=ReplyOperation(operationTask,id,method,arguments,Interlocked.Read(ref stopEpoch));}
 async Task PrepareDownload(long id,string method,JsonElement arguments,string url){
     try{
+        var source=method=="updateProfile"?SubscriptionSource(arguments.GetProperty("id").GetString()!,url):method=="importNodes"&&prefs.Subscriptions.Contains(url)?SubscriptionSource("",url):"";
+        if(source.Length>0){subscriptionDownloads[id]=source;Write(new{changed=true});}
         var revision=method=="updateProfile"?Profile(arguments.GetProperty("id").GetString()!).Updated.Ticks.ToString():method=="importNodes"&&prefs.Subscriptions.Contains(url)?SubscriptionRefresh.NodeRevision(prefs,url):"";
         var download=await ProfileImport.DownloadAsync(url);
         var prepared=JsonNode.Parse(arguments.GetRawText())!.AsObject();
         prepared["downloadContent"]=download.Content;prepared["downloadUsage"]=JsonSerializer.SerializeToNode(download.Usage);prepared["downloadedUrl"]=url;
         prepared["downloadedRevision"]=revision;
         QueueOperation(id,method,JsonSerializer.SerializeToElement(prepared));
-    }catch(Exception error){Write(new{id,error=error.Message});}
+    }catch(Exception error){subscriptionDownloads.TryRemove(id,out _);Write(new{id,error=error.Message});Write(new{changed=true});}
 }
 async Task ReplyOperation(Task previous,long id,string method,JsonElement arguments,long intentEpoch) {
     await previous;
     try{var result=await Handle(method,arguments,intentEpoch);Write(new{id,result});}
     catch(OperationCanceledException){Write(new{id,result=(object?)null});}
     catch(Exception ex){Write(new{id,error=ex.Message});}
-    finally{Write(new{changed=true});}
+    finally{subscriptionDownloads.TryRemove(id,out _);Write(new{changed=true});}
 }
 bool ReadOnly(string method)=>method is "state" or "service" or "memory" or "logs" or "stats" or "groups" or "trayGroups" or "connections" or "mode" or "profiles" or "trayProfiles" or "readProfile" or "readNode" or "proxyStatus";
 var delaySlots = new SemaphoreSlim(8);

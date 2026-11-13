@@ -30,8 +30,10 @@ class LibraryUiTest {
     }}
     @After fun clear(){WboxVpnService.running=false;WboxVpnService.starting=false;WboxVpnService.stopping=false}
     @Test fun configurationActionsOpenReadOnlyPreviewAndCodeEditor(){
+        ui.onNodeWithContentDescription("更新订阅 · Zeta").assertExists().assertIsEnabled()
         ui.onAllNodesWithContentDescription("配置操作").onFirst().performClick()
-        listOf("编辑","预览","同步","更多","删除").forEach{ui.onNodeWithText(it,substring=false).assertExists()}
+        listOf("编辑","预览","更多","导出文件","删除").forEach{ui.onNodeWithText(it,substring=false).assertExists()}
+        ui.onNodeWithText("同步",substring=false).assertDoesNotExist()
         ui.onNodeWithText("预览",substring=false).performClick()
         ui.onNodeWithText("预览配置").assertExists()
         ui.onNodeWithContentDescription("配置预览").assertExists()

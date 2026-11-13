@@ -15,7 +15,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -29,7 +28,7 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
 @Composable internal fun LibraryCard(
     name:String,subtitle:String,updated:Long,usage:JSONObject?,remote:Boolean,
     active:Boolean=false,updating:Boolean=false,onClick:()->Unit,actions:List<LibraryAction>,
-    menuDescription:String,tag:String
+    menuDescription:String,tag:String,onUpdate:(()->Unit)?=null
 ) {
     var menu by remember{mutableStateOf(false)}
     val used=usage?.takeIf{it.has("upload")&&it.has("download")}?.let{it.optLong("upload").toDouble()+it.optLong("download").toDouble()}
@@ -42,7 +41,6 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
         total!=null->"已用未提供 · 总量 "+MainActivity.bytes(total)
         else->"未提供流量信息"
     }
-    val largeText=LocalDensity.current.fontScale>1.15f
     val expire=usage?.takeIf{it.has("expire")}?.optLong("expire")
     val expires=expire?.let { if(it==0L)"长期有效" else {
         val remaining=it*1000.0-System.currentTimeMillis()
@@ -55,17 +53,13 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
         border=if(active)BorderStroke(1.dp,MaterialTheme.colorScheme.primary.copy(alpha=.45f))else null) {
         Column(Modifier.padding(start=16.dp,end=8.dp,top=10.dp,bottom=14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
             Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
-                Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(5.dp)) {
-                    Text(name,style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold,maxLines=2,overflow=TextOverflow.Ellipsis)
-                    Text(traffic,
-                        style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                if(!largeText)Text(compactUpdateTime(updated),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(name,Modifier.weight(1f),style=MaterialTheme.typography.titleMedium,fontWeight=FontWeight.SemiBold,maxLines=2,overflow=TextOverflow.Ellipsis)
                 if(active)Surface(shape=CircleShape,color=MaterialTheme.colorScheme.primary) {
                     Icon(Icons.Outlined.Check,"当前配置",Modifier.padding(4.dp).size(16.dp),tint=MaterialTheme.colorScheme.onPrimary)
                 }
+                if(onUpdate!=null)SubscriptionUpdateButton(updating,"更新订阅 · $name",onUpdate)
                 Box{
-                    IconButton(onClick={menu=true},modifier=Modifier.size(40.dp).semantics{contentDescription=menuDescription}){if(updating)CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp)else Icon(Icons.Outlined.MoreVert,null,Modifier.size(21.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)}
+                    IconButton(onClick={menu=true},modifier=Modifier.size(40.dp).semantics{contentDescription=menuDescription}){Icon(Icons.Outlined.MoreVert,null,Modifier.size(21.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)}
                     DropdownMenu(expanded=menu,onDismissRequest={menu=false}){
                         actions.forEachIndexed{index,action->
                             if(action.destructive&&index>0)HorizontalDivider()
@@ -76,13 +70,12 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
                     }
                 }
             }
+            Text(traffic+(expires?.let{" · $it"}?:""),Modifier.padding(end=8.dp),
+                style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             if(quota)LinearProgressIndicator(progress={(used!!/total!!).toFloat().coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().padding(end=8.dp).height(4.dp).clip(CircleShape),color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.primary.copy(alpha=.12f))
-            if(quota||expires!=null||largeText)FlowRow(Modifier.fillMaxWidth().padding(end=8.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+            FlowRow(Modifier.fillMaxWidth().padding(end=8.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 if(quota)Text("剩余 "+MainActivity.bytes((total!!-used!!).coerceAtLeast(0.0).toLong()),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                if(expires!=null)Surface(shape=RoundedCornerShape(6.dp),color=MaterialTheme.colorScheme.tertiaryContainer) {
-                    Text(expires,Modifier.padding(horizontal=7.dp,vertical=3.dp),fontSize=13.sp,color=MaterialTheme.colorScheme.onTertiaryContainer)
-                }
-                if(largeText)Text("更新于 "+compactUpdateTime(updated),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("更新于 "+compactUpdateTime(updated),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -104,10 +97,8 @@ private fun compactUpdateTime(updated:Long):String {
     var sorting by remember{mutableStateOf(false)}
     val sort=m.profiles.data.optString(if(config)"config_sort" else "subscription_sort","default")
     val hasSources=if(config)m.configs.any{it.optString("url").isNotEmpty()}else m.profiles.data.optJSONObject("subscriptions")?.length()?.let{it>0}==true
-    val updating=if(config)m.configs.any{m.isUpdating(it.optString("id"))}else m.updatingSources.any{it.startsWith("http")}
-    IconButton(enabled=hasSources&&!updating,onClick={if(config)m.updateAllProfiles()else m.refreshSubscriptions()},modifier=Modifier.semantics{contentDescription="更新全部"}){
-        if(updating)CircularProgressIndicator(Modifier.size(20.dp),strokeWidth=2.dp)else Icon(Icons.Outlined.Sync,null)
-    }
+    val updating=if(config)m.updatingAllProfiles else m.updatingAllSubscriptions
+    SubscriptionUpdateButton(updating,"更新全部",{if(config)m.updateAllProfiles()else m.refreshSubscriptions()},enabled=hasSources)
     Box{
         IconButton(onClick={sorting=true}){Icon(Icons.Outlined.Sort,"排序订阅")}
         DropdownMenu(sorting,{sorting=false}){

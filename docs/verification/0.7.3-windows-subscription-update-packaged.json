@@ -1,0 +1,67 @@
+{
+  "build": "packaged",
+  "passed": 37,
+  "checks": [
+    "Isolated fixture never starts a core or enables system proxy",
+    "Local configurations do not receive a subscription update button",
+    "Remote configuration overflow menu has no Sync action",
+    "Other configuration menu actions remain available",
+    "Single update responds on the first animation frame and immediately locks its source",
+    "Two immediate clicks produce only one download",
+    "An unrelated card remains idle and enabled",
+    "Backend reports only the source with a pending download",
+    "Subscription update does not show generic processing text",
+    "Update ring rotates continuously without rebuilding its DOM element",
+    "Returning from another page preserves the update state",
+    "Reload recovers per-source progress without blocking the other card",
+    "Successful update applies the new remote configuration",
+    "Successful update refreshes subscription traffic",
+    "Download failure is shown through the existing error dialog",
+    "Failed download preserves the original configuration",
+    "A failed update can be retried successfully",
+    "Node subscription overflow menu has no Sync action",
+    "Node subscription editing remains available",
+    "Node update also deduplicates while leaving unrelated subscriptions enabled",
+    "Node update reports its real source in backend state",
+    "Subscription update does not show generic processing text",
+    "Successful node update replaces the downloaded nodes",
+    "Node download failure keeps existing nodes and unlocks the update button",
+    "Node subscription recovers on the next successful update",
+    "Accepted batch update stays active and includes each remote source",
+    "All-update button stays busy after the start request returns",
+    "Subscription update does not show generic processing text",
+    "Batch targets preserve their pending state when switching workspaces",
+    "Batch completes all node updates before clearing progress",
+    "Batch completes both configuration updates",
+    "Partial batch failure appears on the affected card",
+    "Partial batch failure retains the affected configuration",
+    "Retrying a failed batch clears the card error and refreshes its content",
+    "Toolbar update button does not overlap the workspace picker after window resize",
+    "Dedicated circular controls fit cards at the minimum window size",
+    "No renderer errors during subscription update checks"
+  ],
+  "rendererErrors": [],
+  "animation": {
+    "linear": "linear",
+    "infinite": "infinite",
+    "duration": "0.8s",
+    "moved": true,
+    "same": true,
+    "size": [
+      16,
+      16
+    ]
+  },
+  "compactToolbar": {
+    "updateLeft": 576,
+    "pickerRight": 333,
+    "controlsWidth": "137px",
+    "viewport": 799
+  },
+  "screenshots": [
+    "docs/previews/0.7.3-windows-subscription-updating-light.png",
+    "docs/previews/0.7.3-windows-subscription-updating-dark.png",
+    "docs/previews/0.7.3-windows-node-subscription-updating-dark.png",
+    "docs/previews/0.7.3-windows-subscription-updated-compact.png"
+  ]
+}

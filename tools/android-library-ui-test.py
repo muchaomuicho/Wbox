@@ -143,7 +143,7 @@ try:
     adb('shell','input','keyevent','4')
     wait(lambda:has_text('Orion · 出行'))
     tap('配置操作','content-desc')
-    check(all(s in labels() for s in ['编辑','预览','同步','更多','删除']),'Each configuration has all five actions')
+    check(all(s in labels() for s in ['编辑','预览','更多','导出文件','删除']) and '同步' not in labels(),'Configuration menu retains actions and removes duplicate sync')
     screenshot('profiles-menu',verify_bar=False)
     tap('预览')
     wait(lambda:'预览配置' in labels())

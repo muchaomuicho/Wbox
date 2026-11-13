@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class,androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 package com.wbox.app
 
 import androidx.compose.foundation.*
@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -29,7 +30,20 @@ import java.net.URI
     var testUrl by remember(m.profiles){mutableStateOf(m.profiles.data.optString("test_url",Profiles.TEST_URL))}
     val mode=m.profiles.data.optString("app_mode","all")
     LazyColumn(contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        item {SettingsPanel("外观") {Choice("主题",m.profiles.data.optString("theme","auto"),listOf("auto" to "跟随系统","light" to "浅色","dark" to "深色")){m.setting("theme",it)}}}
+        item {SettingsPanel("外观") {
+            Choice("主题",m.profiles.data.optString("theme","auto"),listOf("auto" to "跟随系统","light" to "浅色","dark" to "深色")){m.setting("theme",it)}
+            Column(Modifier.padding(horizontal=16.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                Text("配色",style=MaterialTheme.typography.bodyMedium)
+                FlowRow(horizontalArrangement=Arrangement.spacedBy(8.dp),verticalArrangement=Arrangement.spacedBy(4.dp)) {
+                    listOf("default" to "黑白","blue" to "雾蓝","pink" to "柔粉").forEach { (value,label) ->
+                        val color=wboxColorScheme(MaterialTheme.colorScheme.surface.red<.5f,value).primary
+                        FilterChip(selected=m.profiles.data.optString("accent","blue")==value,onClick={m.setting("accent",value)},
+                            label={Text(label,style=MaterialTheme.typography.bodySmall)},
+                            leadingIcon={Box(Modifier.size(10.dp).background(color,CircleShape))})
+                    }
+                }
+            }
+        }}
         item {SettingsPanel("代理") {
             if(m.workspace=="nodes")Choice("内核",m.profiles.engine(),listOf("sing-box" to "sing-box","mihomo" to "mihomo")){m.setting("engine",it)}
             else ListItem(headlineContent={Text("内核")},supportingContent={Text("由当前配置决定")},trailingContent={Text(m.profiles.engine())},colors=ListItemDefaults.colors(containerColor=Color.Transparent))

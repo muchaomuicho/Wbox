@@ -15,6 +15,7 @@ export interface WboxState {
   subscriptions: string[];
   subscriptionAutoUpdate: boolean; subscriptionUpdateMinutes: number;
   subscriptionLastAttempt: string; subscriptionLastSuccess: string; subscriptionUpdateError: string; subscriptionUpdating: boolean;
+  subscriptionUpdatingSources: string[];
 }
 export function useWboxState() {
   const [state, setState] = useState<WboxState | null>(null);

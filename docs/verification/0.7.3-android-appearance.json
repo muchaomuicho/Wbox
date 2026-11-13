@@ -1,0 +1,315 @@
+{
+  "version": "0.7.3",
+  "phase": "feedback",
+  "verified_phases": [
+    "appearance",
+    "config-updates",
+    "nodes-updates"
+  ],
+  "appearance_reused_from_same_apk": true,
+  "emulator": "emulator-5556",
+  "checks": [
+    "blue/light selected through UI and persists after restart",
+    "blue/light page and system bar use the selected palette",
+    "blue/light expiry and traffic share one text node",
+    "pink/light selected through UI and persists after restart",
+    "pink/light page and system bar use the selected palette",
+    "pink/light expiry and traffic share one text node",
+    "default/light selected through UI and persists after restart",
+    "default/light page and system bar use the selected palette",
+    "default/light expiry and traffic share one text node",
+    "blue/dark selected through UI and persists after restart",
+    "blue/dark page and system bar use the selected palette",
+    "blue/dark expiry and traffic share one text node",
+    "pink/dark selected through UI and persists after restart",
+    "pink/dark page and system bar use the selected palette",
+    "pink/dark expiry and traffic share one text node",
+    "default/dark selected through UI and persists after restart",
+    "default/dark page and system bar use the selected palette",
+    "default/dark expiry and traffic share one text node",
+    "All three palette chips remain visible at font scale 1.5",
+    "Traffic and expiry remain readable as one text at font scale 1.5",
+    "概览 has one floating start control and no stopped connections entry",
+    "配置 has one floating start control and no stopped connections entry",
+    "日志 has one floating start control and no stopped connections entry",
+    "设置 has one floating start control and no stopped connections entry",
+    "Stopped pages use the same floating start position and size",
+    "Running configuration page replaces floating start with connections and stop controls",
+    "Connections entry appears only after start and disappears after stop",
+    "config three-dot menu removes duplicate sync and retains editing",
+    "config single-card update starts its download",
+    "config slow update immediately shows an animated ring",
+    "config unrelated card remains visually still",
+    "config only the requested card is disabled during its slow update",
+    "config repeated clicks do not duplicate the download",
+    "config synthetic slow request finishes before network timeout",
+    "config HTTP 400 request reaches the controlled source",
+    "config HTTP 400 displays a visible failure message",
+    "config HTTP 400 keeps the previous valid data",
+    "config failed source can be retried immediately",
+    "config batch starts first source",
+    "config batch marks current and queued sources busy",
+    "config batch advances to second source",
+    "config batch stays active until the last source completes",
+    "config completed source can update again while another batch source is pending",
+    "config finishing old batch preserves the new single-source busy state",
+    "config overlapping batch and individual updates never duplicate active downloads",
+    "config batch interleaving completed within network timeout",
+    "nodes three-dot menu removes duplicate sync and retains editing",
+    "nodes single-card update starts its download",
+    "nodes slow update immediately shows an animated ring",
+    "nodes unrelated card remains visually still",
+    "nodes only the requested card is disabled during its slow update",
+    "nodes repeated clicks do not duplicate the download",
+    "nodes synthetic slow request finishes before network timeout",
+    "nodes HTTP 400 request reaches the controlled source",
+    "nodes HTTP 400 displays a visible failure message",
+    "nodes HTTP 400 keeps the previous valid data",
+    "nodes failed source can be retried immediately",
+    "nodes batch starts first source",
+    "nodes batch marks current and queued sources busy",
+    "nodes batch advances to second source",
+    "nodes batch stays active until the last source completes",
+    "nodes completed source can update again while another batch source is pending",
+    "nodes finishing old batch preserves the new single-source busy state",
+    "nodes overlapping batch and individual updates never duplicate active downloads",
+    "nodes batch interleaving completed within network timeout",
+    "Settings previews are captured only after all three palette controls appear",
+    "Installs current debug APK before verification",
+    "config feedback preview reaches controlled HTTP 400 source",
+    "nodes feedback preview reaches controlled HTTP 400 source",
+    "Failure feedback previews are captured after the HTTP 400 message appears"
+  ],
+  "observations": {
+    "blue/light page and system bar use the selected palette": [
+      [
+        243,
+        244,
+        248
+      ],
+      [
+        243,
+        244,
+        248
+      ],
+      [
+        243,
+        244,
+        248
+      ]
+    ],
+    "pink/light page and system bar use the selected palette": [
+      [
+        248,
+        243,
+        246
+      ],
+      [
+        248,
+        243,
+        246
+      ],
+      [
+        248,
+        243,
+        246
+      ]
+    ],
+    "default/light page and system bar use the selected palette": [
+      [
+        250,
+        250,
+        250
+      ],
+      [
+        250,
+        250,
+        250
+      ],
+      [
+        250,
+        250,
+        250
+      ]
+    ],
+    "blue/dark page and system bar use the selected palette": [
+      [
+        22,
+        25,
+        32
+      ],
+      [
+        22,
+        25,
+        32
+      ],
+      [
+        22,
+        25,
+        32
+      ]
+    ],
+    "pink/dark page and system bar use the selected palette": [
+      [
+        30,
+        24,
+        28
+      ],
+      [
+        30,
+        24,
+        28
+      ],
+      [
+        30,
+        24,
+        28
+      ]
+    ],
+    "default/dark page and system bar use the selected palette": [
+      [
+        31,
+        31,
+        31
+      ],
+      [
+        31,
+        31,
+        31
+      ],
+      [
+        31,
+        31,
+        31
+      ]
+    ],
+    "All three palette chips remain visible at font scale 1.5": [
+      [
+        152,
+        730,
+        266,
+        812
+      ],
+      [
+        397,
+        730,
+        511,
+        812
+      ],
+      [
+        642,
+        730,
+        756,
+        812
+      ]
+    ],
+    "Stopped pages use the same floating start position and size": {
+      "概览": [
+        931,
+        1978,
+        999,
+        2046
+      ],
+      "配置": [
+        931,
+        1978,
+        999,
+        2046
+      ],
+      "日志": [
+        931,
+        1978,
+        999,
+        2046
+      ],
+      "设置": [
+        931,
+        1978,
+        999,
+        2046
+      ]
+    },
+    "config slow update immediately shows an animated ring": {
+      "feedback_observed_ms": 910,
+      "frame_changed_pixels": [
+        8006,
+        705
+      ]
+    },
+    "config only the requested card is disabled during its slow update": {
+      "更新订阅 · Orion · 出行": true,
+      "更新订阅 · Atlas · 主订阅": false,
+      "更新全部": false
+    },
+    "config HTTP 400 displays a visible failure message": [
+      "订阅服务器返回 HTTP 400。请检查订阅地址、有效期或访问限制。"
+    ],
+    "config batch marks current and queued sources busy": {
+      "更新订阅 · Orion · 出行": true,
+      "更新订阅 · Atlas · 主订阅": true,
+      "更新全部": true
+    },
+    "config batch stays active until the last source completes": {
+      "更新订阅 · Orion · 出行": false,
+      "更新订阅 · Atlas · 主订阅": true,
+      "更新全部": true
+    },
+    "config finishing old batch preserves the new single-source busy state": {
+      "更新订阅 · Orion · 出行": true,
+      "更新订阅 · Atlas · 主订阅": false,
+      "更新全部": false
+    },
+    "nodes slow update immediately shows an animated ring": {
+      "feedback_observed_ms": 825,
+      "frame_changed_pixels": [
+        8095,
+        711
+      ]
+    },
+    "nodes only the requested card is disabled during its slow update": {
+      "更新订阅 · Orion · 节点订阅": true,
+      "更新订阅 · Atlas · 节点订阅": false,
+      "更新全部": false
+    },
+    "nodes HTTP 400 displays a visible failure message": [
+      "已更新 0 个订阅；Orion · 节点订阅：订阅服务器返回 HTTP 400。请检查订阅地址、有效期或访问限制。"
+    ],
+    "nodes batch marks current and queued sources busy": {
+      "更新订阅 · Orion · 节点订阅": true,
+      "更新订阅 · Atlas · 节点订阅": true,
+      "更新全部": true
+    },
+    "nodes batch stays active until the last source completes": {
+      "更新订阅 · Orion · 节点订阅": false,
+      "更新订阅 · Atlas · 节点订阅": true,
+      "更新全部": true
+    },
+    "nodes finishing old batch preserves the new single-source busy state": {
+      "更新订阅 · Orion · 节点订阅": true,
+      "更新订阅 · Atlas · 节点订阅": false,
+      "更新全部": false
+    },
+    "apk_sha256": "52142e0ff76d0c91731dd92f24af14b1f952cd049308e34eee4a9909b0918f70"
+  },
+  "screenshots": [
+    "docs/previews/0.7.3-android-blue-light.png",
+    "docs/previews/0.7.3-android-pink-light.png",
+    "docs/previews/0.7.3-android-pink-light-settings.png",
+    "docs/previews/0.7.3-android-default-light.png",
+    "docs/previews/0.7.3-android-blue-dark.png",
+    "docs/previews/0.7.3-android-pink-dark.png",
+    "docs/previews/0.7.3-android-default-dark.png",
+    "docs/previews/0.7.3-android-default-dark-settings.png",
+    "docs/previews/0.7.3-android-appearance-large-font-settings.png",
+    "docs/previews/0.7.3-android-appearance-large-font.png",
+    "docs/previews/0.7.3-android-appearance-connected.png",
+    "docs/previews/0.7.3-android-appearance-config-menu.png",
+    "docs/previews/0.7.3-android-appearance-config-updating.png",
+    "docs/previews/0.7.3-android-appearance-config-http400.png",
+    "docs/previews/0.7.3-android-appearance-nodes-menu.png",
+    "docs/previews/0.7.3-android-appearance-nodes-updating.png",
+    "docs/previews/0.7.3-android-appearance-nodes-http400.png"
+  ],
+  "failure": null,
+  "preferences_and_display_restored": true
+}

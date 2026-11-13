@@ -45,15 +45,21 @@ function watchTitleBarOverlay() {
   const controlsOverlay = (
     navigator as Navigator & { windowControlsOverlay?: WindowControlsOverlay }
   ).windowControlsOverlay;
+  let geometryFrame = 0;
   const reportGeometry = () => {
-    if (controlsOverlay === undefined) {
-      return;
-    }
-    const titlebarArea = controlsOverlay.getTitlebarAreaRect();
-    const controlsWidth = titlebarArea.width > 0 ? Math.max(0, window.innerWidth - titlebarArea.width) : 138;
-    document.documentElement.style.setProperty("--window-controls-width", `${controlsWidth}px`);
+    cancelAnimationFrame(geometryFrame);
+    // Electron can report the new titlebar area before innerWidth has caught up.
+    geometryFrame = requestAnimationFrame(() => {
+      if (controlsOverlay === undefined) {
+        return;
+      }
+      const titlebarArea = controlsOverlay.getTitlebarAreaRect();
+      const controlsWidth = titlebarArea.width > 0 ? Math.max(0, window.innerWidth - titlebarArea.width) : 138;
+      document.documentElement.style.setProperty("--window-controls-width", `${controlsWidth}px`);
+    });
   };
   controlsOverlay?.addEventListener("geometrychange", reportGeometry);
+  window.addEventListener("resize", reportGeometry);
   reportGeometry();
 
   let lastColor = "";

@@ -52,15 +52,13 @@ import kotlinx.coroutines.*
 import org.json.*
 import java.net.URI
 
-private val LightColors=lightColorScheme(primary=Color(0xff3564bd),onPrimary=Color.White,primaryContainer=Color(0xffdce7ff),onPrimaryContainer=Color(0xff193867),secondary=Color(0xff586b90),secondaryContainer=Color(0xffe4eaf6),onSecondaryContainer=Color(0xff304261),tertiary=Color(0xff916780),tertiaryContainer=Color(0xfff3e5ee),onTertiaryContainer=Color(0xff755169),background=Color(0xfff3f4f8),surface=Color(0xfff3f4f8),surfaceVariant=Color(0xfffdfdff),onSurface=Color(0xff20232b),onSurfaceVariant=Color(0xff636a79),outline=Color(0xff8c94a5),outlineVariant=Color(0xffe0e4ed))
-private val DarkColors=darkColorScheme(primary=Color(0xffa4c3ff),onPrimary=Color(0xff12315e),primaryContainer=Color(0xff253f67),onPrimaryContainer=Color(0xffdbe7ff),secondary=Color(0xffb4c4e3),secondaryContainer=Color(0xff2d3b52),onSecondaryContainer=Color(0xffdce6f8),tertiary=Color(0xffdfb3cf),tertiaryContainer=Color(0xff463442),onTertiaryContainer=Color(0xffeac2dc),background=Color(0xff161920),surface=Color(0xff161920),surfaceVariant=Color(0xff232731),onSurface=Color(0xffe5e8ef),onSurfaceVariant=Color(0xffaab2c2),outline=Color(0xff7d889c),outlineVariant=Color(0xff373f4e))
 private val WboxTypography=Typography(bodySmall=TextStyle(fontSize=14.sp,lineHeight=20.sp),labelSmall=TextStyle(fontSize=13.sp,lineHeight=19.sp),labelMedium=TextStyle(fontSize=13.sp,lineHeight=19.sp,fontWeight=FontWeight.Medium))
 internal data class Editor(val type: String, val profile: JSONObject?=null, val index: Int=-1)
 
 @Composable internal fun WboxApp(m: MobileModel) {
     val systemDark=isSystemInDarkTheme()
     val dark=when(m.profiles.data.optString("theme","auto")){"dark"->true;"light"->false;else->systemDark}
-    MaterialTheme(colorScheme=if(dark)DarkColors else LightColors,typography=WboxTypography, shapes=Shapes(medium=RoundedCornerShape(16.dp),large=RoundedCornerShape(20.dp),extraLarge=RoundedCornerShape(24.dp))) {
+    MaterialTheme(colorScheme=wboxColorScheme(dark,m.profiles.data.optString("accent","blue")),typography=WboxTypography, shapes=Shapes(medium=RoundedCornerShape(16.dp),large=RoundedCornerShape(20.dp),extraLarge=RoundedCornerShape(24.dp))) {
         WboxSystemBars(m)
         var editor by remember { mutableStateOf<Editor?>(null) }
         var subscriptionEditor by remember { mutableStateOf<SubscriptionEdit?>(null) }
@@ -116,8 +114,8 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
                     text={Text(if(m.testing)"取消测试" else "延迟测试")},
                     containerColor=MaterialTheme.colorScheme.secondaryContainer,contentColor=MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                else if(m.page!="proxies" && m.page!="library" && !m.runtime.running && !m.runtime.stopping) FloatingActionButton(
-                    modifier=Modifier.semantics{if(m.runtime.starting)contentDescription="取消连接"},
+                else if(m.page!="proxies" && !m.runtime.running && !m.runtime.stopping) FloatingActionButton(
+                    modifier=Modifier.testTag("connection-fab").semantics{if(m.runtime.starting)contentDescription="取消连接"},
                     onClick={m.toggle()},shape=RoundedCornerShape(18.dp),
                     containerColor=MaterialTheme.colorScheme.primaryContainer,
                     contentColor=MaterialTheme.colorScheme.primary
@@ -127,7 +125,7 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
                 }
             },
             bottomBar={Column{
-                if(m.runtime.running || m.runtime.stopping || m.page=="library") ServiceStatusBar(m,dark)
+                if(m.runtime.running || m.runtime.stopping) ServiceStatusBar(m,dark)
                 NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp){
                     listOf(Triple("overview","概览",Icons.Outlined.Dashboard),Triple("proxies","代理",Icons.Outlined.AccountTree),Triple("library",if(m.workspace=="config")"配置" else "节点",Icons.Outlined.Folder),Triple("logs","日志",Icons.Outlined.Article),Triple("settings","设置",Icons.Outlined.Settings)).filter{m.workspace=="config"||it.first!="proxies"}.forEach{(key,label,icon)->NavigationBarItem(selected=m.page==key,onClick={m.page=key},icon={Icon(icon,label)},label={Text(label)})}
                 }
@@ -164,7 +162,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
     Surface(color=MaterialTheme.colorScheme.surfaceVariant) {
         Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=4.dp),verticalAlignment=Alignment.CenterVertically) {
             Text(m.runtime.status,Modifier.weight(1f),style=MaterialTheme.typography.labelLarge)
-            TextButton(onClick={m.sheet="connections"}){Icon(Icons.Outlined.Cable,null,Modifier.size(18.dp));Spacer(Modifier.width(6.dp));Text(m.runtime.connectionsIn.toString())}
+            if(m.runtime.running)TextButton(onClick={m.sheet="connections"},modifier=Modifier.semantics{contentDescription="查看连接"}){Icon(Icons.Outlined.Cable,null,Modifier.size(18.dp));Spacer(Modifier.width(6.dp));Text(m.runtime.connectionsIn.toString())}
             PowerControl(m,dark)
         }
     }
@@ -228,7 +226,7 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
             }
         }
         if(config||subscriptions)ProfilesScreen(m,config,edit,editSubscription,preview,{url->source=url;query="";onSubscriptionsChange(false)},{edit(Editor("import"))})
-        else LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(start=16.dp,end=16.dp,top=8.dp,bottom=20.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+        else LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(start=16.dp,end=16.dp,top=8.dp,bottom=if(!m.runtime.running&&!m.runtime.stopping)96.dp else 20.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 val visible=m.nodes.filter{(source==null||it.source==source)&&(it.name+it.server+it.protocol).contains(query,true)}
                 if(visible.isEmpty())item{EmptyState("没有匹配的节点","可粘贴节点链接或添加订阅地址。",Icons.Outlined.Dns)}
                 items(visible,key={it.name}){node->

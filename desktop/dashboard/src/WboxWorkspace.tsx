@@ -10,6 +10,7 @@ import { NodeEditor } from './WboxNodeEditor';
 import {SubscriptionEditor,type SubscriptionEdit} from './SubscriptionEditor';
 import {NodeDelay} from './NodeDelay';
 import {SubscriptionTraffic} from './SubscriptionTraffic';
+import {SubscriptionUpdateButton,useSubscriptionUpdates,configUpdateKey,nodeSubscriptionUpdateKey} from './SubscriptionUpdateButton';
 import { call } from '../../wbox/transport';
 
 export function NodeClipboard() {
@@ -58,6 +59,7 @@ function NodeRow({node,current,selected,select,activate,edit,run}: {node:Node;cu
 
 export function WorkspaceView() {
   const s=useWboxState();
+  const updates=useSubscriptionUpdates(s);
   const [importing,setImporting]=useState(false),[filter,setFilter]=useState(''),[source,setSource]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState(-1);
   const [preview,setPreview]=useState<{name:string;content:string}|null>(null);
   const configDialogAnchor=useRef<HTMLButtonElement|null>(null);
@@ -72,7 +74,8 @@ export function WorkspaceView() {
   const configs=[...s.configs].sort((a,b)=>order==='name'?a.name.localeCompare(b.name,'zh-CN'):order==='updated'?Date.parse(b.updated)-Date.parse(a.updated):0);
   const subscriptions=[...s.subscriptions].sort((a,b)=>order==='name'?(s.subscriptionSettings[a]?.name||a).localeCompare(s.subscriptionSettings[b]?.name||b,'zh-CN'):order==='updated'?Date.parse(s.subscriptionSettings[b]?.lastSuccess||'1970')-Date.parse(s.subscriptionSettings[a]?.lastSuccess||'1970'):0);
   const sorting=<OthersMenu title="排序订阅" icon="filter_list">{[['default','默认顺序'],['name','按名称'],['updated','最近更新']].map(([value,label])=><MenuItem key={value} checked={order===value} onSelect={()=>void call('sortLibrary',{order:value}).catch(showError)}>{label}</MenuItem>)}</OthersMenu>;
-  const updateAll=<IconButton title="全部更新" disabled={s.subscriptionUpdating} onClick={()=>void call('refreshSubscriptions').catch(showError)}>{s.subscriptionUpdating?<Spinner/>:<Icon name="sync"/>}</IconButton>;
+  const updateAll=<SubscriptionUpdateButton label="全部更新" updating={updates.anyUpdating}
+    disabled={!s.subscriptions.length&&!s.configs.some(c=>c.url)} onUpdate={()=>void updates.run('all','refreshSubscriptions')}/>;
   const rememberConfigAction=()=>{configDialogAnchor.current=document.activeElement?.closest('.menu-anchor')?.querySelector('button')??null;};
   const closeConfigDialog=()=>{setPreview(null);setEditing(null);requestAnimationFrame(()=>configDialogAnchor.current?.focus({preventScroll:true}));};
   const editProfile=(c:WboxState['configs'][number])=>{rememberConfigAction();void call('readProfile',{id:c.id}).then(content=>setEditing({id:c.id,name:c.name,content})).catch(showError);};
@@ -87,14 +90,16 @@ export function WorkspaceView() {
       {!configs.length&&<EmptyState icon="folder">添加远程配置地址，或导入本地 JSON / YAML。</EmptyState>}
       <div className="wbox-library-grid">{configs.map(c=><section className={`wbox-library-card ${s.configPath===c.path?'current':''}`} key={c.id}>
         <div className="wbox-library-title"><button className="wbox-row-main" onClick={()=>void call('selectProfile',{id:c.id}).catch(showError)}><Icon name={s.configPath===c.path?'check':'folder'}/><strong>{c.name}</strong></button>
+          <div className="wbox-library-actions">
+          {c.url&&<SubscriptionUpdateButton label={`更新订阅 · ${c.name}`} updating={updates.updating(configUpdateKey(c.id))} onUpdate={()=>void updates.run(configUpdateKey(c.id),'updateProfile',{id:c.id})}/>}
           <OthersMenu title={`配置操作 · ${c.name}`}>
             <MenuItem icon="edit" onSelect={()=>editProfile(c)}>编辑配置</MenuItem>
             <MenuItem icon="text_snippet" onSelect={()=>previewProfile(c)}>预览</MenuItem>
-            {c.url&&<MenuItem icon="sync" onSelect={()=>void run('updateProfile',{id:c.id})}>同步</MenuItem>}
             <MenuItem icon="settings" onSelect={()=>{if(c.url)setSubscriptionEditor({id:c.id,name:c.name,url:c.url,options:c.subscription});else{setRenaming({id:c.id,name:c.name});setRenameError('');}}}>更多</MenuItem>
             <MenuItem icon="save" onSelect={()=>void window.wbox.exportFile(c.id).catch(showError)}>导出配置</MenuItem>
             <MenuItem icon="delete" danger onSelect={()=>void run('removeProfile',{id:c.id})}>删除</MenuItem>
           </OthersMenu>
+          </div>
         </div>
         {c.url&&<SubscriptionTraffic usage={c.subscription?.usage}/>}
         <small className="wbox-library-meta">{c.core} · {c.url?'远程配置':'本地配置'} · {new Date(c.updated).toLocaleString()}</small>
@@ -111,11 +116,12 @@ export function WorkspaceView() {
       {!!subscriptions.length&&<>
         <div className="wbox-library-heading"><span>订阅 · {subscriptions.length}</span>{updateAll}{sorting}</div>
         <div className="wbox-library-grid">{subscriptions.map(url=><section className="wbox-library-card" key={url}>
-          <div className="wbox-library-title"><strong>{s.subscriptionSettings[url]?.name||new URL(url).hostname}</strong><OthersMenu title={`订阅操作 · ${s.subscriptionSettings[url]?.name||new URL(url).hostname}`}>
+          <div className="wbox-library-title"><strong>{s.subscriptionSettings[url]?.name||new URL(url).hostname}</strong><div className="wbox-library-actions">
+          <SubscriptionUpdateButton label={`更新订阅 · ${s.subscriptionSettings[url]?.name||new URL(url).hostname}`} updating={updates.updating(nodeSubscriptionUpdateKey(url))} onUpdate={()=>void updates.run(nodeSubscriptionUpdateKey(url),'importNodes',{url})}/>
+          <OthersMenu title={`订阅操作 · ${s.subscriptionSettings[url]?.name||new URL(url).hostname}`}>
             <MenuItem icon="edit" onSelect={()=>setSubscriptionEditor({url,name:s.subscriptionSettings[url]?.name||new URL(url).hostname,options:s.subscriptionSettings[url]})}>编辑订阅</MenuItem>
-            <MenuItem icon="sync" onSelect={()=>void run('importNodes',{url})}>同步</MenuItem>
             <MenuItem icon="delete" danger onSelect={()=>void run('removeSubscription',{url})}>删除</MenuItem>
-          </OthersMenu></div>
+          </OthersMenu></div></div>
           <SubscriptionTraffic usage={s.subscriptionSettings[url]?.usage}/>
           <small className="wbox-library-meta">{s.nodes.filter(n=>n.sourceSubscription===url).length} 个节点 · {s.subscriptionSettings[url]?.autoUpdate?`每 ${s.subscriptionSettings[url].updateMinutes} 分钟更新`:'手动更新'}</small>
           {s.subscriptionSettings[url]?.error&&<p className="wbox-error">{s.subscriptionSettings[url].error}</p>}

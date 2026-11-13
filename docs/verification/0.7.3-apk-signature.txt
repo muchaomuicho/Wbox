@@ -1,0 +1,4 @@
+Signer #1 certificate DN: CN=Wbox, OU=Development, O=Wbox, C=CN
+Signer #1 certificate SHA-256 digest: 774e7eef8410a54c9d80fe18ebd3980d07701afb176d7e94ddfee5b796c7b026
+Signer #1 certificate SHA-1 digest: 6ce4b2925c1eb7758349d3a28558892c8a393914
+Signer #1 certificate MD5 digest: 39707cef3a10e339012b996e990d6791

@@ -1,0 +1,36 @@
+.wbox-subscription-update.icon-button {
+  width:34px;
+  height:34px;
+  min-width:34px;
+  padding:6px;
+  flex-shrink:0;
+  border:1px solid var(--border);
+  border-radius:50%;
+  color:var(--accent-strong);
+  background:var(--accent-soft);
+  transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease;
+}
+.wbox-subscription-update.icon-button:hover { border-color:var(--accent); }
+.wbox-subscription-update.icon-button[aria-busy="true"] {
+  opacity:1;
+  color:var(--accent);
+  border-color:var(--accent);
+  cursor:progress;
+}
+.wbox-subscription-update-ring {
+  display:block;
+  width:20px;
+  height:20px;
+  box-sizing:border-box;
+  border:2px solid color-mix(in srgb,currentColor 20%,transparent);
+  border-top-color:currentColor;
+  border-right-color:currentColor;
+  border-radius:50%;
+  animation:wbox-subscription-update-spin 800ms linear infinite;
+}
+@keyframes wbox-subscription-update-spin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce) {
+  .wbox-subscription-update-ring { animation-duration:1800ms; }
+  .wbox-subscription-update.icon-button { transition:none; }
+}
+.wbox-library-actions { display:flex;align-items:center;gap:8px;flex-shrink:0; }

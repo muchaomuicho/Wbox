@@ -13,7 +13,7 @@ Windows · Android ｜ mihomo · sing-box
 [![Android](https://img.shields.io/badge/Android-8.0%2B-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 
-[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.2.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
+[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.3.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
 
 </div>
 
@@ -22,26 +22,28 @@ Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性
 ## 界面一览
 
 <div align="center">
-<img src="docs/previews/0.7.2-windows-preview-light.png" alt="Windows 配置预览与语法高亮" width="96%" />
-<br/><sub>Windows：清晰的流量信息、自适应语法预览与可选配色。</sub>
+<img src="docs/previews/0.7.3-windows-subscription-updating-light.png" alt="Windows 独立订阅更新按钮" width="96%" />
+<br/><sub>Windows：每份订阅独立更新，圆环清楚显示更新进度。</sub>
 <br/><br/>
-<img src="docs/previews/0.7.2-android-profiles-light.png" alt="Android 浅色配置卡片" width="32%" />
-<img src="docs/previews/0.7.2-android-profiles-menu.png" alt="Android 配置操作菜单" width="32%" />
-<img src="docs/previews/0.7.2-android-profiles-dark.png" alt="Android 深色配置卡片" width="32%" />
-<br/><sub>Android：参考 FlClash 的配置页，集中操作，支持系统字体缩放。</sub>
+<img src="docs/previews/0.7.3-android-blue-light.png" alt="Android 雾蓝配色" width="32%" />
+<img src="docs/previews/0.7.3-android-pink-light.png" alt="Android 柔粉配色" width="32%" />
+<img src="docs/previews/0.7.3-android-default-dark.png" alt="Android 黑白深色配色" width="32%" />
+<br/><sub>Android：黑白、雾蓝与柔粉可选，流量与到期信息保持统一，启动入口使用悬浮按钮。</sub>
 </div>
 
-## 0.7.2：配置更清楚，编辑更顺手
+## 0.7.3：更新更直观，配色更统一
 
-Android 配置页参考 [FlClash](https://github.com/chen08209/FlClash) 的真实配置列表结构，集中更新、排序与添加入口，手机单列、平板自适应多列。蓝色主色与柔和粉紫强调色配合浅深背景，流量和日期更易阅读。编辑支持惯性滚动与系统边缘返回，键盘优先收起，离开未保存修改时确认。
+双端远程配置与节点订阅卡片增加独立圆形更新按钮：点击立即显示连续圆环，更新期间防止重复触发，失败后保留已有内容并恢复重试。顶部保留“全部更新”，三点菜单移除重复的“同步”。
 
-Windows 预览与编辑提供 JSON／YAML 高亮、行号、查找和自动换行，随窗口与缩放调整。卡片辅助文字放大至 14px，外观可选黑白、雾蓝与柔粉。右键托盘菜单优先在图标左侧显示，子菜单按可用空间展开。
+Android 新增与 Windows 一致的黑白、雾蓝和柔粉，独立选择浅色、深色或跟随系统并保存。到期信息并入流量文字，字号、颜色一致。配置页使用统一悬浮启动按钮，启动中可取消，成功连接后才出现连接入口。
+
+配置页继续参考 [FlClash](https://github.com/chen08209/FlClash)，手机单列、平板自适应多列；Android 编辑保留惯性滚动与未保存修改保护。Windows 保留自适应 JSON／YAML 高亮预览和优先向左展开的托盘菜单。
 
 保留在线配置应用、失败恢复、测速期间连接与选择、停止优先等原有行为。
 
 ## 两个工作区，各自完整
 
-- **配置工作区**：导入远程 URL 或本地 JSON / YAML，保留完整代理组、DNS 与路由；支持多份配置、代码编辑、同步、导出、在线切换及代理组管理。
+- **配置工作区**：导入远程 URL 或本地 JSON / YAML，保留完整代理组、DNS 与路由；支持多份配置、代码编辑、更新订阅、导出、在线切换及代理组管理。
 - **节点工作区**：独立管理订阅与节点链接，按来源筛选、搜索、编辑与克隆；只加载当前节点和显式依赖，继续使用内置 DNS、FakeIP、广告拦截及应用分流模板。
 
 两工作区分别保存选择。Windows 单击选中、双击或 Enter 连接，右键或 Ctrl+D 编辑，Ctrl+V 导入；Android 使用单击、双击和长按，也支持外接键盘快捷键。点击闪电仅测试延迟，保留当前选择；离线测速使用临时内核，不启用系统代理、TUN 或 VPN。
@@ -50,10 +52,10 @@ Windows 预览与编辑提供 JSON／YAML 高亮、行号、查找和自动换�
 
 在 [GitHub Releases](https://github.com/muchaomuicho/Wbox/releases/latest) 下载：
 
-- `Wbox-0.7.2-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
-- `Wbox-0.7.2-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
-- `Wbox-0.7.2-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
-- `SHA256SUMS-0.7.2.txt`：发布文件 SHA256 校验值。
+- `Wbox-0.7.3-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
+- `Wbox-0.7.3-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
+- `Wbox-0.7.3-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
+- `SHA256SUMS-0.7.3.txt`：发布文件 SHA256 校验值。
 
 Windows 关闭窗口后保留托盘，左键恢复主界面，右键打开菜单；支持开机自启、静默启动与自动连接。托盘可切换运行策略组、配置、测速及关闭连接。Android 首次连接授权系统 VPN，支持全部应用、只代理所选应用或绕过所选应用，IPv6 默认开启。
 
@@ -77,7 +79,7 @@ Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，�
 
 ## 验证与历史归档
 
-本轮检查配置列表与编辑导航、字体缩放、Windows 高亮预览与托盘布局，并回归双内核配置行为；Android 界面验证使用隔离 API35 模拟器。发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.2-` 开头。
+本轮检查双端独立更新按钮、慢请求、重复触发、失败恢复、批量更新与菜单，以及 Android 配色持久化、字体缩放和启动入口。Android 界面验证使用隔离 API35 模拟器；发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.3-` 开头。
 
 Android 系统 Back、键盘优先收起、未保存修改保护及惯性滚动已检查；当前模拟器缺少系统边缘手势监听，左右边缘滑动尚未完成真机验证，记录中单独标为未验证。
 

@@ -1,0 +1,9 @@
+{
+  "tests": 102,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 4,
+  "lintErrors": 0,
+  "lintWarnings": 7,
+  "command": "tools/build-android.ps1 -JavaHome <JDK 21> -SdkPath <Android SDK> -Test"
+}
