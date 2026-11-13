@@ -19,6 +19,7 @@ public sealed class Preferences
     public List<ConfigProfile> Configs { get; set; } = [];
     public string NodeCore { get; set; } = "";
     public Dictionary<string, string> NodeGroupSelections { get; set; } = [];
+    public string LibrarySort { get; set; } = "default";
     public string SubscriptionFilter { get; set; } = "";
     public bool SubscriptionAutoUpdate { get; set; }
     public int SubscriptionUpdateMinutes { get; set; } = 360;

@@ -45,3 +45,14 @@
 .wbox-node-delay:focus-visible { outline: 2px solid var(--accent); }
 .wbox-node-delay:disabled { cursor: default; }
 .wbox-delay-action.icon-button:hover,.wbox-delay-action.icon-button:active { background: transparent; }
+
+.wbox-library-heading { display:flex; align-items:center; gap:10px; margin:20px 0 14px; color:var(--text-secondary); font-size:13px; }
+.wbox-library-heading > span { flex:1; }
+.wbox-library-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:16px; }
+.wbox-library-card { min-width:0; padding:20px 22px; border:1px solid var(--border); border-radius:20px; background:var(--card); }
+.wbox-library-card.current { border-color:var(--accent); }
+.wbox-library-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; font-size:18px; }
+.wbox-library-title strong { overflow-wrap:anywhere; font-weight:500; }
+.wbox-library-meta { display:block; margin-top:12px; color:var(--text-secondary); font-size:12px; line-height:1.6; }
+.wbox-library-card .wbox-subscription-traffic progress { max-width:none; height:5px; }
+.wbox-preview-code { white-space:pre-wrap; overflow:auto; max-height:65vh; font:12px/1.7 var(--font-mono); }

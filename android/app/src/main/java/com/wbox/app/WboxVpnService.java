@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 
 public final class WboxVpnService extends VpnService {
     public static final String STOP="com.wbox.app.STOP";
-    public static volatile boolean running, starting, stopping, visible, wantsGroups, wantsConnections, wantsOverview;
+    public static volatile boolean running, starting, stopping, reloading, visible, wantsGroups, wantsConnections, wantsOverview;
     public static volatile List<ConnectionRecord> connectionRows=List.of();
     public static volatile long startedAt;
     public static volatile String status="未连接", secret="", lastError="";
@@ -57,26 +57,43 @@ public final class WboxVpnService extends VpnService {
     private ParcelFileDescriptor ownedTun;
     private volatile boolean shuttingDown;
     private volatile boolean stopRequested;
+    private final Object connectionIntent=new Object();
     private boolean closed=true;
     private String startStage="准备 VPN";
     private volatile String startupDiagnostic="";
     private ConnectivityManager connectivity;
     private ConnectivityManager.NetworkCallback networkCallback;
-    static CompletableFuture<Void> commitNodes(Context context,JSONObject next) {
+    static CompletableFuture<Void> commitNodes(Context context,JSONObject next) {return commitProfiles(context,new Profiles(context),next);}
+    static CompletableFuture<Void> commitProfiles(Context context,Profiles source,JSONObject next) {
         CompletableFuture<Void> result=new CompletableFuture<>();WboxVpnService service=instance;
         Runnable apply=()->{try{
-            NodeChanges.commit(new Profiles(context),next,new NodeChanges.Connection(){
+            Profiles current=new Profiles(context);
+            JSONObject merged=Profiles.merge(source.data,next,current.data);
+            reloading=service!=null&&running;
+            RuntimeChanges.commit(current,merged,new NodeChanges.Connection(){
                 public boolean running(){return service!=null&&WboxVpnService.running;}
                 public boolean cancelled(){return service==null||service.stopRequested;}
                 public void stop(){if(service!=null)service.stopCore();}
-                public void start()throws Exception{if(service!=null&&!service.stopRequested){service.startingForeground();service.startCore();}}
+                public void start()throws Exception{
+                    if(service==null)return;
+                    service.startingForeground(false);service.startCore();
+                    if(service.stopRequested||service.shuttingDown)throw new CancellationException("配置应用已取消");
+                }
             });
             if(service!=null&&!running&&!starting)service.stopSelf();result.complete(null);
-        }catch(Exception error){result.completeExceptionally(error);}};
+        }catch(Exception error){result.completeExceptionally(error);}finally{reloading=false;}};
         if(service!=null)try{service.commands.execute(apply);}catch(RejectedExecutionException error){result.completeExceptionally(error);}else apply.run();
         return result;
     }
-    private void startingForeground(){closed=false;starting=true;shuttingDown=false;lastError="";status="连接中";if(Build.VERSION.SDK_INT>=34)startForeground(NOTIFY,notification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);else startForeground(NOTIFY,notification());}
+    private void requestStop(){synchronized(connectionIntent){stopRequested=true;shuttingDown=true;}}
+    private void startingForeground(boolean explicit){
+        synchronized(connectionIntent){
+            if(explicit)stopRequested=false;
+            if(stopRequested)throw new CancellationException("连接已取消");
+            closed=false;starting=true;shuttingDown=false;lastError="";status="连接中";
+            if(Build.VERSION.SDK_INT>=34)startForeground(NOTIFY,notification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);else startForeground(NOTIFY,notification());
+        }
+    }
     private long corePid,previousUp,previousDown,lastPoll;
     private int pollTicks;
     private static final int NOTIFY=42;
@@ -86,9 +103,9 @@ public final class WboxVpnService extends VpnService {
     @Override public void onCreate(){super.onCreate();instance=this;NotificationManager m=getSystemService(NotificationManager.class);NotificationChannel ch=new NotificationChannel("vpn","代理连接",NotificationManager.IMPORTANCE_LOW);ch.setShowBadge(false);m.createNotificationChannel(ch);}
     private Notification notification(){PendingIntent open=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class),PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,WboxVpnService.class).setAction(STOP),PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);return new Notification.Builder(this,"vpn").setSmallIcon(com.wbox.app.R.drawable.wbox_icon).setContentTitle("Wbox · "+status).setContentText("上传 "+MainActivity.bytes(upload)+" · 下载 "+MainActivity.bytes(download)).setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true).addAction(new Notification.Action.Builder(null,"断开",stop).build()).build();}
     @Override public int onStartCommand(Intent intent,int flags,int startId){
-        if(intent!=null&&STOP.equals(intent.getAction())){stopRequested=true;shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});return START_NOT_STICKY;}
-        if(running||starting||stopping)return START_NOT_STICKY;
-        stopRequested=false;startingForeground();
+        if(intent!=null&&STOP.equals(intent.getAction())){requestStop();commands.execute(()->{stopCore();stopSelf();});return START_NOT_STICKY;}
+        if(running||starting||stopping||reloading)return START_NOT_STICKY;
+        startingForeground(true);
         commands.execute(()->{try{startCore();if(shuttingDown){stopCore();stopSelf();}}catch(Throwable ex){if(!shuttingDown){lastError=startStage+"："+(startupDiagnostic.isEmpty()?ErrorMessage.describe(ex):startupDiagnostic);log("ERROR 启动失败 · "+lastError);persistFailure();}stopCore();stopSelf();}});
         return START_NOT_STICKY;
     }
@@ -135,7 +152,10 @@ public final class WboxVpnService extends VpnService {
         b.setBlocking(true);if(Build.VERSION.SDK_INT>=29)b.setMetered(false);ownedTun=b.establish();if(ownedTun==null)throw new IOException("VPN 权限被撤销");
         File hev=new File(dir,"tunnel.yaml");String y="tunnel:\n  name: wbox\n  mtu: 1500\n  ipv4: 172.19.0.1\n"+(ipv6?"  ipv6: 'fdfe:dcba:9876::1'\n":"")+"socks5:\n  address: 127.0.0.1\n  port: 10808\n  udp: udp\nmisc:\n  task-stack-size: 24576\n  tcp-buffer-size: 32768\n  udp-recv-buffer-size: 131072\n  max-session-count: 1024\n  connect-timeout: 8000\n  tcp-read-write-timeout: 300000\n  udp-read-write-timeout: 60000\n  log-level: warn\n";Files.write(hev.toPath(),y.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         final int fd=ownedTun.detachFd();ownedTun=null;tunnel=new Thread(()->{try{if(shuttingDown)return;int result=NativeTunnel.run(hev.getAbsolutePath(),fd);if(!shuttingDown){log("隧道结束："+result);shuttingDown=true;queueShutdown();}}catch(Throwable ex){log("隧道失败："+ex.getMessage());shuttingDown=true;queueShutdown();}finally{try{ParcelFileDescriptor.adoptFd(fd).close();}catch(IOException ignored){}}},"wbox-tun");tunnel.start();
-        upload=download=upRate=downRate=previousUp=previousDown=0;clearTraffic();lastPoll=SystemClock.elapsedRealtime();startedAt=lastPoll;running=true;starting=false;status="已连接";log(p.engine()+" 已连接（"+(SystemClock.elapsedRealtime()-startupBegan)+" ms） · IPv6 "+(ipv6?"开启":"关闭"));
+        synchronized(connectionIntent){
+            if(stopRequested||shuttingDown)return;
+            upload=download=upRate=downRate=previousUp=previousDown=0;clearTraffic();lastPoll=SystemClock.elapsedRealtime();startedAt=lastPoll;running=true;starting=false;status="已连接";log(p.engine()+" 已连接（"+(SystemClock.elapsedRealtime()-startupBegan)+" ms） · IPv6 "+(ipv6?"开启":"关闭"));
+        }
         monitorNetwork();polling=Executors.newSingleThreadScheduledExecutor();instance=this;schedulePoll(0);
         getSystemService(NotificationManager.class).notify(NOTIFY,notification());
         // Wait for exit instead of waking every 30 seconds in the background.
@@ -159,6 +179,6 @@ public final class WboxVpnService extends VpnService {
     private long coreRss(){try{for(String line:Files.readAllLines(Paths.get("/proc/"+corePid+"/status"))){if(line.startsWith("VmRSS:"))return Long.parseLong(line.replaceAll("[^0-9]",""))*1024;}}catch(Exception ignored){}return 0;}
     private void queueShutdown(){try{commands.execute(()->{stopCore();stopSelf();});}catch(RejectedExecutionException ignored){}}
     private void stopCore(){if(closed)return;closed=true;if(networkCallback!=null){try{connectivity.unregisterNetworkCallback(networkCallback);}catch(Exception ignored){}networkCallback=null;}stopping=true;shuttingDown=true;running=false;starting=false;status="正在关闭";if(polling!=null){polling.shutdownNow();polling=null;}try{NativeTunnel.stop();}catch(Throwable ignored){}if(tunnel!=null){while(tunnel.isAlive()){try{tunnel.join(2000);if(tunnel.isAlive())NativeTunnel.stop();}catch(InterruptedException ignored){}catch(Throwable ignored){}}tunnel=null;}if(ownedTun!=null){try{ownedTun.close();}catch(IOException ignored){}ownedTun=null;}if(core!=null){core.destroy();try{if(!core.waitFor(2,TimeUnit.SECONDS))core.destroyForcibly();}catch(InterruptedException ignored){core.destroyForcibly();}core=null;}inbound=outbound=0;upRate=downRate=memory=appMemory=coreMemory=0;connections=new JSONObject();connectionRows=List.of();proxies=new JSONObject();status=lastError.isEmpty()?"未连接":"连接失败";stopping=false;log("连接已关闭");stopForeground(STOP_FOREGROUND_REMOVE);}
-    @Override public void onRevoke(){stopRequested=true;shuttingDown=true;commands.execute(()->{stopCore();stopSelf();});super.onRevoke();}
-    @Override public void onDestroy(){if(instance==this)instance=null;stopRequested=true;shuttingDown=true;commands.execute(this::stopCore);commands.shutdown();super.onDestroy();}
+    @Override public void onRevoke(){requestStop();commands.execute(()->{stopCore();stopSelf();});super.onRevoke();}
+    @Override public void onDestroy(){if(instance==this)instance=null;requestStop();commands.execute(this::stopCore);commands.shutdown();super.onDestroy();}
 }

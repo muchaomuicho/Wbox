@@ -15,7 +15,7 @@ export function SubscriptionEditor({value,onClose}:{value:SubscriptionEdit;onClo
     <Field label="URL"><textarea className="input wbox-subscription-url" aria-label="URL" rows={3} value={url} onChange={e=>setUrl(e.target.value)} spellCheck={false}/></Field>
     <div className="wbox-row"><span className="wbox-grow">自动更新</span><Switch label="此订阅自动更新" value={enabled} onChange={setEnabled}/></div>
     <Field label="自动更新间隔（分钟）"><input className="input" aria-label="自动更新间隔（分钟）" type="number" min={15} max={10080} value={minutes} onChange={e=>setMinutes(e.target.value)}/></Field>
-    <p className="wbox-hint">仅更新此订阅，间隔为 15–10080 分钟。更改地址会保留现有内容，更新后生效。</p>
+    <p className="wbox-hint">仅更新此订阅，间隔为 15–10080 分钟。更改地址后自动同步并立即应用，失败时保留原订阅。</p>
     <SubscriptionTraffic usage={value.options?.usage}/>
     {value.options?.lastSuccess&&new Date(value.options.lastSuccess).getFullYear()>2000&&<p className="wbox-hint">最近更新：{new Date(value.options.lastSuccess).toLocaleString()}</p>}
     {(error||value.options?.error)&&<p role="alert" className="wbox-error">{error||value.options?.error}</p>}

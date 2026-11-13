@@ -72,6 +72,7 @@ final class SubscriptionUpdates {
             if(Thread.currentThread().isInterrupted())throw new InterruptedException();
             SubscriptionFetch.Download download=null;String error="";try{download=SubscriptionFetch.download(t.url);}catch(Exception e){error="下载失败，请检查网络或订阅地址";}
             if(Thread.currentThread().isInterrupted())throw new InterruptedException();
+            Profiles source=null;JSONObject nextData=null;
             synchronized(Profiles.STORE_LOCK){
                 Profiles p=new Profiles(context);JSONObject settings=options(p,t.id,t.url);
                 if(settings==null||!settings.optBoolean("auto_update"))continue;
@@ -82,10 +83,14 @@ final class SubscriptionUpdates {
                     Profiles next=p.copy();
                     if(t.id.isEmpty())next.importNodes(download.content(),t.url);else next.importConfig(download.content(),t.url,t.id,false);
                     SubscriptionUsage.apply(next,t.id,t.url,download.usage());
-                    p.data=next.data;settings=options(p,t.id,t.url);settings.put("last_success",System.currentTimeMillis());
+                    source=p;settings=options(next,t.id,t.url);settings.put("last_success",System.currentTimeMillis()).put("error","");nextData=next.data;
                 }catch(Exception e){error="订阅内容无效，已保留原数据";}
-                settings.put("error",error);p.save();
+                if(nextData==null){settings.put("error",error);p.save();}
             }
+            // The service's command executor owns reloads. Never wait on it while
+            // holding STORE_LOCK: startCore and rollback both read/save Profiles.
+            if(nextData!=null)try{WboxVpnService.commitProfiles(context,source,nextData).get();}
+            catch(Exception e){synchronized(Profiles.STORE_LOCK){Profiles p=new Profiles(context);JSONObject settings=options(p,t.id,t.url);if(settings!=null){settings.put("error","订阅应用失败，已保留原数据和连接");p.save();}}WboxVpnService.log("ERROR 自动更新未应用："+ErrorMessage.describe(e.getCause()==null?e:e.getCause()));}
         }
     }
 }

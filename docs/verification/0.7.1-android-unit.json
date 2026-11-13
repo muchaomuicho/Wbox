@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "command": ":app:testDebugUnitTest :app:assembleDebug :app:lintDebug -PwboxTestAbi=x86_64",
+  "unitTests": {
+    "tests": 96,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 4
+  },
+  "lintErrors": [],
+  "cancellationChecks": [
+    "deletingLastProfileStopsWithoutRestart",
+    "cancellationDuringStartupRollsBackWithoutReconnecting",
+    "appRoutingAppliesImmediatelyAndOrderingIsEquivalent",
+    "namesAndSortDoNotRestartRuntime",
+    "activeConfigEditReloadsAndFailedReloadRestoresData",
+    "userStopDuringTransactionPreventsRestart",
+    "stopDuringReloadGapSendsStopInsteadOfStartingAgain",
+    "stopBeforeNodeChangeFinishesPreventsItsAutoConnect"
+  ]
+}

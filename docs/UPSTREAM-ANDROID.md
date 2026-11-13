@@ -10,6 +10,6 @@
 
 网络实现参考上游 `bg/VPNService.kt` 和 sing-box v1.14.4 的 `route/network.go`。官方 Android 客户端通过 libbox 平台接口实现网卡监测与 socket protect。Wbox 本版仍采用命令行内核 + HEV，使用 Android VpnService 排除自身 UID，由 Android 决定上游默认网络，因此不需要命令行内核的 netlink 网卡探测与 SO_BINDTODEVICE。`AndroidConfig.java` 只调整运行副本的这些系统参数并映射 TUN 入站匹配，原始配置不变。
 
-两种实现的内存口径不同：Wbox 显示应用 PSS 和内核子进程 RSS，不能直接与官方客户端的 Go 堆数值相减。后台不持有唤醒锁，采样降低为 30 秒；发布版启用 R8。耗电需要设备测量。
+两种实现的内存口径不同：Wbox 显示应用 PSS 和内核子进程 RSS，不能直接与官方客户端的 Go 堆数值相减。后台不持有唤醒锁，并停止界面采样；发布版启用 R8。耗电需要设备测量。
 
 `src/debug` 中的 RuntimeProbeReceiver 仅用于测试模拟器，发布版不包含该入口。`tools/android-runtime-test.py --minified` 对本机 TCP/UDP 服务进行合成测试，不使用用户节点凭据。

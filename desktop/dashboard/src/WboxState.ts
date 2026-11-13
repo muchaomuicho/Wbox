@@ -6,6 +6,7 @@ import type {SubscriptionUsage} from './SubscriptionTraffic';
 export interface SubscriptionOptions { usage?:SubscriptionUsage|null; name:string; autoUpdate:boolean; updateMinutes:number; lastAttempt:string; lastSuccess:string; error:string }
 export interface WboxState {
   delayTesting: boolean;
+  librarySort: string;
   mode: string; core: string; configPath: string; running: boolean; selectedNode: number; delayUrl: string;
   silent: boolean; autoStart: boolean; autoConnect: boolean; systemProxy: boolean; nativeInbounds: boolean;
   configs: {id: string; name: string; core: string; path: string; url: string; updated: string; subscription:SubscriptionOptions|null}[];

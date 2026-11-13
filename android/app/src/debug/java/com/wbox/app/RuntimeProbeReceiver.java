@@ -12,6 +12,24 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context context,Intent intent){
         PendingResult pending=goAsync();new Thread(()->{try{
             String action=intent.getStringExtra("operation");
+            if("apply-change".equals(action)){
+                JSONObject request=new JSONObject(new String(Files.readAllBytes(new File(context.getFilesDir(),"probe-change.json").toPath()),java.nio.charset.StandardCharsets.UTF_8));
+                JSONObject result=new JSONObject().put("id",request.optString("id"));
+                try{
+                    Profiles source=new Profiles(context);if(request.has("source"))source.data=request.getJSONObject("source");
+                    WboxVpnService.commitProfiles(context,source,request.getJSONObject("next")).whenComplete((unused,error)->{
+                        try{
+                            if(error==null)result.put("ok",true);
+                            else {Throwable cause=error.getCause()==null?error:error.getCause();result.put("ok",false).put("error",ErrorMessage.describe(cause));}
+                            Files.write(new File(context.getFilesDir(),"probe-change-result.json").toPath(),result.toString().getBytes());
+                        }catch(Exception failure){try{Files.write(new File(context.getFilesDir(),"probe-error.txt").toPath(),failure.toString().getBytes());}catch(IOException ignored){}}
+                    });
+                    // Release the ordered broadcast so status/stop broadcasts can
+                    // observe the transaction while the service executor applies it.
+                    return;
+                }catch(Exception e){Throwable cause=e.getCause()==null?e:e.getCause();result.put("ok",false).put("error",ErrorMessage.describe(cause));}
+                Files.write(new File(context.getFilesDir(),"probe-change-result.json").toPath(),result.toString().getBytes());return;
+            }
             if("groups".equals(action)){
                 Files.write(new File(context.getFilesDir(),"probe-groups.json").toPath(),WboxVpnService.api().proxies().toString().getBytes());return;
             }
@@ -35,9 +53,9 @@ public final class RuntimeProbeReceiver extends BroadcastReceiver {
             if("stop".equals(action)){context.startService(new Intent(context,WboxVpnService.class).setAction(WboxVpnService.STOP));return;}
             if("connect".equals(action)){if(android.net.VpnService.prepare(context)!=null)throw new IllegalStateException("Test VPN approval missing");context.startForegroundService(new Intent(context,WboxVpnService.class));return;}
             if("status".equals(action)){
-                JSONObject state=new JSONObject().put("running",WboxVpnService.running).put("starting",WboxVpnService.starting).put("status",WboxVpnService.status).put("error",WboxVpnService.lastError).put("upload",WboxVpnService.upload).put("download",WboxVpnService.download).put("logs",new JSONArray(WboxVpnService.logSnapshot()));
+                JSONObject state=new JSONObject().put("running",WboxVpnService.running).put("starting",WboxVpnService.starting).put("stopping",WboxVpnService.stopping).put("reloading",WboxVpnService.reloading).put("status",WboxVpnService.status).put("error",WboxVpnService.lastError).put("upload",WboxVpnService.upload).put("download",WboxVpnService.download).put("logs",new JSONArray(WboxVpnService.logSnapshot()));
                 List<WboxVpnService.TrafficSample> samples=WboxVpnService.trafficSnapshot();
-                state.put("visible",WboxVpnService.visible).put("lastSample",samples.isEmpty()?0:samples.get(samples.size()-1).time);
+                state.put("visible",WboxVpnService.visible).put("startedAt",WboxVpnService.startedAt).put("lastSample",samples.isEmpty()?0:samples.get(samples.size()-1).time);
                 Files.write(new File(context.getFilesDir(),"probe-state.json").toPath(),state.toString().getBytes());return;
             }
             String core=intent.getStringExtra("engine");if(core==null)core="sing-box";

@@ -58,7 +58,7 @@ import androidx.compose.ui.unit.dp
                             Column(Modifier.fillMaxWidth().combinedClickable(onClick={m.selectNode(name,active)},onLongClick={fullName=name}).padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
                                 Text(name,style=MaterialTheme.typography.bodyMedium,fontWeight=FontWeight.Medium,minLines=2,maxLines=2,overflow=TextOverflow.Ellipsis)
                                 Text(proxyTypeLabel(m.groups.optJSONObject(name)?.optString("type").orEmpty(),m.groups.optJSONObject(name)?.has("all")==true),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                                NodeDelay(name,value,!m.busy&&!m.testing&&!m.transition,{m.latency(listOf(name),expandGroup=false)},Modifier.fillMaxWidth())
+                                NodeDelay(name,value,!m.testing&&!m.transition,{m.latency(listOf(name),expandGroup=false)},Modifier.fillMaxWidth())
                             }
                         }
                     }

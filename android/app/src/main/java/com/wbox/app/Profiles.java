@@ -85,7 +85,7 @@ public final class Profiles {
     }
     public JSONArray configs(){JSONArray a=data.optJSONArray("configs");return a==null?new JSONArray():a;}
     public JSONObject activeConfig(){JSONArray a=configs();for(int i=0;i<a.length();i++){JSONObject p=a.optJSONObject(i);if(p!=null&&p.optString("id").equals(data.optString("active_config")))return p;}return a.optJSONObject(0);}
-    public void activateConfig(String id)throws Exception {for(int i=0;i<configs().length();i++){JSONObject p=configs().getJSONObject(i);if(p.getString("id").equals(id)){data.put("active_config",id);data.put("config_"+p.getString("core"),p.getString("content"));if(mode().equals("config"))data.put("engine",p.getString("core"));return;}}}
+    public void activateConfig(String id)throws Exception {for(int i=0;i<configs().length();i++){JSONObject p=configs().getJSONObject(i);if(p.getString("id").equals(id)){data.put("active_config",id);data.put("config_"+p.getString("core"),p.getString("content"));if(mode().equals("config"))data.put("engine",p.getString("core"));return;}}throw new IllegalArgumentException("配置已移除，请重新选择");}
     public String importConfig(String body,String source,String id)throws Exception {
         return importConfig(body,source,id,true);
     }

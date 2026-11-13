@@ -1,0 +1,77 @@
+{
+  "passed": true,
+  "failure": null,
+  "checks": [
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:43:40 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "mihomo active config edits immediately reload",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:43:42 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "mihomo failed live config restores saved data and connection",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:43:44 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "mihomo profile switching applies while connected",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:43:45 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "mihomo per-app VPN changes immediately rebuild routing",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:43:47 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "mihomo stopping a pending live reload cancels promptly",
+    "mihomo canceled reload restores the original saved profiles",
+    "mihomo canceled reload never reconnects during rollback",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:43:56 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "mihomo explicit start works after canceled reload",
+    "mihomo offline latency does not enable VPN",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:10 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "mihomo start remains available during latency",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:17 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "mihomo double-tap switches the live node during latency",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:23 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "sing-box active config edits immediately reload",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:26 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "sing-box repeated live edit switches to proxy 0",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:28 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "sing-box repeated live edit switches to proxy 1",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:30 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "sing-box repeated live edit switches to proxy 0",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:32 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "sing-box repeated live edit switches to proxy 1",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:34 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "sing-box failed live config restores saved data and connection",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:36 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "sing-box profile switching applies while connected",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:38 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "sing-box per-app VPN changes immediately rebuild routing",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:40 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "sing-box stopping a pending live reload cancels promptly",
+    "sing-box canceled reload restores the original saved profiles",
+    "sing-box canceled reload never reconnects during rollback",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:44:48 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "sing-box explicit start works after canceled reload",
+    "sing-box offline latency does not enable VPN",
+    "Actual VPN core forwards through proxy 0; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:45:02 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-0'",
+    "sing-box start remains available during latency",
+    "Actual VPN core forwards through proxy 1; response=b'HTTP/1.1 200 OK\\r\\nConnection: close\\r\\nContent-Length: 6\\r\\nDate: Fri, 13 Nov 2026 04:45:09 GMT\\r\\nServer: BaseHTTP/0.6 Python/3.13.3\\r\\n\\r\\nWBOX-1'",
+    "sing-box double-tap switches the live node during latency"
+  ],
+  "emulator": "API35 x86_64",
+  "proxyFixture": "HTTP CONNECT byte tunnels to separate local HTTP origins",
+  "forwardingRetries": 0,
+  "networkIsolation": {
+    "mode": "Wi-Fi only for synthetic-proxy tests; production network logic unchanged",
+    "mobileDataRestored": true,
+    "diagnosis": "Synthetic replies made Android connectivity probes reject Wi-Fi and switch to cellular, resetting an in-flight TCP request. This was isolated in the emulator, without adding request retries.",
+    "evidence": [
+      {
+        "time": "2026-11-13T04:38:36.663Z",
+        "source": "ConnectivityService",
+        "event": "Wi-Fi network 100 lost VALIDATED; default network switched to cellular 101 at 04:38:36.664Z."
+      },
+      {
+        "time": "2026-11-13T04:38:37Z",
+        "source": "sing-box",
+        "event": "Request 3926590219 failed after 883ms: raw read: connection reset by peer; GET /forward EOF. The core remained running."
+      },
+      {
+        "time": "2026-11-13T04:38:38.756Z",
+        "source": "ConnectivityService",
+        "event": "Wi-Fi network 100 regained VALIDATED and became the default again."
+      }
+    ]
+  }
+}

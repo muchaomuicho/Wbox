@@ -42,7 +42,7 @@ import java.net.URI
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){TextButton(onClick={testUrl=Profiles.TEST_URL}){Text("恢复默认")};Button(onClick={m.work{val uri=URI(testUrl);require(uri.scheme in listOf("https","http") && uri.host!=null){"请填写 HTTP / HTTPS 地址"};require(m.profiles.engine()!="sing-box" || uri.scheme=="https"){"sing-box 延迟测试需要 HTTPS 地址"};m.setting("test_url",testUrl.trim())}}){Text("保存")}}
             }
         }}
-        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox 0.7.0",style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4-wbox.1 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
+        item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox "+m.activity.packageManager.getPackageInfo(m.activity.packageName,0).versionName,style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4-wbox.1 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
     }
 }
 @Composable private fun SettingsPanel(title:String,content:@Composable ColumnScope.()->Unit) {Column(verticalArrangement=Arrangement.spacedBy(8.dp)){Text(title,Modifier.padding(start=12.dp),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant);Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(content=content)}}}
@@ -58,7 +58,7 @@ import java.net.URI
     val selected=remember{mutableStateListOf<String>().apply{addAll(m.profiles.data.optJSONArray("apps")?.strings().orEmpty())}}
     LaunchedEffect(Unit){applications=withContext(Dispatchers.IO){val pm=m.activity.packageManager;pm.getInstalledApplications(0).filter{it.packageName!=m.activity.packageName}.map{it.packageName to pm.getApplicationLabel(it).toString()}.sortedBy{it.second.lowercase()}}}
     Column {
-        Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.CenterVertically){Text("分应用代理",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge);TextButton(onClick={m.work{require(mode!="include" || selected.isNotEmpty()){ "请选择至少一个应用" };m.saveApps(mode,selected.toList());m.sheet="";m.message="已保存，下次连接生效"}}){Text("保存")}}
+        Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.CenterVertically){Text("分应用代理",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge);TextButton(onClick={m.work{require(mode!="include" || selected.isNotEmpty()){ "请选择至少一个应用" };m.saveApps(mode,selected.toList());m.sheet=""}}){Text("保存")}}
         Choice("代理范围",mode,listOf("all" to "全部应用","include" to "只代理所选应用","exclude" to "绕过所选应用")){mode=it}
         if(mode!="all"){
             OutlinedTextField(query,{query=it},Modifier.onFocusChanged{m.textInputFocused=it.isFocused}.fillMaxWidth().padding(16.dp),placeholder={Text("搜索应用")},singleLine=true,shape=RoundedCornerShape(12.dp))

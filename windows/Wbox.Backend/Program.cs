@@ -13,7 +13,20 @@ var core = new CoreManager();
 var prefs = Store.Load();
 Task<List<SubscriptionResult>>? subscriptionTask = null;
 bool subscriptionManual = false;
+bool subscriptionApplying = false;
 long coreGeneration = 0;
+long stopEpoch = 0;
+int stopRequested = 0;
+bool CanStart(long epoch) => Volatile.Read(ref stopRequested) == 0 && Interlocked.Read(ref stopEpoch) == epoch;
+void RequestStop() { Volatile.Write(ref stopRequested,1); Interlocked.Increment(ref stopEpoch); core.CancelStartup(); }
+async Task StartConnection(Preferences target,long epoch) {
+    if(!CanStart(epoch))throw new OperationCanceledException();
+    var startup=core.StartAsync(target);
+    // A stop can arrive between the check and StartAsync creating its new CTS.
+    if(!CanStart(epoch))core.CancelStartup();
+    await startup;
+    if(!CanStart(epoch))throw new OperationCanceledException();
+}
 bool delayTesting = false;
 CancellationTokenSource nodeTestCancellation = new();
 Task nodeTests = Task.CompletedTask;
@@ -83,35 +96,58 @@ Preferences CopyPreferences() {
     for (int i = 0; i < copy.Nodes.Count; i++) copy.Nodes[i].DelayText = prefs.Nodes[i].DelayText;
     return copy;
 }
-async Task CommitNodes(Preferences next) {
-    if (delayTesting) { nodeTestCancellation.Cancel(); await nodeTests; }
-    var previous = prefs;
-    bool restart = core.Running && prefs.Mode == "nodes";
-    if (restart && next.Nodes.Count > 0) restart = ConfigBuilder.Build(next, "validation") != ConfigBuilder.Build(previous, "validation");
-    if (restart) { core.Stop(); coreGeneration++; }
+async Task CancelTests() {
+    nodeTestCancellation.Cancel(); await nodeTests;
+}
+string RuntimeInput(Preferences p) {
+    if(p.Mode=="config" && !File.Exists(p.ConfigPath) || p.Mode=="nodes" && p.Nodes.Count==0)return "";
+    var input=p.Mode+"|"+p.Core+"|"+p.ConfigPath+"|"+p.NativeInbounds+"|";
+    return input+(core.Running?ConfigBuilder.Build(p,"validation"):p.Mode=="config"?File.ReadAllText(p.ConfigPath):JsonSerializer.Serialize(p.Nodes)+"|"+p.SelectedNode);
+}
+async Task CommitPreferences(Preferences next,string? previousInput=null,Action? rollbackFiles=null) {
+    var previous=prefs;
+    var before=previousInput??RuntimeInput(previous);
+    var epoch=Interlocked.Read(ref stopEpoch);
+    bool restart=false;
     try {
-        if (restart && next.Nodes.Count > 0) await core.StartAsync(next);
-        prefs = next; Save();
-    } catch (Exception changeError) {
-        prefs = previous;
-        if (restart) {
-            core.Stop(); coreGeneration++;
-            try { await core.StartAsync(previous); }
-            catch (Exception restoreError) { Save(); throw new InvalidOperationException("修改未保存，恢复连接失败：" + restoreError.Message, changeError); }
+        var after=RuntimeInput(next);
+        restart=core.Running && before!=after;
+        if(before!=after || previous.DelayUrl!=next.DelayUrl) await CancelTests();
+        foreach(var node in next.Nodes)if(node.DelayText=="测试中")node.DelayText="未测试";
+        if(restart){core.Stop();coreGeneration++;if(after.Length>0)await StartConnection(next,epoch);}
+        else if(core.Ready && previous.SystemProxy!=next.SystemProxy){if(next.SystemProxy)SystemProxy.Install(core.ProxyPort);else SystemProxy.Restore();}
+        prefs=next;Save();
+    } catch(Exception changeError) {
+        rollbackFiles?.Invoke();prefs=previous;
+        if(restart){
+            core.Stop();coreGeneration++;
+            if(CanStart(epoch))try{await StartConnection(previous,epoch);}
+            catch(OperationCanceledException) when(!CanStart(epoch)){}
+            catch(Exception restoreError){Save();throw new InvalidOperationException("修改未保存，恢复连接失败："+restoreError.Message,changeError);}
         }
-        Save(); throw;
+        Save();throw;
     }
 }
-void Idle() { if (core.Running || core.Starting) throw new InvalidOperationException("请先停止连接，再切换工作区、内核或运行配置。"); }
+async Task ApplyChange(Action<Preferences> change) {
+    var next=CopyPreferences();var before=RuntimeInput(prefs);
+    var files=prefs.Configs.Where(c=>File.Exists(c.Path)).Select(c=>c.Path).Distinct().ToDictionary(path=>path,File.ReadAllBytes);
+    void RestoreFiles(){
+        foreach(var item in files)File.WriteAllBytes(item.Key,item.Value);
+        foreach(var path in next.Configs.Select(c=>c.Path).Distinct().Where(path=>!files.ContainsKey(path)))
+            if(path.StartsWith(Path.Combine(Store.DirectoryPath,"profiles")+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)&&File.Exists(path))File.Delete(path);
+    }
+    try{change(next);await CommitPreferences(next,before,RestoreFiles);}catch{RestoreFiles();throw;}
+}
+Task CommitNodes(Preferences next)=>CommitPreferences(next);
 ConfigProfile Profile(string id) => prefs.Configs.FirstOrDefault(p => p.Id == id) ?? throw new ArgumentException("配置不存在。");
 object State() => new {
     delayTesting,
     groupTestError,
-    prefs.Core, prefs.Mode, prefs.ConfigPath, prefs.DelayUrl, prefs.Silent, prefs.AutoStart, prefs.AutoConnect, prefs.SystemProxy, prefs.NativeInbounds, prefs.SelectedNode,
+    prefs.LibrarySort, prefs.Core, prefs.Mode, prefs.ConfigPath, prefs.DelayUrl, prefs.Silent, prefs.AutoStart, prefs.AutoConnect, prefs.SystemProxy, prefs.NativeInbounds, prefs.SelectedNode,
     configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated, c.Subscription }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
     prefs.Subscriptions, running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
-    ,prefs.SubscriptionSettings,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null
+    ,prefs.SubscriptionSettings,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null||subscriptionApplying
 };
 async Task TestNodes(Preferences test, NodeRecord[] records, long generation, CancellationToken cancellation, int[]? indexes=null) {
     using var starts = new SemaphoreSlim(1);
@@ -119,6 +155,7 @@ async Task TestNodes(Preferences test, NodeRecord[] records, long generation, Ca
         await Parallel.ForEachAsync(indexes ?? Enumerable.Range(0, records.Length).ToArray(), new ParallelOptions { MaxDegreeOfParallelism = 2, CancellationToken = cancellation }, async (i, token) => {
             string result;
             using var tester = new CoreManager(() => true);
+            using var cancelStartup = token.Register(tester.CancelStartup);
             try {
                 var single = JsonSerializer.Deserialize<Preferences>(JsonSerializer.Serialize(test))!; single.SelectedNode=i;
                 if (!NodeOptions.Compatible(records[i],test.Core)) result="不兼容";
@@ -137,15 +174,29 @@ async Task TestNodes(Preferences test, NodeRecord[] records, long generation, Ca
     catch(Exception error) {Log("ERROR Wbox: 测速失败："+error.Message);}
     finally {foreach(var node in records)if(node.DelayText=="测试中")node.DelayText="未测试";delayTesting=false;Write(new {changed=true});}
 }
-async Task<object?> Handle(string method, JsonElement a) {
+async Task<object?> Handle(string method, JsonElement a,long? intentEpoch=null) {
     string S(string name, string fallback = "") => a.TryGetProperty(name, out var v) ? v.GetString() ?? fallback : fallback;
     int I(string name) => a.GetProperty(name).GetInt32();
+    Task<SubscriptionDownload> Download(string url) {
+        if(!a.TryGetProperty("downloadContent",out var content))return ProfileImport.DownloadAsync(url);
+        if(S("downloadedUrl")!=url)throw new InvalidOperationException("订阅地址已变化，请重新更新。");
+        return Task.FromResult(new SubscriptionDownload(content.GetString()!,a.GetProperty("downloadUsage").Deserialize<SubscriptionUsage>()));
+    }
     switch (method) {
         case "state": return State();
+        case "applySubscriptions": {
+            var results=a.Deserialize<List<SubscriptionResult>>()!;
+            try{await ApplyChange(next=>{
+                next.SubscriptionUpdateError=SubscriptionRefresh.Apply(next,results,false);
+                if(next.SubscriptionUpdateError.Length==0)next.SubscriptionLastSuccess=DateTime.UtcNow;
+                else Log("WARN 订阅更新："+next.SubscriptionUpdateError);
+            });}catch(Exception error){prefs.SubscriptionUpdateError=error.Message;Log("ERROR 订阅更新已恢复原配置："+error.Message);Save();}finally{subscriptionApplying=false;Write(new{changed=true});}
+            return null;
+        }
         case "autoUpdate":
         case "refreshSubscriptions": {
             bool manual=method=="refreshSubscriptions";
-            if(subscriptionTask!=null||core.Starting||delayTesting||(!manual&&!SubscriptionRefresh.Due(prefs,DateTime.UtcNow)))return null;
+            if(subscriptionTask!=null||subscriptionApplying||(!manual&&!SubscriptionRefresh.Due(prefs,DateTime.UtcNow)))return null;
             if(prefs.Subscriptions.Count==0&&!prefs.Configs.Any(c=>c.Url.Length>0))return null;
             var snapshot=CopyPreferences();SubscriptionRefresh.MarkAttempts(prefs,manual,DateTime.UtcNow);
             prefs.SubscriptionLastAttempt=DateTime.UtcNow;subscriptionManual=manual;
@@ -155,13 +206,29 @@ async Task<object?> Handle(string method, JsonElement a) {
         }
         case "startup": return StartupRegistration.Configure(S("executable"), a.GetProperty("enabled").GetBoolean(), a.GetProperty("silent").GetBoolean());
         case "editSubscription": {
-            SubscriptionRefresh.Edit(prefs,S("id"),S("oldUrl"),S("name"),S("url"),a.GetProperty("autoUpdate").GetBoolean(),I("updateMinutes"));
-            Save();return null;
+            var changed=S("oldUrl")!=S("url").Trim();
+            var download=changed?await Download(S("url").Trim()):null;
+            await ApplyChange(next=>{
+                SubscriptionRefresh.Edit(next,S("id"),S("oldUrl"),S("name"),S("url"),a.GetProperty("autoUpdate").GetBoolean(),I("updateMinutes"));
+                if(download!=null){
+                    var target=SubscriptionRefresh.Targets(next).First(t=>t.Id==S("id")&&t.Url==S("url").Trim());
+                    var error=SubscriptionRefresh.Apply(next,[new(target.Id,target.Url,target.Revision,download.Content,null,true,download.Usage)],false);
+                    if(error.Length>0)throw new FormatException(error);
+                }
+            });return null;
         }
         case "service": return new { running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0 };
         case "memory": using (var self = System.Diagnostics.Process.GetCurrentProcess()) return self.PrivateMemorySize64;
-        case "start": nodeTestCancellation.Cancel();await nodeTests;coreGeneration++; if(prefs.Mode=="config"){var selected=prefs.Configs.FirstOrDefault(p=>p.Path==prefs.ConfigPath);if(selected!=null)prefs.Core=selected.Core;}await core.StartAsync(CopyPreferences()); Save(); return null;
-        case "stop": nodeTestCancellation.Cancel();await nodeTests;core.Stop(); coreGeneration++; Save(); return null;
+        case "start": {
+            await CancelTests();
+            var epoch=intentEpoch??Interlocked.Read(ref stopEpoch);
+            if(epoch!=Interlocked.Read(ref stopEpoch))return null;
+            Volatile.Write(ref stopRequested,0);
+            coreGeneration++;
+            if(prefs.Mode=="config"){var selected=prefs.Configs.FirstOrDefault(p=>p.Path==prefs.ConfigPath);if(selected!=null)prefs.Core=selected.Core;}
+            await StartConnection(CopyPreferences(),epoch);Save();return null;
+        }
+        case "stop": await CancelTests();core.Stop(); coreGeneration++; Save(); return null;
         case "logs": return logs.ToArray();
         case "clearLogs": logs.Clear(); return null;
         case "stats": return core.Ready ? await core.StatsAsync(false) : null;
@@ -234,21 +301,23 @@ async Task<object?> Handle(string method, JsonElement a) {
         }
         case "proxyStatus": return new { available = core.Running, enabled = core.Running && SystemProxy.Enabled };
         case "proxy": if (a.GetProperty("enabled").GetBoolean()) { if (!core.Running) throw new InvalidOperationException("请先启动内核。"); SystemProxy.Install(core.ProxyPort); } else SystemProxy.Restore(); prefs.SystemProxy = a.GetProperty("enabled").GetBoolean(); Save(); return null;
-        case "settings":
+        case "settings": {
+            await ApplyChange(next => {
             if(a.TryGetProperty("subscriptionUpdateMinutes",out var interval)) {
                 int minutes=interval.GetInt32();if(minutes<15||minutes>10080)throw new ArgumentException("更新间隔需为 15–10080 分钟。");
-                prefs.SubscriptionUpdateMinutes=minutes;
+                next.SubscriptionUpdateMinutes=minutes;
             }
-            if(a.TryGetProperty("subscriptionAutoUpdate",out var updates))prefs.SubscriptionAutoUpdate=updates.GetBoolean();
-            if (a.TryGetProperty("mode", out var mode)) { Idle(); prefs.Mode = mode.GetString() == "config" ? "config" : "nodes"; if (prefs.Mode == "nodes") prefs.Core = prefs.NodeCore.Length > 0 ? prefs.NodeCore : "mihomo"; else { var c = prefs.Configs.FirstOrDefault(c => c.Path == prefs.ConfigPath); if (c != null) prefs.Core = c.Core; } }
-            if (a.TryGetProperty("core", out var engine)) { Idle(); if (prefs.Mode == "config") throw new InvalidOperationException("配置工作区自动匹配配置的内核。"); prefs.Core = engine.GetString() == "sing-box" ? "sing-box" : "mihomo"; prefs.NodeCore = prefs.Core; }
-            if (a.TryGetProperty("delayUrl", out var delayUrl)) { if (!Uri.TryCreate(delayUrl.GetString(), UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")) throw new ArgumentException("测速链接需要是 HTTP / HTTPS 地址。"); prefs.DelayUrl = uri.ToString(); }
-            if (a.TryGetProperty("silent", out var silent)) prefs.Silent = silent.GetBoolean();
-            if (a.TryGetProperty("autoStart", out var auto)) prefs.AutoStart = auto.GetBoolean();
-            if (a.TryGetProperty("autoConnect", out var connect)) prefs.AutoConnect = connect.GetBoolean();
-            if (a.TryGetProperty("systemProxy", out var proxy)) { Idle(); prefs.SystemProxy = proxy.GetBoolean(); }
-            if (a.TryGetProperty("nativeInbounds", out var native)) { Idle(); prefs.NativeInbounds = native.GetBoolean(); }
-            Save(); return null;
+            if(a.TryGetProperty("subscriptionAutoUpdate",out var updates))next.SubscriptionAutoUpdate=updates.GetBoolean();
+            if (a.TryGetProperty("mode", out var mode)) { next.Mode = mode.GetString() == "config" ? "config" : "nodes"; if (next.Mode == "nodes") next.Core = next.NodeCore.Length > 0 ? next.NodeCore : "mihomo"; else { var c = next.Configs.FirstOrDefault(c => c.Path == next.ConfigPath); if (c != null) next.Core = c.Core; } }
+            if (a.TryGetProperty("core", out var engine)) { if (next.Mode == "config") throw new InvalidOperationException("配置工作区自动匹配配置的内核。"); next.Core = engine.GetString() == "sing-box" ? "sing-box" : "mihomo"; next.NodeCore = next.Core; }
+            if (a.TryGetProperty("delayUrl", out var delayUrl)) { if (!Uri.TryCreate(delayUrl.GetString(), UriKind.Absolute, out var uri) || uri.Scheme is not ("https" or "http")) throw new ArgumentException("测速链接需要是 HTTP / HTTPS 地址。"); next.DelayUrl = uri.ToString(); }
+            if (a.TryGetProperty("silent", out var silent)) next.Silent = silent.GetBoolean();
+            if (a.TryGetProperty("autoStart", out var auto)) next.AutoStart = auto.GetBoolean();
+            if (a.TryGetProperty("autoConnect", out var connect)) next.AutoConnect = connect.GetBoolean();
+            if (a.TryGetProperty("systemProxy", out var proxy)) { next.SystemProxy = proxy.GetBoolean(); }
+            if (a.TryGetProperty("nativeInbounds", out var native)) { next.NativeInbounds = native.GetBoolean(); }
+            }); return null;
+        }
         case "selectNode": { var index = I("index"); if (index < 0 || index >= prefs.Nodes.Count) throw new ArgumentException("节点不存在。"); if (prefs.Mode != "nodes") throw new InvalidOperationException("请先切换到节点工作区。"); var next=CopyPreferences(); next.SelectedNode=index; await CommitNodes(next); return null; }
         case "removeNode": {
             var next = CopyPreferences(); int index = I("index"); next.Nodes.RemoveAt(index);
@@ -286,8 +355,9 @@ async Task<object?> Handle(string method, JsonElement a) {
         }
         case "importNodes": {
             var text = S("text").Trim(); var url = S("url").Trim();
+            if(S("downloadedRevision").Length>0 && (!prefs.Subscriptions.Contains(url)||SubscriptionRefresh.NodeRevision(prefs,url)!=S("downloadedRevision")))throw new InvalidOperationException("订阅已编辑或移除，请重新更新。");
             SubscriptionDownload? download=null;
-            if (url.Length > 0) {download=await ProfileImport.DownloadAsync(url);text=download.Content;}
+            if (url.Length > 0) {download=await Download(url);text=download.Content;}
             var nodes = NodeParser.ParseSubscription(text); if (nodes.Count == 0) throw new FormatException("未识别到节点。完整 JSON / YAML 请导入配置工作区。");
             var next = CopyPreferences();
             if (url.Length > 0) {
@@ -302,41 +372,64 @@ async Task<object?> Handle(string method, JsonElement a) {
             await CommitNodes(next); return nodes.Count;
         }
         case "profiles": return new { selectedId = prefs.Mode == "nodes" ? (prefs.Nodes.Count > 0 ? "nodes" : null) : prefs.Configs.FirstOrDefault(p => p.Path == prefs.ConfigPath)?.Id, profiles = prefs.Mode == "nodes" ? new[] { new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = 0L } } : prefs.Configs.Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = c.Url.Length > 0 ? "remote" : "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = new DateTimeOffset(c.Updated).ToUnixTimeMilliseconds() }).ToArray() };
-        case "createProfile": { var url = S("remoteUrl"); var download = url.Length > 0 ? await ProfileImport.DownloadAsync(url) : null; var p = ProfileImport.SaveConfig(prefs, download?.Content ?? S("content"), S("name", "配置"), url); if(p.Subscription!=null)p.Subscription.Usage=download?.Usage; if(!core.Running&&!core.Starting){prefs.Mode = "config"; prefs.ConfigPath = p.Path; prefs.Core = p.Core;} Save(); return null; }
+        case "createProfile": { var url = S("remoteUrl"); var download = url.Length > 0 ? await Download(url) : null; var p = ProfileImport.SaveConfig(prefs, download?.Content ?? S("content"), S("name", "配置"), url); if(p.Subscription!=null)p.Subscription.Usage=download?.Usage; if(!core.Running&&!core.Starting){prefs.Mode = "config"; prefs.ConfigPath = p.Path; prefs.Core = p.Core;} Save(); return null; }
         case "trayProfiles": {
             var entries = prefs.Configs.Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = "local" }).ToList();
             if (prefs.Nodes.Count > 0) entries.Add(new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local" });
             return new { selectedId = prefs.Mode == "nodes" ? "nodes" : prefs.Configs.FirstOrDefault(c => c.Path == prefs.ConfigPath)?.Id, profiles = entries };
         }
-        case "traySelectProfile": {
-            string id = S("id");
-            var profile = id == "nodes" && prefs.Nodes.Count > 0 ? null : Profile(id);
-            if (id == "nodes" && prefs.Mode == "nodes" || profile != null && prefs.Mode == "config" && prefs.ConfigPath == profile.Path) return null;
-            bool restart = core.Running;
-            core.Stop(); coreGeneration++;
-            if (profile == null) { prefs.Mode = "nodes"; prefs.Core = prefs.NodeCore.Length > 0 ? prefs.NodeCore : "mihomo"; }
-            else { prefs.Mode = "config"; prefs.ConfigPath = profile.Path; prefs.Core = profile.Core; }
-            Save();
-            if (restart) { await core.StartAsync(prefs); Save(); }
-            return null;
+        case "traySelectProfile":
+        case "selectProfile": {
+            var id=S("id");
+            await ApplyChange(next=>{
+                if(id=="nodes"&&next.Nodes.Count>0){next.Mode="nodes";next.Core=next.NodeCore.Length>0?next.NodeCore:"mihomo";}
+                else{var p=next.Configs.FirstOrDefault(c=>c.Id==id)??throw new ArgumentException("配置不存在。");next.Mode="config";next.ConfigPath=p.Path;next.Core=p.Core;}
+            });return null;
         }
-        case "selectProfile": { Idle(); var p = Profile(S("id")); prefs.ConfigPath = p.Path; prefs.Core = p.Core; Save(); return null; }
-        case "removeProfile": Idle(); prefs.Configs.Remove(Profile(S("id"))); if (!prefs.Configs.Any(p => p.Path == prefs.ConfigPath)) { prefs.ConfigPath = prefs.Configs.FirstOrDefault()?.Path ?? ""; prefs.Core = prefs.Configs.FirstOrDefault()?.Core ?? "mihomo"; } Save(); return null;
-        case "updateProfile": { var p = Profile(S("id")); if (p.Url.Length == 0) throw new ArgumentException("这是本地配置。"); var selected=prefs.ConfigPath==p.Path;var download=await ProfileImport.DownloadAsync(p.Url);ProfileImport.SaveConfig(prefs, download.Content, p.Name, p.Url, p);p.Subscription!.Usage=download.Usage; if(selected){prefs.ConfigPath=p.Path;if(!core.Running&&!core.Starting)prefs.Core=p.Core;} Save(); return null; }
+        case "removeProfile": {
+            await ApplyChange(next=>{next.Configs.RemoveAll(c=>c.Id==S("id"));if(!next.Configs.Any(c=>c.Path==next.ConfigPath)){next.ConfigPath=next.Configs.FirstOrDefault()?.Path??"";if(next.Mode=="config")next.Core=next.Configs.FirstOrDefault()?.Core??"mihomo";}});return null;
+        }
+        case "updateProfile": {
+            var p=Profile(S("id"));if(p.Url.Length==0)throw new ArgumentException("这是本地配置。");
+            if(S("downloadedRevision").Length>0&&p.Updated.Ticks.ToString()!=S("downloadedRevision"))throw new InvalidOperationException("配置已编辑，请重新更新。");
+            var download=await Download(p.Url);
+            await ApplyChange(next=>{var target=next.Configs.First(c=>c.Id==p.Id);var selected=next.ConfigPath==target.Path;ProfileImport.SaveConfig(next,download.Content,target.Name,target.Url,target);target.Subscription!.Usage=download.Usage;if(selected){next.ConfigPath=target.Path;if(next.Mode=="config")next.Core=target.Core;}});return null;
+        }
         case "readProfile": return File.ReadAllText(Profile(S("id")).Path);
         case "renameProfile": { var name = S("name").Trim(); if (name.Length == 0 || name.Length > 100) throw new ArgumentException("名称需要为 1–100 个字符。"); Profile(S("id")).Name = name; Save(); return null; }
-        case "writeProfile": { var p = Profile(S("id"));var selected=prefs.ConfigPath==p.Path; ProfileImport.SaveConfig(prefs, S("content"), p.Name, p.Url, p);if(selected){prefs.ConfigPath=p.Path;if(!core.Running&&!core.Starting)prefs.Core=p.Core;} Save(); return null; }
+        case "writeProfile": {
+            await ApplyChange(next=>{var p=next.Configs.FirstOrDefault(c=>c.Id==S("id"))??throw new ArgumentException("配置不存在。");var selected=next.ConfigPath==p.Path;ProfileImport.SaveConfig(next,S("content"),p.Name,p.Url,p);if(selected){next.ConfigPath=p.Path;if(next.Mode=="config")next.Core=p.Core;}});return null;
+        }
+        case "sortLibrary": {
+            var order=S("order");if(order is not ("default" or "name" or "updated"))throw new ArgumentException("未知排序方式。");
+            prefs.LibrarySort=order;Save();return null;
+        }
         default: throw new ArgumentException("未知操作：" + method);
     }
 }
 string? line;
-Task startTask=Task.CompletedTask;
-async Task ReplyStart(long id,JsonElement arguments) {
-    try { var result=await Handle("start",arguments);Write(new {id,result}); }
-    catch(OperationCanceledException) { Write(new {id,result=(object?)null}); }
-    catch(Exception ex) {Write(new {id,error=ex.Message});}
-    finally {Write(new {changed=true});}
+Task operationTask=Task.CompletedTask;
+var operationLock=new object();
+var downloads=new List<Task>();
+void QueueOperation(long id,string method,JsonElement arguments){lock(operationLock)operationTask=ReplyOperation(operationTask,id,method,arguments,Interlocked.Read(ref stopEpoch));}
+async Task PrepareDownload(long id,string method,JsonElement arguments,string url){
+    try{
+        var revision=method=="updateProfile"?Profile(arguments.GetProperty("id").GetString()!).Updated.Ticks.ToString():method=="importNodes"&&prefs.Subscriptions.Contains(url)?SubscriptionRefresh.NodeRevision(prefs,url):"";
+        var download=await ProfileImport.DownloadAsync(url);
+        var prepared=JsonNode.Parse(arguments.GetRawText())!.AsObject();
+        prepared["downloadContent"]=download.Content;prepared["downloadUsage"]=JsonSerializer.SerializeToNode(download.Usage);prepared["downloadedUrl"]=url;
+        prepared["downloadedRevision"]=revision;
+        QueueOperation(id,method,JsonSerializer.SerializeToElement(prepared));
+    }catch(Exception error){Write(new{id,error=error.Message});}
 }
+async Task ReplyOperation(Task previous,long id,string method,JsonElement arguments,long intentEpoch) {
+    await previous;
+    try{var result=await Handle(method,arguments,intentEpoch);Write(new{id,result});}
+    catch(OperationCanceledException){Write(new{id,result=(object?)null});}
+    catch(Exception ex){Write(new{id,error=ex.Message});}
+    finally{Write(new{changed=true});}
+}
+bool ReadOnly(string method)=>method is "state" or "service" or "memory" or "logs" or "stats" or "groups" or "trayGroups" or "connections" or "mode" or "profiles" or "trayProfiles" or "readProfile" or "readNode" or "proxyStatus";
 var delaySlots = new SemaphoreSlim(8);
 var delayTasks = new List<Task>();
 async Task ReplyDelay(long id, string tag, long generation, string url) {
@@ -350,28 +443,33 @@ async Task ReplyDelay(long id, string tag, long generation, string url) {
 while ((line = await Console.In.ReadLineAsync()) != null) {
     long id = 0;
     try {
-        if(subscriptionTask is {IsCompleted:true}&&!core.Starting&&!delayTesting) {
+        if(subscriptionTask is {IsCompleted:true}) {
             var completed=subscriptionTask;subscriptionTask=null;
-            {
-                prefs.SubscriptionUpdateError=SubscriptionRefresh.Apply(prefs,await completed,core.Running);
-                if(prefs.SubscriptionUpdateError.Length==0)prefs.SubscriptionLastSuccess=DateTime.UtcNow;
-                else Log("WARN 订阅自动更新："+prefs.SubscriptionUpdateError);
-                Save();
-            }
+            subscriptionApplying=true;
+            var results=await completed;
+            QueueOperation(0,"applySubscriptions",JsonSerializer.SerializeToElement(results));
         }
         using var request = JsonDocument.Parse(line);
         id = request.RootElement.GetProperty("id").GetInt64();
         string method = request.RootElement.GetProperty("method").GetString()!;
         var arguments = request.RootElement.GetProperty("args");
-        // Only the startup wait runs in the background. Stop cancels that wait
-        // and joins it before disposing the core; settings never race a start.
-        if(method=="start") {
-            if(!startTask.IsCompleted)throw new InvalidOperationException("内核正在启动，可点击停止取消。");
-            startTask=ReplyStart(id,arguments.Clone());continue;
+        string downloadUrl="";
+        if(method=="updateProfile")downloadUrl=Profile(arguments.GetProperty("id").GetString()!).Url;
+        else if(method is "importNodes" or "createProfile" or "editSubscription"){
+            var key=method=="createProfile"?"remoteUrl":"url";
+            if(arguments.TryGetProperty(key,out var address))downloadUrl=address.GetString()?.Trim()??"";
+            if(method=="editSubscription"&&arguments.GetProperty("oldUrl").GetString()==downloadUrl)downloadUrl="";
         }
-        if(method=="stop") {core.CancelStartup();await startTask;}
-        if(!startTask.IsCompleted && method is not ("state" or "service" or "memory" or "logs" or "clearLogs" or "stats" or "groups" or "trayGroups" or "connections" or "mode" or "profiles" or "trayProfiles" or "readProfile" or "createProfile" or "writeProfile" or "updateProfile" or "renameProfile"))
-            throw new InvalidOperationException("内核正在启动，请稍候或点击停止取消。");
+        else if(method=="importInput"){
+            var input=arguments.GetProperty("text").GetString()?.Trim()??"";
+            if(!input.Contains('\n')&&Uri.TryCreate(input,UriKind.Absolute,out var uri)&&uri.Scheme is "http" or "https"&&uri.UserInfo.Length==0&&uri.Fragment.Length==0){method="importNodes";downloadUrl=input;arguments=JsonSerializer.SerializeToElement(new{url=input,text=""});}
+        }
+        if(downloadUrl.Length>0){downloads.RemoveAll(task=>task.IsCompleted);downloads.Add(PrepareDownload(id,method,arguments.Clone(),downloadUrl));continue;}
+        if(method=="stop")RequestStop();
+        if(method=="stop" || method=="cancelTest")nodeTestCancellation.Cancel();
+        if(!ReadOnly(method) && method!="delay") {
+            QueueOperation(id,method,arguments.Clone());continue;
+        }
         // Network tests must not prevent the tray or main window from stopping
         // the service. Only these read-only requests run concurrently.
         if (method == "delay") {
@@ -384,7 +482,7 @@ while ((line = await Console.In.ReadLineAsync()) != null) {
     catch (Exception ex) { Write(new { id, error = ex.Message }); }
 }
 // Parent closed normally or crashed. Retry restoration before releasing the job.
-core.CancelStartup();await startTask;
+RequestStop();await Task.WhenAll(downloads);await operationTask;
 for (int attempt = 0; ; attempt++) {
     try { core.Stop(); break; } catch (Exception ex) { Log(ex.Message); await Task.Delay(Math.Min(30_000, 1000 * (attempt + 1))); }
 }

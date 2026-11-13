@@ -1,0 +1,1486 @@
+{
+  "schemaVersion": 1,
+  "repo": "muchaomuicho/Wbox",
+  "verifiedAtUtc": "2026-11-12T15:29:04.306698+00:00",
+  "originalLocalFileCount": 71,
+  "originalLocalTotalBytes": 4603738362,
+  "versionCount": 20,
+  "versions": [
+    "0.1.0",
+    "0.2.0",
+    "0.3.0",
+    "0.4.0",
+    "0.5.0",
+    "0.5.1",
+    "0.5.2",
+    "0.6.0",
+    "0.6.1",
+    "0.6.2",
+    "0.6.3",
+    "0.6.4",
+    "0.6.5",
+    "0.6.6",
+    "0.6.7",
+    "0.6.8",
+    "0.6.9",
+    "0.6.10",
+    "0.6.11",
+    "0.7.0"
+  ],
+  "verifiedOriginalAssetCount": 71,
+  "allOriginalAssetsVerified": true,
+  "allReleasesPublished": true,
+  "allTagsVerified": true,
+  "tagChecks": [
+    {
+      "version": "0.1.0",
+      "expectedCommit": "0bfe14c6947452a88a7d4b1451c5e07a3dda572c",
+      "remoteCommit": "0bfe14c6947452a88a7d4b1451c5e07a3dda572c",
+      "verified": true
+    },
+    {
+      "version": "0.2.0",
+      "expectedCommit": "1c92e0222c160689719d56bc0c15a893961e5bb1",
+      "remoteCommit": "1c92e0222c160689719d56bc0c15a893961e5bb1",
+      "verified": true
+    },
+    {
+      "version": "0.3.0",
+      "expectedCommit": "72f5971577c9474ea38602e55ed66d5195ad6f5a",
+      "remoteCommit": "72f5971577c9474ea38602e55ed66d5195ad6f5a",
+      "verified": true
+    },
+    {
+      "version": "0.4.0",
+      "expectedCommit": "c9a4b2b211da7054ada10013d2f405b3871cd89f",
+      "remoteCommit": "c9a4b2b211da7054ada10013d2f405b3871cd89f",
+      "verified": true
+    },
+    {
+      "version": "0.5.0",
+      "expectedCommit": "98d0f84b4c49938d6193e001df2a2a3b1691ab20",
+      "remoteCommit": "98d0f84b4c49938d6193e001df2a2a3b1691ab20",
+      "verified": true
+    },
+    {
+      "version": "0.5.1",
+      "expectedCommit": "81fe7e1e85cc5e1031916ec6b64c1a19bb267c22",
+      "remoteCommit": "81fe7e1e85cc5e1031916ec6b64c1a19bb267c22",
+      "verified": true
+    },
+    {
+      "version": "0.5.2",
+      "expectedCommit": "907fcacc56909301f782598f5d0d79a816dea54a",
+      "remoteCommit": "907fcacc56909301f782598f5d0d79a816dea54a",
+      "verified": true
+    },
+    {
+      "version": "0.6.0",
+      "expectedCommit": "f34664f491d35edd1e15f9dd16141c32a75cf60f",
+      "remoteCommit": "f34664f491d35edd1e15f9dd16141c32a75cf60f",
+      "verified": true
+    },
+    {
+      "version": "0.6.1",
+      "expectedCommit": "910508fdb0122f765dc09fd07a4c899df7864ae5",
+      "remoteCommit": "910508fdb0122f765dc09fd07a4c899df7864ae5",
+      "verified": true
+    },
+    {
+      "version": "0.6.2",
+      "expectedCommit": "a38bd2d3f18b1876c13f1cffe814dc97bcaccc17",
+      "remoteCommit": "a38bd2d3f18b1876c13f1cffe814dc97bcaccc17",
+      "verified": true
+    },
+    {
+      "version": "0.6.3",
+      "expectedCommit": "15e264aba1f2a9c01799b9a5b65c17506bdf24e7",
+      "remoteCommit": "15e264aba1f2a9c01799b9a5b65c17506bdf24e7",
+      "verified": true
+    },
+    {
+      "version": "0.6.4",
+      "expectedCommit": "aa9167ee40662cf6b4a24fbcd790a00618aee0f0",
+      "remoteCommit": "aa9167ee40662cf6b4a24fbcd790a00618aee0f0",
+      "verified": true
+    },
+    {
+      "version": "0.6.5",
+      "expectedCommit": "4004ed5ba88a2ea5a7902d64fe6bbd47b54e54cd",
+      "remoteCommit": "4004ed5ba88a2ea5a7902d64fe6bbd47b54e54cd",
+      "verified": true
+    },
+    {
+      "version": "0.6.6",
+      "expectedCommit": "93e172053ba18cb7e9a6ab424d3d49deef7e1d4f",
+      "remoteCommit": "93e172053ba18cb7e9a6ab424d3d49deef7e1d4f",
+      "verified": true
+    },
+    {
+      "version": "0.6.7",
+      "expectedCommit": "9ed7ba0b6c0431dbce5eac504680a04e69280e3f",
+      "remoteCommit": "9ed7ba0b6c0431dbce5eac504680a04e69280e3f",
+      "verified": true
+    },
+    {
+      "version": "0.6.8",
+      "expectedCommit": "3075bea486344b203724247045eaabd286bccfcc",
+      "remoteCommit": "3075bea486344b203724247045eaabd286bccfcc",
+      "verified": true
+    },
+    {
+      "version": "0.6.9",
+      "expectedCommit": "8fab03b37d8d311912135adb1971f3a2a08c492d",
+      "remoteCommit": "8fab03b37d8d311912135adb1971f3a2a08c492d",
+      "verified": true
+    },
+    {
+      "version": "0.6.10",
+      "expectedCommit": "8186f5b2e3c094d913024ca2729ea5953223536a",
+      "remoteCommit": "8186f5b2e3c094d913024ca2729ea5953223536a",
+      "verified": true
+    },
+    {
+      "version": "0.6.11",
+      "expectedCommit": "2b3351eb73015c51b7f51932dd2b6588821b7d85",
+      "remoteCommit": "2b3351eb73015c51b7f51932dd2b6588821b7d85",
+      "verified": true
+    },
+    {
+      "version": "0.7.0",
+      "expectedCommit": "3c21e6e751c5c6996bf0027c46b6bb3780991b8f",
+      "remoteCommit": "3c21e6e751c5c6996bf0027c46b6bb3780991b8f",
+      "verified": true
+    }
+  ],
+  "archiveSourceSnapshots": {
+    "0.1.0": {
+      "sourceStatus": "missing",
+      "treeFiles": 1,
+      "onlyFile": "ARCHIVE.md",
+      "commit": "0bfe14c6947452a88a7d4b1451c5e07a3dda572c"
+    },
+    "0.2.0": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.2.0-source.zip",
+      "treeFiles": 646,
+      "sourceSha256": "17056c181ed41761db52e934338ef67a1462396d26d0e4c0e01f0cf500f5ed31",
+      "commit": "1c92e0222c160689719d56bc0c15a893961e5bb1"
+    },
+    "0.3.0": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.3.0-source.zip",
+      "treeFiles": 657,
+      "sourceSha256": "10fe2dc95bb43d29b056c60680b499cec5b6b7fdddc9dd8129b7a41a86f375b9",
+      "commit": "72f5971577c9474ea38602e55ed66d5195ad6f5a"
+    },
+    "0.4.0": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.4.0-source.zip",
+      "treeFiles": 933,
+      "sourceSha256": "0b658e5bebaa06c136ff1b2ac3903fd6b39803ecf869876c4c82e9452ce8be53",
+      "commit": "c9a4b2b211da7054ada10013d2f405b3871cd89f"
+    },
+    "0.5.0": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.5.0-source.zip",
+      "treeFiles": 1219,
+      "sourceSha256": "3bb3fad1614d9e2a0ba62f2eaf1761eb59fbd62f09efd617be60de8b09b0ff69",
+      "commit": "98d0f84b4c49938d6193e001df2a2a3b1691ab20"
+    },
+    "0.5.1": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.5.1-source.zip",
+      "treeFiles": 1250,
+      "sourceSha256": "e7aba6e0e31303ecbd23538de1ee8817379e37b9765eb6a19cad661d9ab58aa9",
+      "commit": "81fe7e1e85cc5e1031916ec6b64c1a19bb267c22"
+    },
+    "0.5.2": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.5.2-source.zip",
+      "treeFiles": 1278,
+      "sourceSha256": "9a811d72baae97d4797a27e67f5e1166946b2515bf728a4d2709be75d9e82a3d",
+      "commit": "907fcacc56909301f782598f5d0d79a816dea54a"
+    },
+    "0.6.0": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.0-source.zip",
+      "treeFiles": 1315,
+      "sourceSha256": "72f5602c2c536cb0a5007c716ace6cfd954295af8b2a821450e457dfcf11dbde",
+      "commit": "f34664f491d35edd1e15f9dd16141c32a75cf60f"
+    },
+    "0.6.1": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.1-source.zip",
+      "treeFiles": 1363,
+      "sourceSha256": "dc4f54c782af776808bcbfddf82d61b29bdec8424f422b40dd3c2c8fab31496b",
+      "commit": "910508fdb0122f765dc09fd07a4c899df7864ae5"
+    },
+    "0.6.2": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.2-source.zip",
+      "treeFiles": 1404,
+      "sourceSha256": "cfed7087079422a90fe6e2e13f5db4ddd14c4d8b2f41fb82170ee6fdbf4de749",
+      "commit": "a38bd2d3f18b1876c13f1cffe814dc97bcaccc17"
+    },
+    "0.6.3": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.3-source.zip",
+      "treeFiles": 1441,
+      "sourceSha256": "3407037faaf7a835506f20b7b59ef53cd4b329b8424c89a56e33a15f1510bc2b",
+      "commit": "15e264aba1f2a9c01799b9a5b65c17506bdf24e7"
+    },
+    "0.6.4": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.4-source.zip",
+      "treeFiles": 1479,
+      "sourceSha256": "bba995ad8ba700a6fccf0ea22e691d1fe614a9393c269de6d5cec866cbba8818",
+      "commit": "aa9167ee40662cf6b4a24fbcd790a00618aee0f0"
+    },
+    "0.6.5": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.5-source.zip",
+      "treeFiles": 1570,
+      "sourceSha256": "36f3323f64feb4e28a2dfdea26f6aac79a2fafe2632d8490cc79ad72eded5fcb",
+      "commit": "4004ed5ba88a2ea5a7902d64fe6bbd47b54e54cd"
+    },
+    "0.6.6": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.6-source.zip",
+      "treeFiles": 1627,
+      "sourceSha256": "404133fe0ef709ad2876f76e6bd35d625fcad980d99a24b948108d9655905c69",
+      "commit": "93e172053ba18cb7e9a6ab424d3d49deef7e1d4f"
+    },
+    "0.6.7": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.7-source.zip",
+      "treeFiles": 1655,
+      "sourceSha256": "d1c25284e97335696a36ec47e4d020d76109425f3a3ace63c8c33e99616a6350",
+      "commit": "9ed7ba0b6c0431dbce5eac504680a04e69280e3f"
+    },
+    "0.6.8": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.8-source.zip",
+      "treeFiles": 1676,
+      "sourceSha256": "27cf7938bdd18d49913c5bfd3621b59d3e29a2465274ccf462c7e29150b37e0d",
+      "commit": "3075bea486344b203724247045eaabd286bccfcc"
+    },
+    "0.6.9": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.9-source.zip",
+      "treeFiles": 1702,
+      "sourceSha256": "01a441117ca3a92167fe11046bb8fe647a1da65e96f4756e55d1464bbc678e8a",
+      "commit": "8fab03b37d8d311912135adb1971f3a2a08c492d"
+    },
+    "0.6.10": {
+      "sourceStatus": "restored_from_original_zip",
+      "sourceZip": "Wbox-0.6.10-source.zip",
+      "treeFiles": 1715,
+      "sourceSha256": "e0fe935e2dcf6fb073799a2d80f26a85ef32aa0c6eeb32325b9153bf99e2f0b6",
+      "commit": "8186f5b2e3c094d913024ca2729ea5953223536a"
+    }
+  },
+  "sourceTreeVerification": [
+    {
+      "version": "0.2.0",
+      "fileCount": 646,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.3.0",
+      "fileCount": 657,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.4.0",
+      "fileCount": 933,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.5.0",
+      "fileCount": 1219,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.5.1",
+      "fileCount": 1250,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.5.2",
+      "fileCount": 1278,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.0",
+      "fileCount": 1315,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.1",
+      "fileCount": 1363,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.10",
+      "fileCount": 1715,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.2",
+      "fileCount": 1404,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.3",
+      "fileCount": 1441,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.4",
+      "fileCount": 1479,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.5",
+      "fileCount": 1570,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.6",
+      "fileCount": 1627,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.7",
+      "fileCount": 1655,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.8",
+      "fileCount": 1676,
+      "gitTreeExactlyMatchesSourceZip": true
+    },
+    {
+      "version": "0.6.9",
+      "fileCount": 1702,
+      "gitTreeExactlyMatchesSourceZip": true
+    }
+  ],
+  "protectedTagsUnchanged": true,
+  "mainWasNotPushedByArchiveJob": true,
+  "mainCommitAtStart": "3c21e6e751c5c6996bf0027c46b6bb3780991b8f",
+  "mainCommitAtVerification": "3c21e6e751c5c6996bf0027c46b6bb3780991b8f",
+  "latestRelease": "v0.7.0",
+  "oldReleaseWasNotMarkedLatest": true,
+  "sourceLimitation": "Version 0.1.0 original source is missing. Its tag contains only ARCHIVE.md, and GitHub-generated source downloads are metadata only. Its original Windows installer and APK are fully archived.",
+  "secretArchiveCheck": "All 19 original source ZIPs scanned: no signing-key extensions (.jks, .keystore, .p12, .pfx, .pem, .key), .git entries, or path traversal. No signing keys uploaded.",
+  "localArtifactsDeleted": false,
+  "safeToDeleteArchivedLocalInstallerCopies": true,
+  "deletionEvidence": "Each original installer/APK has matching local SHA256, remote asset.digest, name and byte size, with remote asset state uploaded. GitHub remains the remote archive; this job did not delete any local file.",
+  "releases": [
+    {
+      "id": 443117726,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.1.0",
+      "tag": "v0.1.0",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:14:59Z",
+      "assets": [
+        {
+          "name": "Wbox-0.1.0-android-arm64-v8a.apk",
+          "size": 47671878,
+          "sha256": "c8f798bcd7d01b7d16d9c68f67a0ce33e6127c033bb0cbae822921ba329b7d25",
+          "version": "0.1.0",
+          "releaseTag": "v0.1.0",
+          "assetId": 739947541,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.1.0/Wbox-0.1.0-android-arm64-v8a.apk",
+          "remoteSize": 47671878,
+          "remoteDigest": "sha256:c8f798bcd7d01b7d16d9c68f67a0ce33e6127c033bb0cbae822921ba329b7d25",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.1.0-windows-x64-setup.exe",
+          "size": 88715458,
+          "sha256": "7da718b5527ddc244c094d6bc00181495fc17ef62f5f800317c2594997cd250b",
+          "version": "0.1.0",
+          "releaseTag": "v0.1.0",
+          "assetId": 739947540,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.1.0/Wbox-0.1.0-windows-x64-setup.exe",
+          "remoteSize": 88715458,
+          "remoteDigest": "sha256:7da718b5527ddc244c094d6bc00181495fc17ef62f5f800317c2594997cd250b",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443119815,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.2.0",
+      "tag": "v0.2.0",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:16:10Z",
+      "assets": [
+        {
+          "name": "SHA256SUMS-0.2.0.txt",
+          "size": 289,
+          "sha256": "21113bac5feecaf7ed042e39834bc1f42e2efad76ca7a4924c4341b95856afc6",
+          "version": "0.2.0",
+          "releaseTag": "v0.2.0",
+          "assetId": 739951771,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.2.0/SHA256SUMS-0.2.0.txt",
+          "remoteSize": 289,
+          "remoteDigest": "sha256:21113bac5feecaf7ed042e39834bc1f42e2efad76ca7a4924c4341b95856afc6",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.2.0-android-arm64-v8a.apk",
+          "size": 47678074,
+          "sha256": "be04c92d1042586eb3c323d164f4941b75eb07adda36d8d7d0c212a2d9b6a766",
+          "version": "0.2.0",
+          "releaseTag": "v0.2.0",
+          "assetId": 739951795,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.2.0/Wbox-0.2.0-android-arm64-v8a.apk",
+          "remoteSize": 47678074,
+          "remoteDigest": "sha256:be04c92d1042586eb3c323d164f4941b75eb07adda36d8d7d0c212a2d9b6a766",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.2.0-source.zip",
+          "size": 5348922,
+          "sha256": "17056c181ed41761db52e934338ef67a1462396d26d0e4c0e01f0cf500f5ed31",
+          "version": "0.2.0",
+          "releaseTag": "v0.2.0",
+          "assetId": 739951779,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.2.0/Wbox-0.2.0-source.zip",
+          "remoteSize": 5348922,
+          "remoteDigest": "sha256:17056c181ed41761db52e934338ef67a1462396d26d0e4c0e01f0cf500f5ed31",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.2.0-windows-x64-setup.exe",
+          "size": 89152668,
+          "sha256": "8626ae7636d8e6150a79db3ac76232dace77c4b09426b3cd2b043e328481ebc5",
+          "version": "0.2.0",
+          "releaseTag": "v0.2.0",
+          "assetId": 739952021,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.2.0/Wbox-0.2.0-windows-x64-setup.exe",
+          "remoteSize": 89152668,
+          "remoteDigest": "sha256:8626ae7636d8e6150a79db3ac76232dace77c4b09426b3cd2b043e328481ebc5",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443121461,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.3.0",
+      "tag": "v0.3.0",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:16:44Z",
+      "assets": [
+        {
+          "name": "SHA256SUMS-0.3.0.txt",
+          "size": 289,
+          "sha256": "1a75d6daf86439da3b7c750d7b3523e205cb00e52119ae6514d72d2a5b26555d",
+          "version": "0.3.0",
+          "releaseTag": "v0.3.0",
+          "assetId": 739953982,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.3.0/SHA256SUMS-0.3.0.txt",
+          "remoteSize": 289,
+          "remoteDigest": "sha256:1a75d6daf86439da3b7c750d7b3523e205cb00e52119ae6514d72d2a5b26555d",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.3.0-android-arm64-v8a.apk",
+          "size": 47688246,
+          "sha256": "aad6faf5d68b4ce905692cad659e9bfd0af680c303ef3c4ef91f45fe0860c6fe",
+          "version": "0.3.0",
+          "releaseTag": "v0.3.0",
+          "assetId": 739954009,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.3.0/Wbox-0.3.0-android-arm64-v8a.apk",
+          "remoteSize": 47688246,
+          "remoteDigest": "sha256:aad6faf5d68b4ce905692cad659e9bfd0af680c303ef3c4ef91f45fe0860c6fe",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.3.0-source.zip",
+          "size": 5573595,
+          "sha256": "10fe2dc95bb43d29b056c60680b499cec5b6b7fdddc9dd8129b7a41a86f375b9",
+          "version": "0.3.0",
+          "releaseTag": "v0.3.0",
+          "assetId": 739953953,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.3.0/Wbox-0.3.0-source.zip",
+          "remoteSize": 5573595,
+          "remoteDigest": "sha256:10fe2dc95bb43d29b056c60680b499cec5b6b7fdddc9dd8129b7a41a86f375b9",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.3.0-windows-x64-setup.exe",
+          "size": 89410374,
+          "sha256": "0a2c270985ba434dc41fcea44de39e2e7d74c43577a45b69c3ab88b418d0f377",
+          "version": "0.3.0",
+          "releaseTag": "v0.3.0",
+          "assetId": 739954197,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.3.0/Wbox-0.3.0-windows-x64-setup.exe",
+          "remoteSize": 89410374,
+          "remoteDigest": "sha256:0a2c270985ba434dc41fcea44de39e2e7d74c43577a45b69c3ab88b418d0f377",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443122247,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.4.0",
+      "tag": "v0.4.0",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:17:15Z",
+      "assets": [
+        {
+          "name": "Wbox-0.4.0-android-arm64-v8a.apk",
+          "size": 47874450,
+          "sha256": "24c92187ac621aa2c114824e05a0f923c78cc9814907240a8d319536d7387492",
+          "version": "0.4.0",
+          "releaseTag": "v0.4.0",
+          "assetId": 739955764,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.4.0/Wbox-0.4.0-android-arm64-v8a.apk",
+          "remoteSize": 47874450,
+          "remoteDigest": "sha256:24c92187ac621aa2c114824e05a0f923c78cc9814907240a8d319536d7387492",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.4.0-source.zip",
+          "size": 6117303,
+          "sha256": "0b658e5bebaa06c136ff1b2ac3903fd6b39803ecf869876c4c82e9452ce8be53",
+          "version": "0.4.0",
+          "releaseTag": "v0.4.0",
+          "assetId": 739955862,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.4.0/Wbox-0.4.0-source.zip",
+          "remoteSize": 6117303,
+          "remoteDigest": "sha256:0b658e5bebaa06c136ff1b2ac3903fd6b39803ecf869876c4c82e9452ce8be53",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.4.0-windows-x64-setup.exe",
+          "size": 89842205,
+          "sha256": "93a894a2e13982798fd8911a15e4896f873c32cf5f22a57f232751d6a9564435",
+          "version": "0.4.0",
+          "releaseTag": "v0.4.0",
+          "assetId": 739955774,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.4.0/Wbox-0.4.0-windows-x64-setup.exe",
+          "remoteSize": 89842205,
+          "remoteDigest": "sha256:93a894a2e13982798fd8911a15e4896f873c32cf5f22a57f232751d6a9564435",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443122915,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.5.0",
+      "tag": "v0.5.0",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:18:02Z",
+      "assets": [
+        {
+          "name": "Wbox-0.5.0-android-arm64-v8a.apk",
+          "size": 47879922,
+          "sha256": "9f7f33649a03909d805d7ac606eee058481a106d34250487ba492549a91f88b3",
+          "version": "0.5.0",
+          "releaseTag": "v0.5.0",
+          "assetId": 739957971,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.0/Wbox-0.5.0-android-arm64-v8a.apk",
+          "remoteSize": 47879922,
+          "remoteDigest": "sha256:9f7f33649a03909d805d7ac606eee058481a106d34250487ba492549a91f88b3",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.5.0-source.zip",
+          "size": 8664171,
+          "sha256": "3bb3fad1614d9e2a0ba62f2eaf1761eb59fbd62f09efd617be60de8b09b0ff69",
+          "version": "0.5.0",
+          "releaseTag": "v0.5.0",
+          "assetId": 739957925,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.0/Wbox-0.5.0-source.zip",
+          "remoteSize": 8664171,
+          "remoteDigest": "sha256:3bb3fad1614d9e2a0ba62f2eaf1761eb59fbd62f09efd617be60de8b09b0ff69",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.5.0-windows-x64-setup.exe",
+          "size": 176017022,
+          "sha256": "e7dcb8496406d7246318ea017cefdb1cbca10e6372bfd6edcc28ee6a0132bb4f",
+          "version": "0.5.0",
+          "releaseTag": "v0.5.0",
+          "assetId": 739957957,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.0/Wbox-0.5.0-windows-x64-setup.exe",
+          "remoteSize": 176017022,
+          "remoteDigest": "sha256:e7dcb8496406d7246318ea017cefdb1cbca10e6372bfd6edcc28ee6a0132bb4f",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443123940,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.5.1",
+      "tag": "v0.5.1",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:18:47Z",
+      "assets": [
+        {
+          "name": "Wbox-0.5.1-android-arm64-v8a.apk",
+          "size": 47890350,
+          "sha256": "cf68a6e566b1e0ed02fed13b462e25f39edbc7c1fb016a9bf06f813d0755514d",
+          "version": "0.5.1",
+          "releaseTag": "v0.5.1",
+          "assetId": 739960842,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.1/Wbox-0.5.1-android-arm64-v8a.apk",
+          "remoteSize": 47890350,
+          "remoteDigest": "sha256:cf68a6e566b1e0ed02fed13b462e25f39edbc7c1fb016a9bf06f813d0755514d",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.5.1-source.zip",
+          "size": 10109046,
+          "sha256": "e7aba6e0e31303ecbd23538de1ee8817379e37b9765eb6a19cad661d9ab58aa9",
+          "version": "0.5.1",
+          "releaseTag": "v0.5.1",
+          "assetId": 739960822,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.1/Wbox-0.5.1-source.zip",
+          "remoteSize": 10109046,
+          "remoteDigest": "sha256:e7aba6e0e31303ecbd23538de1ee8817379e37b9765eb6a19cad661d9ab58aa9",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.5.1-windows-x64-setup.exe",
+          "size": 176017051,
+          "sha256": "9ee0d38c440111a196a6ffb1118519293b5c7bd524d9a428a54423f7d14296b2",
+          "version": "0.5.1",
+          "releaseTag": "v0.5.1",
+          "assetId": 739960837,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.1/Wbox-0.5.1-windows-x64-setup.exe",
+          "remoteSize": 176017051,
+          "remoteDigest": "sha256:9ee0d38c440111a196a6ffb1118519293b5c7bd524d9a428a54423f7d14296b2",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443124869,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.5.2",
+      "tag": "v0.5.2",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:19:31Z",
+      "assets": [
+        {
+          "name": "Wbox-0.5.2-android-arm64-v8a.apk",
+          "size": 47894254,
+          "sha256": "515f4c014f0b72ae2ca4d847786ff970f26ee004769072f7a3fec1d6a3642be0",
+          "version": "0.5.2",
+          "releaseTag": "v0.5.2",
+          "assetId": 739963724,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.2/Wbox-0.5.2-android-arm64-v8a.apk",
+          "remoteSize": 47894254,
+          "remoteDigest": "sha256:515f4c014f0b72ae2ca4d847786ff970f26ee004769072f7a3fec1d6a3642be0",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.5.2-source.zip",
+          "size": 11695802,
+          "sha256": "9a811d72baae97d4797a27e67f5e1166946b2515bf728a4d2709be75d9e82a3d",
+          "version": "0.5.2",
+          "releaseTag": "v0.5.2",
+          "assetId": 739963722,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.2/Wbox-0.5.2-source.zip",
+          "remoteSize": 11695802,
+          "remoteDigest": "sha256:9a811d72baae97d4797a27e67f5e1166946b2515bf728a4d2709be75d9e82a3d",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.5.2-windows-x64-setup.exe",
+          "size": 176031847,
+          "sha256": "e0c312a98747ec4b6af41eebb1ed6a045bb7a0f7ca59f5574f8fe526aa6215f9",
+          "version": "0.5.2",
+          "releaseTag": "v0.5.2",
+          "assetId": 739963726,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.5.2/Wbox-0.5.2-windows-x64-setup.exe",
+          "remoteSize": 176031847,
+          "remoteDigest": "sha256:e0c312a98747ec4b6af41eebb1ed6a045bb7a0f7ca59f5574f8fe526aa6215f9",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443125768,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.0",
+      "tag": "v0.6.0",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:20:18Z",
+      "assets": [
+        {
+          "name": "Wbox-0.6.0-android-arm64-v8a.apk",
+          "size": 48752588,
+          "sha256": "859e42abef97123418a4246544ea31ae22fbef0b3ed96812656cab55ce5f3129",
+          "version": "0.6.0",
+          "releaseTag": "v0.6.0",
+          "assetId": 739966689,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.0/Wbox-0.6.0-android-arm64-v8a.apk",
+          "remoteSize": 48752588,
+          "remoteDigest": "sha256:859e42abef97123418a4246544ea31ae22fbef0b3ed96812656cab55ce5f3129",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.0-source.zip",
+          "size": 13991467,
+          "sha256": "72f5602c2c536cb0a5007c716ace6cfd954295af8b2a821450e457dfcf11dbde",
+          "version": "0.6.0",
+          "releaseTag": "v0.6.0",
+          "assetId": 739966655,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.0/Wbox-0.6.0-source.zip",
+          "remoteSize": 13991467,
+          "remoteDigest": "sha256:72f5602c2c536cb0a5007c716ace6cfd954295af8b2a821450e457dfcf11dbde",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.0-windows-x64-setup.exe",
+          "size": 176036242,
+          "sha256": "e2243c7504fac7ed76761bb29af245e5ca4f2ca0694630e4bc3002c51c6530c4",
+          "version": "0.6.0",
+          "releaseTag": "v0.6.0",
+          "assetId": 739966749,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.0/Wbox-0.6.0-windows-x64-setup.exe",
+          "remoteSize": 176036242,
+          "remoteDigest": "sha256:e2243c7504fac7ed76761bb29af245e5ca4f2ca0694630e4bc3002c51c6530c4",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443126786,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.1",
+      "tag": "v0.6.1",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:21:09Z",
+      "assets": [
+        {
+          "name": "Wbox-0.6.1-android-arm64-v8a.apk",
+          "size": 48789664,
+          "sha256": "426a4f422444657a84d74d938ac0418678a4d311e2e95b4f8b0176986a62fdf5",
+          "version": "0.6.1",
+          "releaseTag": "v0.6.1",
+          "assetId": 739969896,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.1/Wbox-0.6.1-android-arm64-v8a.apk",
+          "remoteSize": 48789664,
+          "remoteDigest": "sha256:426a4f422444657a84d74d938ac0418678a4d311e2e95b4f8b0176986a62fdf5",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.1-source.zip",
+          "size": 17568546,
+          "sha256": "dc4f54c782af776808bcbfddf82d61b29bdec8424f422b40dd3c2c8fab31496b",
+          "version": "0.6.1",
+          "releaseTag": "v0.6.1",
+          "assetId": 739969810,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.1/Wbox-0.6.1-source.zip",
+          "remoteSize": 17568546,
+          "remoteDigest": "sha256:dc4f54c782af776808bcbfddf82d61b29bdec8424f422b40dd3c2c8fab31496b",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.1-windows-x64-setup.exe",
+          "size": 176041608,
+          "sha256": "243428bee2c8690c5a566ca32430f224be081845e24bd9cf06a2db65085e4d91",
+          "version": "0.6.1",
+          "releaseTag": "v0.6.1",
+          "assetId": 739969830,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.1/Wbox-0.6.1-windows-x64-setup.exe",
+          "remoteSize": 176041608,
+          "remoteDigest": "sha256:243428bee2c8690c5a566ca32430f224be081845e24bd9cf06a2db65085e4d91",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443127824,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.2",
+      "tag": "v0.6.2",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:21:54Z",
+      "assets": [
+        {
+          "name": "Wbox-0.6.2-android-arm64-v8a.apk",
+          "size": 48791932,
+          "sha256": "638ffd31b236617baf8a3def50fe9b4b0d7bfb4a0e5937b6edf63deffde7964b",
+          "version": "0.6.2",
+          "releaseTag": "v0.6.2",
+          "assetId": 739972724,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.2/Wbox-0.6.2-android-arm64-v8a.apk",
+          "remoteSize": 48791932,
+          "remoteDigest": "sha256:638ffd31b236617baf8a3def50fe9b4b0d7bfb4a0e5937b6edf63deffde7964b",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.2-source.zip",
+          "size": 19672965,
+          "sha256": "cfed7087079422a90fe6e2e13f5db4ddd14c4d8b2f41fb82170ee6fdbf4de749",
+          "version": "0.6.2",
+          "releaseTag": "v0.6.2",
+          "assetId": 739972720,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.2/Wbox-0.6.2-source.zip",
+          "remoteSize": 19672965,
+          "remoteDigest": "sha256:cfed7087079422a90fe6e2e13f5db4ddd14c4d8b2f41fb82170ee6fdbf4de749",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.2-windows-x64-setup.exe",
+          "size": 176039943,
+          "sha256": "7c1a145b936c75b82483d6130cb241d5b8e8f71b86796c242e58baa6325cfe6f",
+          "version": "0.6.2",
+          "releaseTag": "v0.6.2",
+          "assetId": 739972722,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.2/Wbox-0.6.2-windows-x64-setup.exe",
+          "remoteSize": 176039943,
+          "remoteDigest": "sha256:7c1a145b936c75b82483d6130cb241d5b8e8f71b86796c242e58baa6325cfe6f",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443128813,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.3",
+      "tag": "v0.6.3",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:22:53Z",
+      "assets": [
+        {
+          "name": "Wbox-0.6.3-android-arm64-v8a.apk",
+          "size": 58014240,
+          "sha256": "82302da58d3fb1d38ba79d086525751dc2f8448a47358c42dc625a2adf964ebf",
+          "version": "0.6.3",
+          "releaseTag": "v0.6.3",
+          "assetId": 739975931,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.3/Wbox-0.6.3-android-arm64-v8a.apk",
+          "remoteSize": 58014240,
+          "remoteDigest": "sha256:82302da58d3fb1d38ba79d086525751dc2f8448a47358c42dc625a2adf964ebf",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.3-source.zip",
+          "size": 31228538,
+          "sha256": "3407037faaf7a835506f20b7b59ef53cd4b329b8424c89a56e33a15f1510bc2b",
+          "version": "0.6.3",
+          "releaseTag": "v0.6.3",
+          "assetId": 739975848,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.3/Wbox-0.6.3-source.zip",
+          "remoteSize": 31228538,
+          "remoteDigest": "sha256:3407037faaf7a835506f20b7b59ef53cd4b329b8424c89a56e33a15f1510bc2b",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.3-windows-x64-setup.exe",
+          "size": 180727389,
+          "sha256": "482423dfce67d23c50e5c825fcdf521223620090e20fff80d8c73e8f32d609ce",
+          "version": "0.6.3",
+          "releaseTag": "v0.6.3",
+          "assetId": 739975929,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.3/Wbox-0.6.3-windows-x64-setup.exe",
+          "remoteSize": 180727389,
+          "remoteDigest": "sha256:482423dfce67d23c50e5c825fcdf521223620090e20fff80d8c73e8f32d609ce",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443130099,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.4",
+      "tag": "v0.6.4",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:23:50Z",
+      "assets": [
+        {
+          "name": "Wbox-0.6.4-android-arm64-v8a.apk",
+          "size": 58020208,
+          "sha256": "3b56f58b57592aa9f6b4519d16c629eed1e8c910df6db2bcb20bb6725dfd15b2",
+          "version": "0.6.4",
+          "releaseTag": "v0.6.4",
+          "assetId": 739979327,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.4/Wbox-0.6.4-android-arm64-v8a.apk",
+          "remoteSize": 58020208,
+          "remoteDigest": "sha256:3b56f58b57592aa9f6b4519d16c629eed1e8c910df6db2bcb20bb6725dfd15b2",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.4-source.zip",
+          "size": 34000468,
+          "sha256": "bba995ad8ba700a6fccf0ea22e691d1fe614a9393c269de6d5cec866cbba8818",
+          "version": "0.6.4",
+          "releaseTag": "v0.6.4",
+          "assetId": 739979283,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.4/Wbox-0.6.4-source.zip",
+          "remoteSize": 34000468,
+          "remoteDigest": "sha256:bba995ad8ba700a6fccf0ea22e691d1fe614a9393c269de6d5cec866cbba8818",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.4-windows-x64-setup.exe",
+          "size": 180731263,
+          "sha256": "df5dae3dca2d7c0b8d717b0c6e6aa5e3301d6d437f8647bfba25cd9fb828a985",
+          "version": "0.6.4",
+          "releaseTag": "v0.6.4",
+          "assetId": 739979335,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.4/Wbox-0.6.4-windows-x64-setup.exe",
+          "remoteSize": 180731263,
+          "remoteDigest": "sha256:df5dae3dca2d7c0b8d717b0c6e6aa5e3301d6d437f8647bfba25cd9fb828a985",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443131461,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.5",
+      "tag": "v0.6.5",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:24:44Z",
+      "assets": [
+        {
+          "name": "Wbox-0.6.5-android-arm64-v8a.apk",
+          "size": 60731498,
+          "sha256": "2bc359fadba77a0b5c2afc1bb5fb869ce8487dc11bb8d72c731232b0a841e865",
+          "version": "0.6.5",
+          "releaseTag": "v0.6.5",
+          "assetId": 739982695,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.5/Wbox-0.6.5-android-arm64-v8a.apk",
+          "remoteSize": 60731498,
+          "remoteDigest": "sha256:2bc359fadba77a0b5c2afc1bb5fb869ce8487dc11bb8d72c731232b0a841e865",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.5-source.zip",
+          "size": 40972050,
+          "sha256": "36f3323f64feb4e28a2dfdea26f6aac79a2fafe2632d8490cc79ad72eded5fcb",
+          "version": "0.6.5",
+          "releaseTag": "v0.6.5",
+          "assetId": 739982635,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.5/Wbox-0.6.5-source.zip",
+          "remoteSize": 40972050,
+          "remoteDigest": "sha256:36f3323f64feb4e28a2dfdea26f6aac79a2fafe2632d8490cc79ad72eded5fcb",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.5-windows-x64-setup.exe",
+          "size": 183325308,
+          "sha256": "5211770eafb8e4c03d404ffcf17b5949c227e5b4c330c2314ccb63b3376643f2",
+          "version": "0.6.5",
+          "releaseTag": "v0.6.5",
+          "assetId": 739982672,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.5/Wbox-0.6.5-windows-x64-setup.exe",
+          "remoteSize": 183325308,
+          "remoteDigest": "sha256:5211770eafb8e4c03d404ffcf17b5949c227e5b4c330c2314ccb63b3376643f2",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443132816,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.6",
+      "tag": "v0.6.6",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:25:38Z",
+      "assets": [
+        {
+          "name": "Wbox-0.6.6-android-arm64-v8a.apk",
+          "size": 60266657,
+          "sha256": "4bdeb19d6e393ddbeb2f7def8f85badf0265ec55f873748f915664016092166d",
+          "version": "0.6.6",
+          "releaseTag": "v0.6.6",
+          "assetId": 739985406,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.6/Wbox-0.6.6-android-arm64-v8a.apk",
+          "remoteSize": 60266657,
+          "remoteDigest": "sha256:4bdeb19d6e393ddbeb2f7def8f85badf0265ec55f873748f915664016092166d",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.6-android-arm64-v8a.apk.idsig",
+          "size": 477126,
+          "sha256": "8f86bdfd4dac03ff1977543f446a1d390e2b453b679a46b4561d266665f89534",
+          "version": "0.6.6",
+          "releaseTag": "v0.6.6",
+          "assetId": 739985379,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.6/Wbox-0.6.6-android-arm64-v8a.apk.idsig",
+          "remoteSize": 477126,
+          "remoteDigest": "sha256:8f86bdfd4dac03ff1977543f446a1d390e2b453b679a46b4561d266665f89534",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.6-source.zip",
+          "size": 43328675,
+          "sha256": "404133fe0ef709ad2876f76e6bd35d625fcad980d99a24b948108d9655905c69",
+          "version": "0.6.6",
+          "releaseTag": "v0.6.6",
+          "assetId": 739985362,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.6/Wbox-0.6.6-source.zip",
+          "remoteSize": 43328675,
+          "remoteDigest": "sha256:404133fe0ef709ad2876f76e6bd35d625fcad980d99a24b948108d9655905c69",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.6-windows-x64-setup.exe",
+          "size": 158890446,
+          "sha256": "6b92c62bc0ff036daf5f231db90f72b395af65573dc6eff1c61b817e8850b557",
+          "version": "0.6.6",
+          "releaseTag": "v0.6.6",
+          "assetId": 739985711,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.6/Wbox-0.6.6-windows-x64-setup.exe",
+          "remoteSize": 158890446,
+          "remoteDigest": "sha256:6b92c62bc0ff036daf5f231db90f72b395af65573dc6eff1c61b817e8850b557",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443133976,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.7",
+      "tag": "v0.6.7",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:26:26Z",
+      "assets": [
+        {
+          "name": "SHA256SUMS-0.6.7.txt",
+          "size": 289,
+          "sha256": "d3a3641cc18f9540e9278ac8ef0a41f13534aea6bb31de5760362088a5e7b23a",
+          "version": "0.6.7",
+          "releaseTag": "v0.6.7",
+          "assetId": 739988309,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.7/SHA256SUMS-0.6.7.txt",
+          "remoteSize": 289,
+          "remoteDigest": "sha256:d3a3641cc18f9540e9278ac8ef0a41f13534aea6bb31de5760362088a5e7b23a",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.7-android-arm64-v8a.apk",
+          "size": 56158445,
+          "sha256": "cfe87a2fbb139cb742d5b9ba630fabfd9a584f176beda8755fe59f8a67509937",
+          "version": "0.6.7",
+          "releaseTag": "v0.6.7",
+          "assetId": 739988310,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.7/Wbox-0.6.7-android-arm64-v8a.apk",
+          "remoteSize": 56158445,
+          "remoteDigest": "sha256:cfe87a2fbb139cb742d5b9ba630fabfd9a584f176beda8755fe59f8a67509937",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.7-source.zip",
+          "size": 44608685,
+          "sha256": "d1c25284e97335696a36ec47e4d020d76109425f3a3ace63c8c33e99616a6350",
+          "version": "0.6.7",
+          "releaseTag": "v0.6.7",
+          "assetId": 739988284,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.7/Wbox-0.6.7-source.zip",
+          "remoteSize": 44608685,
+          "remoteDigest": "sha256:d1c25284e97335696a36ec47e4d020d76109425f3a3ace63c8c33e99616a6350",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.7-windows-x64-setup.exe",
+          "size": 159076917,
+          "sha256": "89118263f03e1c3ab6fad0082e16fbf67d4910d2e83144d592a0c9d5426dda5f",
+          "version": "0.6.7",
+          "releaseTag": "v0.6.7",
+          "assetId": 739988590,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.7/Wbox-0.6.7-windows-x64-setup.exe",
+          "remoteSize": 159076917,
+          "remoteDigest": "sha256:89118263f03e1c3ab6fad0082e16fbf67d4910d2e83144d592a0c9d5426dda5f",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443135093,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.8",
+      "tag": "v0.6.8",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:27:16Z",
+      "assets": [
+        {
+          "name": "SHA256SUMS-0.6.8.txt",
+          "size": 289,
+          "sha256": "650113ba23b57b74dd240fc15b8e5c7c444156e45dda7fe8d3406f4b3643ab51",
+          "version": "0.6.8",
+          "releaseTag": "v0.6.8",
+          "assetId": 739991236,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.8/SHA256SUMS-0.6.8.txt",
+          "remoteSize": 289,
+          "remoteDigest": "sha256:650113ba23b57b74dd240fc15b8e5c7c444156e45dda7fe8d3406f4b3643ab51",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.8-android-arm64-v8a.apk",
+          "size": 56166637,
+          "sha256": "9d0b869215648264e912c6064d41c0edddaf3ffffb85dcdb996d0d06f0e9a7a2",
+          "version": "0.6.8",
+          "releaseTag": "v0.6.8",
+          "assetId": 739991238,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.8/Wbox-0.6.8-android-arm64-v8a.apk",
+          "remoteSize": 56166637,
+          "remoteDigest": "sha256:9d0b869215648264e912c6064d41c0edddaf3ffffb85dcdb996d0d06f0e9a7a2",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.8-source.zip",
+          "size": 44886820,
+          "sha256": "27cf7938bdd18d49913c5bfd3621b59d3e29a2465274ccf462c7e29150b37e0d",
+          "version": "0.6.8",
+          "releaseTag": "v0.6.8",
+          "assetId": 739991206,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.8/Wbox-0.6.8-source.zip",
+          "remoteSize": 44886820,
+          "remoteDigest": "sha256:27cf7938bdd18d49913c5bfd3621b59d3e29a2465274ccf462c7e29150b37e0d",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.8-windows-x64-setup.exe",
+          "size": 159084248,
+          "sha256": "14f11786d1955a486572501ceb429ee124d30a0333a9bcdb1a2d55de7e37dad3",
+          "version": "0.6.8",
+          "releaseTag": "v0.6.8",
+          "assetId": 739991657,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.8/Wbox-0.6.8-windows-x64-setup.exe",
+          "remoteSize": 159084248,
+          "remoteDigest": "sha256:14f11786d1955a486572501ceb429ee124d30a0333a9bcdb1a2d55de7e37dad3",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443136069,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.9",
+      "tag": "v0.6.9",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:28:05Z",
+      "assets": [
+        {
+          "name": "SHA256SUMS-0.6.9.txt",
+          "size": 289,
+          "sha256": "167779851a0df160b3282d9ccc2bd1810105304d9ed57cc29aa0f112a4d9aeb5",
+          "version": "0.6.9",
+          "releaseTag": "v0.6.9",
+          "assetId": 739994123,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.9/SHA256SUMS-0.6.9.txt",
+          "remoteSize": 289,
+          "remoteDigest": "sha256:167779851a0df160b3282d9ccc2bd1810105304d9ed57cc29aa0f112a4d9aeb5",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.9-android-arm64-v8a.apk",
+          "size": 56199405,
+          "sha256": "1fa1490771f7ac5b126025bad11a798c00092f6fc94311994b6bb7277d915431",
+          "version": "0.6.9",
+          "releaseTag": "v0.6.9",
+          "assetId": 739994091,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.9/Wbox-0.6.9-android-arm64-v8a.apk",
+          "remoteSize": 56199405,
+          "remoteDigest": "sha256:1fa1490771f7ac5b126025bad11a798c00092f6fc94311994b6bb7277d915431",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.9-source.zip",
+          "size": 45529485,
+          "sha256": "01a441117ca3a92167fe11046bb8fe647a1da65e96f4756e55d1464bbc678e8a",
+          "version": "0.6.9",
+          "releaseTag": "v0.6.9",
+          "assetId": 739994084,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.9/Wbox-0.6.9-source.zip",
+          "remoteSize": 45529485,
+          "remoteDigest": "sha256:01a441117ca3a92167fe11046bb8fe647a1da65e96f4756e55d1464bbc678e8a",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.9-windows-x64-setup.exe",
+          "size": 159097292,
+          "sha256": "ab0edf899b3ebfba80758676493d9ac75b1638e45625d7d42f08fdcfda635e5b",
+          "version": "0.6.9",
+          "releaseTag": "v0.6.9",
+          "assetId": 739994568,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.9/Wbox-0.6.9-windows-x64-setup.exe",
+          "remoteSize": 159097292,
+          "remoteDigest": "sha256:ab0edf899b3ebfba80758676493d9ac75b1638e45625d7d42f08fdcfda635e5b",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 443137056,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.10",
+      "tag": "v0.6.10",
+      "draft": false,
+      "publishedAt": "2026-11-12T15:28:56Z",
+      "assets": [
+        {
+          "name": "SHA256SUMS-0.6.10.txt",
+          "size": 292,
+          "sha256": "766b76853e712e3ea990408cf3898e35c57157a212cc7f0cf5f38d5c2425e05a",
+          "version": "0.6.10",
+          "releaseTag": "v0.6.10",
+          "assetId": 739997188,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.10/SHA256SUMS-0.6.10.txt",
+          "remoteSize": 292,
+          "remoteDigest": "sha256:766b76853e712e3ea990408cf3898e35c57157a212cc7f0cf5f38d5c2425e05a",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.10-android-arm64-v8a.apk",
+          "size": 56199405,
+          "sha256": "1a3d3e6812067dbcd3d3e36be1b94e8f338a93cdb7264f1bdeb55338f95346a3",
+          "version": "0.6.10",
+          "releaseTag": "v0.6.10",
+          "assetId": 739997201,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.10/Wbox-0.6.10-android-arm64-v8a.apk",
+          "remoteSize": 56199405,
+          "remoteDigest": "sha256:1a3d3e6812067dbcd3d3e36be1b94e8f338a93cdb7264f1bdeb55338f95346a3",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.10-source.zip",
+          "size": 45729958,
+          "sha256": "e0fe935e2dcf6fb073799a2d80f26a85ef32aa0c6eeb32325b9153bf99e2f0b6",
+          "version": "0.6.10",
+          "releaseTag": "v0.6.10",
+          "assetId": 739997185,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.10/Wbox-0.6.10-source.zip",
+          "remoteSize": 45729958,
+          "remoteDigest": "sha256:e0fe935e2dcf6fb073799a2d80f26a85ef32aa0c6eeb32325b9153bf99e2f0b6",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.10-windows-x64-setup.exe",
+          "size": 159101512,
+          "sha256": "8c2d87686fec61edfdffe7bfe81257ac8ccae197c713ef7664f610717daa103d",
+          "version": "0.6.10",
+          "releaseTag": "v0.6.10",
+          "assetId": 739997550,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.10/Wbox-0.6.10-windows-x64-setup.exe",
+          "remoteSize": 159101512,
+          "remoteDigest": "sha256:8c2d87686fec61edfdffe7bfe81257ac8ccae197c713ef7664f610717daa103d",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 440481669,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.6.11",
+      "tag": "v0.6.11",
+      "draft": false,
+      "publishedAt": "2026-11-10T14:43:02Z",
+      "assets": [
+        {
+          "name": "github-release-0.6.11.json",
+          "size": 985,
+          "sha256": "de657fd975756515d0526913f9f75affc062eedc9c58a6bb2ada31ec8dc13f0b",
+          "version": "0.6.11",
+          "releaseTag": "v0.6.11",
+          "assetId": 739999506,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.11/github-release-0.6.11.json",
+          "remoteSize": 985,
+          "remoteDigest": "sha256:de657fd975756515d0526913f9f75affc062eedc9c58a6bb2ada31ec8dc13f0b",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "SHA256SUMS-0.6.11.txt",
+          "size": 292,
+          "sha256": "a66c74fb34929228cf3f5df8d2277714a8868f30f33f7eb007960a66d98ce9a8",
+          "version": "0.6.11",
+          "releaseTag": "v0.6.11",
+          "assetId": 731761270,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.11/SHA256SUMS-0.6.11.txt",
+          "remoteSize": 292,
+          "remoteDigest": "sha256:a66c74fb34929228cf3f5df8d2277714a8868f30f33f7eb007960a66d98ce9a8",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.11-android-arm64-v8a.apk",
+          "size": 56207597,
+          "sha256": "e83b72f2460f56790ec419be44338009925e97588eb521c7e0e50fd8273eb68e",
+          "version": "0.6.11",
+          "releaseTag": "v0.6.11",
+          "assetId": 731761266,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.11/Wbox-0.6.11-android-arm64-v8a.apk",
+          "remoteSize": 56207597,
+          "remoteDigest": "sha256:e83b72f2460f56790ec419be44338009925e97588eb521c7e0e50fd8273eb68e",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.11-source.zip",
+          "size": 23609673,
+          "sha256": "7cf0ac8a9f9985e95cb9f62d987c887113783ddb860615c520b303cf5bf1f781",
+          "version": "0.6.11",
+          "releaseTag": "v0.6.11",
+          "assetId": 731761261,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.11/Wbox-0.6.11-source.zip",
+          "remoteSize": 23609673,
+          "remoteDigest": "sha256:7cf0ac8a9f9985e95cb9f62d987c887113783ddb860615c520b303cf5bf1f781",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.6.11-windows-x64-setup.exe",
+          "size": 159106479,
+          "sha256": "32dda27cc1bdae655a67144ba5b2f27050ea520545700c8af65e399c8384a113",
+          "version": "0.6.11",
+          "releaseTag": "v0.6.11",
+          "assetId": 731761265,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.6.11/Wbox-0.6.11-windows-x64-setup.exe",
+          "remoteSize": 159106479,
+          "remoteDigest": "sha256:32dda27cc1bdae655a67144ba5b2f27050ea520545700c8af65e399c8384a113",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": 440540042,
+      "url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.7.0",
+      "tag": "v0.7.0",
+      "draft": false,
+      "publishedAt": "2026-11-10T15:30:08Z",
+      "assets": [
+        {
+          "name": "github-release-0.7.0.json",
+          "size": 980,
+          "sha256": "168c3dc188db2e335e28aa0df4481a4cc92daf3000fc84e7c6d0416551218993",
+          "version": "0.7.0",
+          "releaseTag": "v0.7.0",
+          "assetId": 739999601,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.0/github-release-0.7.0.json",
+          "remoteSize": 980,
+          "remoteDigest": "sha256:168c3dc188db2e335e28aa0df4481a4cc92daf3000fc84e7c6d0416551218993",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "SHA256SUMS-0.7.0.txt",
+          "size": 289,
+          "sha256": "d6b86e80a33908c8ad65d6fb51fdb47c996cafdde76296605248802e99957fb0",
+          "version": "0.7.0",
+          "releaseTag": "v0.7.0",
+          "assetId": 731918719,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.0/SHA256SUMS-0.7.0.txt",
+          "remoteSize": 289,
+          "remoteDigest": "sha256:d6b86e80a33908c8ad65d6fb51fdb47c996cafdde76296605248802e99957fb0",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "SHA256SUMS.txt",
+          "size": 289,
+          "sha256": "d6b86e80a33908c8ad65d6fb51fdb47c996cafdde76296605248802e99957fb0",
+          "version": "0.7.0",
+          "releaseTag": "v0.7.0",
+          "assetId": 731918726,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.0/SHA256SUMS.txt",
+          "remoteSize": 289,
+          "remoteDigest": "sha256:d6b86e80a33908c8ad65d6fb51fdb47c996cafdde76296605248802e99957fb0",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.7.0-android-arm64-v8a.apk",
+          "size": 56207597,
+          "sha256": "207c8d3d953e45c601a103b511358918d80ac800b030a1e0fb59de5861f5cea7",
+          "version": "0.7.0",
+          "releaseTag": "v0.7.0",
+          "assetId": 731918716,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.0/Wbox-0.7.0-android-arm64-v8a.apk",
+          "remoteSize": 56207597,
+          "remoteDigest": "sha256:207c8d3d953e45c601a103b511358918d80ac800b030a1e0fb59de5861f5cea7",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.7.0-source.zip",
+          "size": 24000069,
+          "sha256": "0d3bcad4764b32ada7ada5b2f67db90cea6f5cfc78d3741c2c977eb18b6db6fa",
+          "version": "0.7.0",
+          "releaseTag": "v0.7.0",
+          "assetId": 731918714,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.0/Wbox-0.7.0-source.zip",
+          "remoteSize": 24000069,
+          "remoteDigest": "sha256:0d3bcad4764b32ada7ada5b2f67db90cea6f5cfc78d3741c2c977eb18b6db6fa",
+          "remoteState": "uploaded",
+          "verified": true
+        },
+        {
+          "name": "Wbox-0.7.0-windows-x64-setup.exe",
+          "size": 159092107,
+          "sha256": "b310530b52f178064e49af07a81acb913e39d77a591662d3b42a91aabb87322d",
+          "version": "0.7.0",
+          "releaseTag": "v0.7.0",
+          "assetId": 731918725,
+          "url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.0/Wbox-0.7.0-windows-x64-setup.exe",
+          "remoteSize": 159092107,
+          "remoteDigest": "sha256:b310530b52f178064e49af07a81acb913e39d77a591662d3b42a91aabb87322d",
+          "remoteState": "uploaded",
+          "verified": true
+        }
+      ]
+    }
+  ]
+}

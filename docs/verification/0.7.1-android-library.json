@@ -1,0 +1,34 @@
+{
+  "version": "0.7.1",
+  "emulator": "emulator-5556",
+  "checks": [
+    "Configuration cards show quota and remaining traffic",
+    "profiles-light status bar shares the page surface",
+    "Each configuration has all five actions",
+    "Preview opens the selectable read-only configuration",
+    "config-preview status bar shares the page surface",
+    "subscription-editor status bar shares the page surface",
+    "config-editor status bar shares the page surface",
+    "Name sorting changes configuration order",
+    "Update all synchronizes both remote configurations",
+    "Configuration sort persists across restart",
+    "profiles-dark status bar shares the page surface",
+    "subscription-editor-dark status bar shares the page surface",
+    "node-subscriptions status bar shares the page surface",
+    "Subscription preview filters the node workspace to its source",
+    "nodes status bar shares the page surface"
+  ],
+  "screenshots": [
+    "docs\\previews\\0.7.1-android-profiles-light.png",
+    "docs\\previews\\0.7.1-android-profiles-menu.png",
+    "docs\\previews\\0.7.1-android-config-preview.png",
+    "docs\\previews\\0.7.1-android-subscription-editor.png",
+    "docs\\previews\\0.7.1-android-config-editor.png",
+    "docs\\previews\\0.7.1-android-profiles-dark.png",
+    "docs\\previews\\0.7.1-android-subscription-editor-dark.png",
+    "docs\\previews\\0.7.1-android-node-subscriptions.png",
+    "docs\\previews\\0.7.1-android-node-subscription-menu.png",
+    "docs\\previews\\0.7.1-android-nodes.png"
+  ],
+  "failure": null
+}
