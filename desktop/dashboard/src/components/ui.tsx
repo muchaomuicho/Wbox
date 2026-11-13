@@ -1060,7 +1060,7 @@ function reactNodeText(node: ReactNode): string {
   return isValidElement<{ children?: ReactNode }>(node) ? reactNodeText(node.props.children) : "";
 }
 
-export function Dialog(props: { onClose: () => void; className?: string; children: ReactNode }) {
+export function Dialog(props: { onClose: () => void; className?: string; ariaLabel?: string; children: ReactNode }) {
   const ref = useShowModal("dialog");
   let accessibleName = "Dialog";
   for (const child of Children.toArray(props.children)) {
@@ -1080,7 +1080,7 @@ export function Dialog(props: { onClose: () => void; className?: string; childre
     <dialog
       ref={ref}
       className={props.className ? `dialog ${props.className}` : "dialog"}
-      aria-label={accessibleName}
+      aria-label={props.ariaLabel ?? accessibleName}
       onCancel={(event) => {
         event.preventDefault();
         props.onClose();

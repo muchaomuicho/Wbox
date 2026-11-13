@@ -8,6 +8,7 @@ import net from 'node:net';
 import assert from 'node:assert/strict';
 
 const root=resolve(import.meta.dirname,'../..'),data=join(root,'.tools/desktop-071-runtime');
+const version=JSON.parse(await readFile(join(root,'desktop/package.json'),'utf8')).version;
 await mkdir(data,{recursive:true});
 const checks=[],hits=[0,0],errors=[],rejectProxy=[false,false];
 let app,page,tray,failure=null;
@@ -50,7 +51,7 @@ try{
   await wait(()=>app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows().some(w=>w.webContents.getURL().includes('index.html')&&w.isVisible()&&!w.isMinimized())));
   check(true,'Tray left click restores a minimized GUI');
  }
- await page.getByText('0.7.1',{exact:true}).waitFor();
+ await page.getByText(version,{exact:true}).waitFor();
  await page.evaluate(()=>localStorage.setItem('wbox.theme',JSON.stringify('dark')));await page.reload();
  await call('importInput',{text:[...proxies.map((p,i)=>`http://127.0.0.1:${p.address().port}#Node${i}`),`http://127.0.0.1:${rejected.address().port}#Rejected`].join('\n')});
  await page.getByRole('button',{name:'节点与订阅',exact:true}).click();
@@ -62,6 +63,12 @@ try{
   check(!groups.some(g=>g.details.some(n=>n.name.includes('Node1')||n.name.includes('Rejected'))),core+' running groups exclude unselected library nodes');
   check(await page.getByRole('button',{name:'代理',exact:true}).count()===0,'Node GUI keeps its independent list with no policy-group page');
   await openGroups();await openGroup('节点选择');
+  const cascade=await tray.evaluate(()=>{
+   const parent=document.querySelector('[data-tray-submenu-parent="1"][data-tray-submenu-active="true"]'),groups=document.querySelector('[data-tray-cascade-level="1"]'),nodes=document.querySelector('[data-tray-cascade-level="2"]');
+   const rect=element=>{const r=element?.getBoundingClientRect();return r?{left:r.left,right:r.right,top:r.top,bottom:r.bottom}:null;};
+   return {side:document.documentElement.dataset.trayCascadeSide,parent:rect(parent),groups:rect(groups),nodes:rect(nodes),width:innerWidth,height:innerHeight};
+  });
+  check(cascade.side==='left'&&cascade.nodes&&cascade.groups&&cascade.parent&&cascade.nodes.right<=cascade.parent.left+1&&cascade.nodes.left>=0&&cascade.nodes.top>=0&&cascade.nodes.bottom<=cascade.height+1,core+' third-level tray node menu opens left and stays within the window');
   const before=hits.slice(),started=(await call('service')).startedAt;
   await tray.getByRole('button',{name:'测速',exact:true}).click();
   await wait(async()=>!(await call('state')).delayTesting,45000);
@@ -97,8 +104,8 @@ try{
    rejectProxy[1]=true;await call('testOne',{index:1});await wait(async()=>!(await call('state')).delayTesting);rejectProxy[1]=false;
    check((await call('state')).nodes[1].delayText==='timeout'&&(await call('trayGroups')).find(g=>g.name==='节点选择').details.find(n=>n.name===tag).delay===0,'Node-list retry replaces the older tray delay with timeout');
   }
-  await openGroup('节点选择');await tray.screenshot({path:join(root,`docs/previews/0.7.1-tray-${core}.png`)});
-  await closeTray();await page.screenshot({path:join(root,`docs/previews/0.7.1-nodes-${core}.png`)});await call('stop');
+  await openGroup('节点选择');await tray.screenshot({path:join(root,`docs/previews/${version}-tray-${core}.png`)});
+  await closeTray();await page.screenshot({path:join(root,`docs/previews/${version}-nodes-${core}.png`)});await call('stop');
  }
  await call('settings',{mode:'config'});
  await call('createProfile',{name:'Two groups',content:JSON.stringify({certificate:{certificate:[cert]},outbounds:[{type:'selector',tag:'First',outbounds:['A']},{type:'selector',tag:'Second',outbounds:['B']},...proxies.map((p,i)=>({type:'http',tag:['A','B'][i],server:'127.0.0.1',server_port:p.address().port}))]})});
@@ -178,10 +185,10 @@ try{
  await call('sortLibrary',{order:'name'});check((await call('state')).librarySort==='name','Library sort persists in preferences');
  await page.getByRole('button',{name:'配置',exact:true}).click();
  await page.getByRole('button',{name:/配置操作/}).first().click();
- await page.screenshot({path:join(root,'docs/previews/0.7.1-windows-profiles.png')});
+ await page.screenshot({path:join(root,`docs/previews/${version}-windows-profiles.png`)});
  await page.getByText('预览',{exact:true}).click();await page.getByText(/预览 ·/).waitFor();check(true,'Card menu opens a read-only config preview');
  await page.getByRole('button',{name:'关闭',exact:true}).click();
- await page.screenshot({path:join(root,'docs/previews/0.7.1-windows-library.png')});
+ await page.screenshot({path:join(root,`docs/previews/${version}-windows-library.png`)});
 check(errors.length===0,'No renderer errors');
-}catch(e){failure=String(e);if(page&&!page.isClosed())try{await page.screenshot({path:join(root,'docs/previews/0.7.1-failure.png'),timeout:5000});}catch{}throw e;}
-finally{if(app)await app.close();for(const server of [tls,rejected,...origins,...proxies]){server.closeAllConnections();server.close();}await writeFile(join(root,`docs/verification/0.7.1-${process.env.WBOX_EXE?'packaged':'desktop'}.json`),JSON.stringify({passed:failure===null,failure,checks,errors},null,2));await rm(data,{recursive:true,force:true});}
+}catch(e){failure=String(e);if(page&&!page.isClosed())try{await page.screenshot({path:join(root,`docs/previews/${version}-failure.png`),timeout:5000});}catch{}throw e;}
+finally{if(app)await app.close();for(const server of [tls,rejected,...origins,...proxies]){server.closeAllConnections();server.close();}await writeFile(join(root,`docs/verification/${version}-${process.env.WBOX_EXE?'packaged':'desktop'}.json`),JSON.stringify({passed:failure===null,failure,checks,errors},null,2));await rm(data,{recursive:true,force:true});}

@@ -1,5 +1,7 @@
 # Android 上游与平台适配
 
+0.7.2 的整个配置列表参考 [FlClash](https://github.com/chen08209/FlClash)，固定提交 `be84736605527034689c95bf27828ff27d912c5e`。`lib/views/profiles/profiles.dart`、`lib/views/profiles/add.dart` 与 `lib/common/layout.dart` 的顶栏、卡片信息排列、添加入口和自适应网格结构，以 Compose 改写为 `ProfilesScreen.kt`、`LibraryCard.kt` 及 `WboxUi.kt` 中的配置页面。数据与操作接入 Wbox 双内核模型，补充剩余量、未知流量提示、较大字体、系统字体缩放以及蓝／粉强调色。原始 GPL-3.0 许可证保存在 `resources/cores/licenses/LICENSE-FlClash`，随 Android 和 Windows 包提供。
+
 参考项目：<https://github.com/SagerNet/sing-box-for-android>，固定提交 `a548a7903e96266a0046018562c73b192edbfc18`。原始许可证保存在 `resources/cores/licenses/LICENSE-sing-box-for-android`。
 
 - `compose/LineChart.kt` 移植为 `android/app/src/main/java/com/wbox/app/LineChart.kt`，仅更改包名和来源说明。

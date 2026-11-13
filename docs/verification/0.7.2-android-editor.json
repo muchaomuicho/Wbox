@@ -1,0 +1,31 @@
+{
+  "backMode": "key",
+  "edgeGesturesVerified": false,
+  "checks": [
+    "Full-page editor hides main navigation",
+    "System Back returns from clean editor",
+    "Full-page editor hides main navigation",
+    "System Back works after reopening editor",
+    "Full-page editor hides main navigation",
+    "Keyboard resizes editor without moving toolbar",
+    "First Back closes keyboard and keeps editor",
+    "System Back asks before discarding changed text",
+    "Continue editing keeps the draft",
+    "Discard returns without changing stored configuration",
+    "Full-page editor hides main navigation",
+    "Fast drag scrolls a long configuration",
+    "Configuration continues scrolling after finger release",
+    "Fast scrolling does not modify the configuration",
+    "Full-page editor hides main navigation",
+    "Native text selection remains enabled",
+    "Long press and copy leave persisted configuration unchanged"
+  ],
+  "screenshots": [
+    "docs\\previews\\0.7.2-android-editor-keyboard.png",
+    "docs\\previews\\0.7.2-android-editor-scroll.png",
+    "docs\\previews\\0.7.2-android-editor-selection.png"
+  ],
+  "failure": null,
+  "testApkSha256": "61cf474f1728e54fd2b23efd3cd3b09766fae6839dfb25c3068a3b1ecc2ce7f0",
+  "edgeGestureLimitation": "The API35 emulator has no attached system edge-swipe monitor; Settings is also affected. Real left/right edge gestures remain unverified. Key Back, IME priority and draft protection were tested separately."
+}

@@ -1,0 +1,35 @@
+.dialog.wbox-config-dialog {
+  box-sizing: border-box;
+  width: min(1400px, calc(100vw - 48px));
+  max-width: calc(100vw - 48px);
+  height: calc(100dvh - 76px);
+  max-height: calc(100dvh - 76px);
+  padding: 20px;
+  gap: 16px;
+}
+.wbox-config-dialog .wbox-config-header { flex: none; min-width: 0; }
+.wbox-config-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.wbox-config-icon { display: flex; align-items: center; justify-content: center; flex: none; width: 42px; height: 42px; color: var(--info); background: var(--info-soft); border-radius: 12px; }
+.wbox-config-title { min-width: 0; }
+.wbox-config-dialog .wbox-config-title h3 { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 18px; line-height: 1.4; }
+.wbox-config-meta { display: flex; align-items: center; gap: 9px; margin-top: 5px; color: var(--text-secondary); font-size: 11px; }
+.wbox-config-language { padding: 2px 6px; color: var(--info); background: var(--info-soft); border-radius: 5px; font: 10px/1.4 var(--font-mono); }
+.wbox-config-language.yaml { color: var(--wbox-pink); background: var(--wbox-pink-soft); }
+.wbox-config-header > .row-actions { flex: none; flex-wrap: nowrap; }
+.wbox-config-dialog .wbox-config-code { width: 100%; min-width: 0; }
+.wbox-config-code .cm-editor { background: var(--card); }
+.wbox-config-code .cm-scroller { line-height: 1.7; overscroll-behavior: contain; }
+.wbox-config-code .cm-content { padding-block: 12px; }
+.wbox-config-code .cm-line { padding-inline: 10px; }
+.wbox-config-code .cm-gutters { color: var(--text-secondary); border-inline-end: 1px solid var(--border); }
+.wbox-config-code .cm-lineNumbers .cm-gutterElement { padding-inline: 12px; }
+.wbox-config-code .cm-content:focus-visible { outline: none; }
+.wbox-config-preview .cm-editor:focus-within { border-color: var(--info); }
+.wbox-config-loading { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; }
+.wbox-config-footer { flex: none; margin: 0; color: var(--text-secondary); font-size: 11px; line-height: 1.5; }
+.wbox-config-dialog > .wbox-error,.wbox-config-dialog > .wbox-hint { flex: none; margin: 0; }
+@media (max-width: 850px), (max-height: 600px) {
+  .dialog.wbox-config-dialog { width: calc(100vw - 24px); max-width: calc(100vw - 24px); height: calc(100dvh - 54px); max-height: calc(100dvh - 54px); padding: 14px; gap: 12px; }
+  .wbox-config-dialog .wbox-config-title h3 { font-size: 16px; }
+  .wbox-config-icon { width: 36px; height: 36px; }
+}

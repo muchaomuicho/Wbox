@@ -1,0 +1,32 @@
+:root {
+  --wbox-pink: #a75882;
+  --wbox-pink-soft: rgb(167 88 130 / 10%);
+}
+[data-theme="dark"] {
+  --wbox-pink: #d9a0bf;
+  --wbox-pink-soft: rgb(217 160 191 / 13%);
+}
+:root[data-accent="blue"] {
+  --accent: #416e9c;
+  --accent-strong: #325b86;
+  --accent-soft: rgb(65 110 156 / 10%);
+  --on-accent: #fff;
+}
+:root[data-theme="dark"][data-accent="blue"] {
+  --accent: #9cbbda;
+  --accent-strong: #bdd4e9;
+  --accent-soft: rgb(156 187 218 / 13%);
+  --on-accent: #182c40;
+}
+:root[data-accent="pink"] {
+  --accent: #a75882;
+  --accent-strong: #894167;
+  --accent-soft: var(--wbox-pink-soft);
+  --on-accent: #fff;
+}
+:root[data-theme="dark"][data-accent="pink"] {
+  --accent: #d9a0bf;
+  --accent-strong: #e8bdd5;
+  --accent-soft: var(--wbox-pink-soft);
+  --on-accent: #38202d;
+}

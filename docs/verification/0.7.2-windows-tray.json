@@ -1,0 +1,30 @@
+{
+  "checks": [
+    "Tray prefers leftward expansion",
+    "Taskbar anchor keeps the root panel low",
+    "Root menu opens beside the icon on its left",
+    "Tray window remains inside the current monitor",
+    "Configuration submenu expands to the left of the root menu",
+    "Configuration submenu stays visible"
+  ],
+  "placement": {
+    "bounds": {
+      "x": 560,
+      "y": 432,
+      "width": 832,
+      "height": 480
+    },
+    "area": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 912
+    },
+    "anchor": {
+      "x": 1360,
+      "y": 920,
+      "width": 24,
+      "height": 24
+    }
+  }
+}

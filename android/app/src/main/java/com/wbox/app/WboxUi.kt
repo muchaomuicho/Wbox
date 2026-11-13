@@ -3,7 +3,7 @@ package com.wbox.app
 
 // Compose layout and traffic cards adapted from SagerNet/sing-box-for-android
 // (a548a7903e96266a0046018562c73b192edbfc18), GPL-3.0-or-later.
-// Wbox supplies the dual-core/workspace model and a monochrome color scheme.
+// Wbox supplies the dual-core/workspace model; profile layouts also adapt FlClash.
 import android.content.res.Configuration
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -50,27 +52,38 @@ import kotlinx.coroutines.*
 import org.json.*
 import java.net.URI
 
-private val LightColors=lightColorScheme(primary=Color(0xff262626),onPrimary=Color.White,primaryContainer=Color(0xffe8e8e8),onPrimaryContainer=Color(0xff191919),secondaryContainer=Color(0xffe8e8e8),onSecondaryContainer=Color(0xff222222),background=Color(0xfffafafa),surface=Color(0xfffafafa),surfaceVariant=Color(0xfff0f0f0),onSurface=Color(0xff1a1a1a),onSurfaceVariant=Color(0xff6e6e6e),outlineVariant=Color(0xffe5e5e5))
-private val DarkColors=darkColorScheme(primary=Color(0xffe5e5e5),onPrimary=Color(0xff202020),primaryContainer=Color(0xff393939),onPrimaryContainer=Color(0xffeeeeee),secondaryContainer=Color(0xff393939),onSecondaryContainer=Color(0xffeeeeee),background=Color(0xff1f1f1f),surface=Color(0xff1f1f1f),surfaceVariant=Color(0xff292929),onSurface=Color(0xffe5e5e5),onSurfaceVariant=Color(0xffa1a1a1),outlineVariant=Color(0xff3b3b3b))
+private val LightColors=lightColorScheme(primary=Color(0xff3564bd),onPrimary=Color.White,primaryContainer=Color(0xffdce7ff),onPrimaryContainer=Color(0xff193867),secondary=Color(0xff586b90),secondaryContainer=Color(0xffe4eaf6),onSecondaryContainer=Color(0xff304261),tertiary=Color(0xff916780),tertiaryContainer=Color(0xfff3e5ee),onTertiaryContainer=Color(0xff755169),background=Color(0xfff3f4f8),surface=Color(0xfff3f4f8),surfaceVariant=Color(0xfffdfdff),onSurface=Color(0xff20232b),onSurfaceVariant=Color(0xff636a79),outline=Color(0xff8c94a5),outlineVariant=Color(0xffe0e4ed))
+private val DarkColors=darkColorScheme(primary=Color(0xffa4c3ff),onPrimary=Color(0xff12315e),primaryContainer=Color(0xff253f67),onPrimaryContainer=Color(0xffdbe7ff),secondary=Color(0xffb4c4e3),secondaryContainer=Color(0xff2d3b52),onSecondaryContainer=Color(0xffdce6f8),tertiary=Color(0xffdfb3cf),tertiaryContainer=Color(0xff463442),onTertiaryContainer=Color(0xffeac2dc),background=Color(0xff161920),surface=Color(0xff161920),surfaceVariant=Color(0xff232731),onSurface=Color(0xffe5e8ef),onSurfaceVariant=Color(0xffaab2c2),outline=Color(0xff7d889c),outlineVariant=Color(0xff373f4e))
+private val WboxTypography=Typography(bodySmall=TextStyle(fontSize=14.sp,lineHeight=20.sp),labelSmall=TextStyle(fontSize=13.sp,lineHeight=19.sp),labelMedium=TextStyle(fontSize=13.sp,lineHeight=19.sp,fontWeight=FontWeight.Medium))
 internal data class Editor(val type: String, val profile: JSONObject?=null, val index: Int=-1)
 
 @Composable internal fun WboxApp(m: MobileModel) {
     val systemDark=isSystemInDarkTheme()
     val dark=when(m.profiles.data.optString("theme","auto")){"dark"->true;"light"->false;else->systemDark}
-    MaterialTheme(colorScheme=if(dark)DarkColors else LightColors, shapes=Shapes(medium=RoundedCornerShape(16.dp),large=RoundedCornerShape(20.dp),extraLarge=RoundedCornerShape(24.dp))) {
+    MaterialTheme(colorScheme=if(dark)DarkColors else LightColors,typography=WboxTypography, shapes=Shapes(medium=RoundedCornerShape(16.dp),large=RoundedCornerShape(20.dp),extraLarge=RoundedCornerShape(24.dp))) {
         WboxSystemBars(m)
         var editor by remember { mutableStateOf<Editor?>(null) }
+        var subscriptionEditor by remember { mutableStateOf<SubscriptionEdit?>(null) }
+        var preview by remember { mutableStateOf<JSONObject?>(null) }
+        val pageState=rememberSaveableStateHolder()
         var librarySubscriptions by remember(m.workspace){mutableStateOf(false)}
         val focus=remember{FocusRequester()}
-        LaunchedEffect(Unit){focus.requestFocus()}
+        val fullPage=editor?.type=="config"||subscriptionEditor!=null||preview!=null
+        LaunchedEffect(fullPage){if(!fullPage)focus.requestFocus()}
         var showWorkspace by remember { mutableStateOf(false) }
         val snackbar=remember { SnackbarHostState() }
         DisposableEffect(m.page,m.sheet) { onDispose { m.textInputFocused=false } }
         LaunchedEffect(m.message) { if(m.message.isNotEmpty()){val text=m.message;snackbar.showSnackbar(text);if(m.message==text)m.message=""} }
-        SideEffect { m.editing=editor!=null }
+        SideEffect { m.editing=editor!=null||fullPage }
         LaunchedEffect(m.page,m.sheet,m.runtime.running,m.profiles){m.refreshDetails()}
         val title=when(m.page){"overview"->"概览";"proxies"->"代理";"library"->if(m.workspace=="config")"配置" else "节点";"logs"->"日志";else->"设置"}
-        Scaffold(
+        if(fullPage) {
+            when {
+                subscriptionEditor!=null->SubscriptionEditor(m,subscriptionEditor!!){subscriptionEditor=null}
+                preview!=null->ConfigPreviewScreen(m,preview!!){preview=null}
+                else->ConfigEditorScreen(m,editor!!.profile!!){editor=null}
+            }
+        } else pageState.SaveableStateProvider("main") { Scaffold(
             modifier=Modifier.focusRequester(focus).onPreviewKeyEvent{event ->
                 val key=event.nativeKeyEvent
                 if(key.action!=android.view.KeyEvent.ACTION_DOWN || m.workspace!="nodes" || editor!=null || m.textInputFocused) false
@@ -81,9 +94,10 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
                     else -> false
                 }
             }.focusable(),
-            topBar={TopAppBar(title={Text(title,style=MaterialTheme.typography.headlineMedium)},colors=TopAppBarDefaults.topAppBarColors(containerColor=MaterialTheme.colorScheme.surface,scrolledContainerColor=MaterialTheme.colorScheme.surface),actions={
+            topBar={TopAppBar(title={Text(title,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,maxLines=1)},colors=TopAppBarDefaults.topAppBarColors(containerColor=MaterialTheme.colorScheme.surface,scrolledContainerColor=MaterialTheme.colorScheme.surface),actions={
                 if(m.page=="library"&&(m.workspace=="config"||librarySubscriptions))LibraryToolbarActions(m,m.workspace=="config")
-                Box { TextButton(onClick={showWorkspace=true}){Text(if(m.workspace=="config")"配置工作区" else "节点工作区",fontSize=12.sp);Icon(Icons.Outlined.ExpandMore,null,Modifier.size(18.dp))}
+                if(m.page=="library")ProfileImportMenu(m){editor=it}
+                Box { IconButton(onClick={showWorkspace=true}){Icon(Icons.Outlined.SwapHoriz,"切换工作区")}
                     DropdownMenu(showWorkspace,{showWorkspace=false}){listOf("config" to "配置工作区","nodes" to "节点工作区").forEach{(key,label)->DropdownMenuItem(text={Text(label)},onClick={showWorkspace=false;m.switchWorkspace(key)},leadingIcon={Icon(if(key=="config")Icons.Outlined.Folder else Icons.Outlined.Dns,null)},trailingIcon={if(m.workspace==key)Icon(Icons.Outlined.Check,null)})}}
             }})},
             snackbarHost={SnackbarHost(snackbar){data->Snackbar(
@@ -102,41 +116,41 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
                     text={Text(if(m.testing)"取消测试" else "延迟测试")},
                     containerColor=MaterialTheme.colorScheme.secondaryContainer,contentColor=MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                else if(m.page!="proxies" && !m.runtime.running && !m.runtime.stopping) FloatingActionButton(
+                else if(m.page!="proxies" && m.page!="library" && !m.runtime.running && !m.runtime.stopping) FloatingActionButton(
                     modifier=Modifier.semantics{if(m.runtime.starting)contentDescription="取消连接"},
                     onClick={m.toggle()},shape=RoundedCornerShape(18.dp),
-                    containerColor=if(dark)Color(0xff355147)else Color(0xffd3e4df),
-                    contentColor=if(dark)Color(0xffecf8f2)else Color(0xff163e30)
+                    containerColor=MaterialTheme.colorScheme.primaryContainer,
+                    contentColor=MaterialTheme.colorScheme.primary
                 ){
                     if(m.runtime.starting)CircularProgressIndicator(Modifier.size(22.dp),strokeWidth=2.dp,color=LocalContentColor.current)
                     else Icon(Icons.Outlined.PlayArrow,"连接代理",Modifier.size(26.dp))
                 }
             },
             bottomBar={Column{
-                if(m.runtime.running || m.runtime.stopping) ServiceStatusBar(m,dark)
+                if(m.runtime.running || m.runtime.stopping || m.page=="library") ServiceStatusBar(m,dark)
                 NavigationBar(containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp){
                     listOf(Triple("overview","概览",Icons.Outlined.Dashboard),Triple("proxies","代理",Icons.Outlined.AccountTree),Triple("library",if(m.workspace=="config")"配置" else "节点",Icons.Outlined.Folder),Triple("logs","日志",Icons.Outlined.Article),Triple("settings","设置",Icons.Outlined.Settings)).filter{m.workspace=="config"||it.first!="proxies"}.forEach{(key,label,icon)->NavigationBarItem(selected=m.page==key,onClick={m.page=key},icon={Icon(icon,label)},label={Text(label)})}
                 }
             }}
         ) { padding ->
             Box(Modifier.padding(padding).fillMaxSize()) {
-                when(m.page){"overview"->Dashboard(m){editor=it};"proxies"->if(m.workspace=="nodes")Library(m,librarySubscriptions,{librarySubscriptions=it}){editor=it}else ProxiesPage(m);"library"->Library(m,librarySubscriptions,{librarySubscriptions=it}){editor=it};"logs"->Logs(m,dark);else->Settings(m)}
+                when(m.page){"overview"->Dashboard(m){editor=it};"proxies"->if(m.workspace=="nodes")Library(m,librarySubscriptions,{librarySubscriptions=it},{subscriptionEditor=it},{preview=it}){editor=it}else ProxiesPage(m);"library"->Library(m,librarySubscriptions,{librarySubscriptions=it},{subscriptionEditor=it},{preview=it}){editor=it};"logs"->Logs(m,dark);else->Settings(m)}
             }
-        }
-        if(m.sheet.isNotEmpty()) {
+        } }
+        if(!fullPage&&m.sheet.isNotEmpty()) {
             val sheet=m.sheet
             ModalBottomSheet(onDismissRequest={m.sheet=""},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=MaterialTheme.colorScheme.surface,tonalElevation=0.dp){
                 Box(Modifier.fillMaxHeight()) {when(sheet){"connections"->Connections(m);"picker"->ProfilePicker(m);"apps"->Apps(m)}}
             }
         }
-        editor?.let { EditSheet(m,it){editor=null} }
+        if(!fullPage)editor?.let { EditSheet(m,it){editor=null} }
     }
 }
 
 @Composable private fun PowerControl(m:MobileModel,dark:Boolean) {
     val r=m.runtime
     // Intrinsic width follows the text. No elapsed-time-dependent sizing.
-    Surface(onClick={m.toggle()},enabled=!r.stopping,modifier=Modifier.semantics{if(r.starting)contentDescription="取消连接"},shape=RoundedCornerShape(12.dp),color=if(dark)Color(0xff355147)else Color(0xffcce8dc),contentColor=if(dark)Color(0xffecf8f2)else Color(0xff163e30)) {
+    Surface(onClick={m.toggle()},enabled=!r.stopping,modifier=Modifier.semantics{if(r.starting)contentDescription="取消连接"},shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.primaryContainer,contentColor=MaterialTheme.colorScheme.primary) {
         Row(Modifier.defaultMinSize(minWidth=40.dp,minHeight=40.dp).padding(horizontal=12.dp),horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically){
             if(r.starting || r.stopping) CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp)
             else {if(r.running)Text(uptime(r.uptime),fontSize=12.sp,fontFamily=FontFamily.Monospace);Icon(if(r.running)Icons.Filled.Stop else Icons.Outlined.PlayArrow,if(r.running)"断开代理连接" else "连接代理",Modifier.size(20.dp))}
@@ -192,24 +206,19 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
 }
 @Composable private fun Metric(label:String,value:String,modifier:Modifier){Column(modifier,verticalArrangement=Arrangement.spacedBy(8.dp)){Muted(label);Text(value,style=MaterialTheme.typography.titleLarge)} }
 
-@Composable private fun Library(m:MobileModel,subscriptions:Boolean,onSubscriptionsChange:(Boolean)->Unit,edit:(Editor)->Unit) {
-    var query by remember {mutableStateOf("")}
-    var source by remember {mutableStateOf<String?>(null)}
+@Composable private fun Library(m:MobileModel,subscriptions:Boolean,onSubscriptionsChange:(Boolean)->Unit,editSubscription:(SubscriptionEdit)->Unit,preview:(JSONObject)->Unit,edit:(Editor)->Unit) {
+    var query by rememberSaveable {mutableStateOf("")}
+    var source by rememberSaveable {mutableStateOf<String?>(null)}
     val selected=m.selectedRow
     var nodeMenu by remember {mutableStateOf<Node?>(null)}
-    
-    var subscriptionEditor by remember {mutableStateOf<SubscriptionEdit?>(null)}
-    var subscriptionMore by remember{mutableStateOf<SubscriptionEdit?>(null)}
-    var preview by remember{mutableStateOf<JSONObject?>(null)}
-    var removing by remember{mutableStateOf<Pair<String,()->Unit>?>(null)}
+
     val config=m.workspace=="config"
     Column(Modifier.fillMaxSize()) {
         if(!config) TabRow(if(subscriptions)1 else 0,containerColor=MaterialTheme.colorScheme.surface){Tab(!subscriptions,{onSubscriptionsChange(false)},text={Text("节点")});Tab(subscriptions,{onSubscriptionsChange(true)},text={Text("订阅")})}
-        Row(Modifier.fillMaxWidth().padding(horizontal=16.dp),verticalAlignment=Alignment.CenterVertically){
-            Text(if(config)"${m.configs.size} 份配置" else if(subscriptions)"${m.profiles.data.optJSONObject("subscriptions")?.length()?:0} 个订阅" else "${m.nodes.size} 个节点",Modifier.weight(1f),style=MaterialTheme.typography.titleSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            if(!config && !subscriptions){IconButton(onClick={m.paste()}){Icon(Icons.Outlined.ContentPaste,"从剪贴板导入")};IconButton(onClick={m.latency(m.nodes.filter{source==null||it.source==source}.map{it.name})}){if(m.testing)CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp) else Icon(Icons.Outlined.Speed,"测试延迟")}}
-            if(!config&&!subscriptions)Text("仅运行当前节点",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-            IconButton(onClick={edit(Editor("import"))}){Icon(Icons.Outlined.Add,if(config)"添加配置" else "添加节点或订阅")}
+        if(!config&&!subscriptions)Row(Modifier.fillMaxWidth().padding(horizontal=16.dp),verticalAlignment=Alignment.CenterVertically){
+            Text("${m.nodes.size} 个节点",Modifier.weight(1f),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            IconButton(onClick={m.paste()}){Icon(Icons.Outlined.ContentPaste,"从剪贴板导入")}
+            IconButton(onClick={m.latency(m.nodes.filter{source==null||it.source==source}.map{it.name})}){if(m.testing)CircularProgressIndicator(Modifier.size(18.dp),strokeWidth=2.dp) else Icon(Icons.Outlined.Speed,"测试延迟")}
         }
         if(!config && !subscriptions) {
             OutlinedTextField(query,{query=it},Modifier.onFocusChanged{m.textInputFocused=it.isFocused}.fillMaxWidth().padding(horizontal=16.dp),placeholder={Text("搜索节点")},leadingIcon={Icon(Icons.Outlined.Search,null)},singleLine=true,shape=RoundedCornerShape(16.dp))
@@ -218,39 +227,8 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
                 m.nodes.map{it.source}.filter{it.isNotEmpty()}.distinct().forEach{url->FilterChip(source==url,{source=url},label={Text(SubscriptionUpdates.name(m.profiles,url))})}
             }
         }
-        LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(start=16.dp,end=16.dp,top=8.dp,bottom=96.dp),verticalArrangement=Arrangement.spacedBy(if(config||subscriptions)16.dp else 8.dp)) {
-            if(config){
-                if(m.configs.isEmpty())item{EmptyState("还没有配置","添加远程 JSON / YAML 或本地配置文件。")}
-                val ordered=when(m.profiles.data.optString("config_sort")){"name"->m.configs.sortedBy{it.optString("name").lowercase()};"updated"->m.configs.sortedByDescending{it.optLong("updated")};else->m.configs}
-                items(ordered,key={it.optString("id")}){profile->
-                    val id=profile.getString("id");val url=profile.optString("url");val name=profile.optString("name")
-                    val active=profile.optString("id")==m.profiles.data.optString("active_config")
-                    LibraryCard(name,profile.optString("core")+" · "+if(url.isEmpty())"本地配置" else "远程配置",profile.optLong("updated"),profile.optJSONObject("subscription")?.optJSONObject("usage"),url.isNotEmpty(),active,m.isUpdating(id),{m.selectProfile(id)},
-                        actions=buildList{
-                            add(LibraryAction("编辑",Icons.Outlined.Edit){edit(Editor("config",profile))})
-                            add(LibraryAction("预览",Icons.Outlined.Visibility){preview=profile})
-                            if(url.isNotEmpty())add(LibraryAction("同步",Icons.Outlined.Sync,enabled=!m.isUpdating(id)){m.updateProfile(profile)})
-                            add(LibraryAction("更多",Icons.Outlined.Tune){subscriptionEditor=SubscriptionEdit(id,url,name)})
-                            add(LibraryAction("删除",Icons.Outlined.DeleteOutline,destructive=true){removing=name to {m.removeProfile(id)}})
-                        },menuDescription="配置操作",tag="profile-$id")
-                }
-            }else if(subscriptions){
-                val urls=m.profiles.data.optJSONObject("subscriptions")?.keys()?.asSequence()?.toList().orEmpty()
-                val ordered=when(m.profiles.data.optString("subscription_sort")){"name"->urls.sortedBy{SubscriptionUpdates.name(m.profiles,it).lowercase()};"updated"->urls.sortedByDescending{SubscriptionUpdates.options(m.profiles,"",it)?.optLong("last_success")?:0};else->urls}
-                if(urls.isEmpty())item{EmptyState("还没有订阅","订阅地址可下载并持续更新一组节点。")}
-                items(ordered,key={it}){url->
-                    val name=SubscriptionUpdates.name(m.profiles,url);val options=SubscriptionUpdates.options(m.profiles,"",url)
-                    val openEditor={subscriptionEditor=SubscriptionEdit(url=url,name=name)}
-                    LibraryCard(name,"${m.nodes.count{it.source==url}} 个节点 · "+if(options?.optBoolean("auto_update")==true)"每 ${options.optInt("update_minutes")} 分钟更新" else "手动更新",options?.optLong("last_success")?:0,options?.optJSONObject("usage"),true,updating=m.isUpdating(url),onClick=openEditor,
-                        actions=listOf(
-                            LibraryAction("编辑",Icons.Outlined.Edit,run=openEditor),
-                            LibraryAction("预览",Icons.Outlined.Visibility){source=url;query="";onSubscriptionsChange(false)},
-                            LibraryAction("同步",Icons.Outlined.Sync,enabled=!m.isUpdating(url)){m.refreshSubscriptions(url)},
-                            LibraryAction("更多",Icons.Outlined.Tune){subscriptionMore=SubscriptionEdit(url=url,name=name)},
-                            LibraryAction("删除",Icons.Outlined.DeleteOutline,destructive=true){removing=name to {m.removeSubscription(url)}}
-                        ),menuDescription="订阅操作",tag="subscription-$url")
-                }
-            }else{
+        if(config||subscriptions)ProfilesScreen(m,config,edit,editSubscription,preview,{url->source=url;query="";onSubscriptionsChange(false)},{edit(Editor("import"))})
+        else LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(start=16.dp,end=16.dp,top=8.dp,bottom=20.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
                 val visible=m.nodes.filter{(source==null||it.source==source)&&(it.name+it.server+it.protocol).contains(query,true)}
                 if(visible.isEmpty())item{EmptyState("没有匹配的节点","可粘贴节点链接或添加订阅地址。",Icons.Outlined.Dns)}
                 items(visible,key={it.name}){node->
@@ -262,18 +240,10 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
                         }
                     }
                 }
-            }
         }
     }
     nodeMenu?.let{node->ActionSheet(node.name,{nodeMenu=null},listOf("连接此节点" to {m.selectNode(node.name,connect=true)},"设为当前节点" to {m.selectNode(node.name)},"测试延迟" to {m.latency(listOf(node.name))},"编辑节点" to {edit(Editor("node",index=m.nodes.indexOfFirst{it.name==node.name}))},"克隆为手动节点" to {m.cloneNode(m.nodes.indexOfFirst{it.name==node.name})},"移除节点" to {m.removeNode(node.name)}))}
-    subscriptionEditor?.let{SubscriptionEditor(m,it){subscriptionEditor=null}}
-    subscriptionMore?.let{value->ActionSheet(value.name,{subscriptionMore=null},listOf(
-        "复制订阅地址" to {(m.activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager).setPrimaryClip(android.content.ClipData.newPlainText("订阅地址",value.url));m.message="订阅地址已复制"},
-        "订阅设置" to {subscriptionEditor=value},
-        "查看节点" to {source=value.url;query="";onSubscriptionsChange(false)}
-    ))}
-    preview?.let{ConfigPreviewScreen(m,it){preview=null}}
-    removing?.let{(name,remove)->AlertDialog(onDismissRequest={removing=null},title={Text(if(config)"删除配置" else "删除订阅")},text={Text(name)},confirmButton={TextButton(onClick={removing=null;remove()},colors=ButtonDefaults.textButtonColors(contentColor=MaterialTheme.colorScheme.error)){Text("删除")}},dismissButton={TextButton(onClick={removing=null}){Text("取消")}})}
+
 }
 
 @Composable private fun ActionSheet(title:String,dismiss:()->Unit,actions:List<Pair<String,()->Unit>>) {ModalBottomSheet(onDismissRequest=dismiss,containerColor=MaterialTheme.colorScheme.surface){SelectionContainer{Text(title,Modifier.heightIn(max=180.dp).verticalScroll(rememberScrollState()).padding(horizontal=24.dp,vertical=12.dp),style=MaterialTheme.typography.titleLarge)};actions.forEach{(label,action)->ListItem(headlineContent={Text(label)},modifier=Modifier.clickable{dismiss();action()},colors=ListItemDefaults.colors(containerColor=Color.Transparent))};Spacer(Modifier.height(16.dp))} }

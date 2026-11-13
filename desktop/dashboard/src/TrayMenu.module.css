@@ -60,7 +60,10 @@
 }
 
 .panel {
+  flex-shrink: 0;
   width: 260px;
+  max-height: 100%;
+  overflow-y: auto;
   padding: var(--space-6);
   background: var(--card);
   border: 1px solid var(--border);
@@ -69,6 +72,7 @@
 }
 
 .submenu {
+  flex-shrink: 0;
   width: 240px;
   max-height: 400px;
   padding: var(--space-6);
@@ -83,6 +87,21 @@
   display: flex;
   gap: 0;
   align-items: flex-end;
+  min-height: 0;
+  max-height: 100%;
+}
+
+:global(html[data-tray-vertical-alignment="center"]) .cascade {
+  align-items: center;
+}
+
+:global(html[data-tray-cascade-side="left"]) [data-tray-submenu-parent] > :last-child {
+  transform: rotate(180deg);
+}
+
+@media (max-height: 460px) {
+  .content { padding-top: 12px !important; padding-bottom: 12px !important; }
+  .submenu { max-height: calc(100vh - 24px); }
 }
 
 .node-slot {

@@ -44,6 +44,7 @@ class ComposeUiTest {
     @Test fun nodeImportPersistsAndLongPressOffersEditing(){
         ui.runOnIdle{m.page="library"}
         ui.onNodeWithContentDescription("添加节点或订阅").performClick()
+        ui.onNodeWithText("从链接或文本导入").performClick()
         ui.onNodeWithText("订阅地址或节点链接").performTextInput(ProfilesTest.SS.replace("#Test","#Imported"))
         ui.onNodeWithText("添加",substring=false).performClick()
         ui.waitUntil(10000){m.nodes.size==2}

@@ -5,7 +5,7 @@ import { PageHeader } from './components/PageHeader';
 import { Icon } from './components/Icon';
 import { Badge, Button, Card, Dialog, EmptyState, Field, IconButton, Select, Spinner, OthersMenu, MenuItem, useContextMenu } from './components/ui';
 import { useWboxState, type WboxState } from './WboxState';
-import { ConfigEditor } from './WboxConfigEditor';
+import { ConfigEditor, ConfigPreview } from './WboxConfigEditor';
 import { NodeEditor } from './WboxNodeEditor';
 import {SubscriptionEditor,type SubscriptionEdit} from './SubscriptionEditor';
 import {NodeDelay} from './NodeDelay';
@@ -60,6 +60,7 @@ export function WorkspaceView() {
   const s=useWboxState();
   const [importing,setImporting]=useState(false),[filter,setFilter]=useState(''),[source,setSource]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState(-1);
   const [preview,setPreview]=useState<{name:string;content:string}|null>(null);
+  const configDialogAnchor=useRef<HTMLButtonElement|null>(null);
   const [editing,setEditing]=useState<{id:string;name:string;content:string}|null>(null);
   const [renaming,setRenaming]=useState<{id:string;name:string}|null>(null),[renameError,setRenameError]=useState('');
   const [nodeEditor,setNodeEditor]=useState<{index:number;initial:any}|null>(null);
@@ -72,7 +73,10 @@ export function WorkspaceView() {
   const subscriptions=[...s.subscriptions].sort((a,b)=>order==='name'?(s.subscriptionSettings[a]?.name||a).localeCompare(s.subscriptionSettings[b]?.name||b,'zh-CN'):order==='updated'?Date.parse(s.subscriptionSettings[b]?.lastSuccess||'1970')-Date.parse(s.subscriptionSettings[a]?.lastSuccess||'1970'):0);
   const sorting=<OthersMenu title="排序订阅" icon="filter_list">{[['default','默认顺序'],['name','按名称'],['updated','最近更新']].map(([value,label])=><MenuItem key={value} checked={order===value} onSelect={()=>void call('sortLibrary',{order:value}).catch(showError)}>{label}</MenuItem>)}</OthersMenu>;
   const updateAll=<IconButton title="全部更新" disabled={s.subscriptionUpdating} onClick={()=>void call('refreshSubscriptions').catch(showError)}>{s.subscriptionUpdating?<Spinner/>:<Icon name="sync"/>}</IconButton>;
-  const editProfile=(c:WboxState['configs'][number])=>void call('readProfile',{id:c.id}).then(content=>setEditing({id:c.id,name:c.name,content})).catch(showError);
+  const rememberConfigAction=()=>{configDialogAnchor.current=document.activeElement?.closest('.menu-anchor')?.querySelector('button')??null;};
+  const closeConfigDialog=()=>{setPreview(null);setEditing(null);requestAnimationFrame(()=>configDialogAnchor.current?.focus({preventScroll:true}));};
+  const editProfile=(c:WboxState['configs'][number])=>{rememberConfigAction();void call('readProfile',{id:c.id}).then(content=>setEditing({id:c.id,name:c.name,content})).catch(showError);};
+  const previewProfile=(c:WboxState['configs'][number])=>{rememberConfigAction();void call('readProfile',{id:c.id}).then(content=>setPreview({name:c.name,content})).catch(showError);};
 
   const nodes=s.nodes.filter(n=>(!source||source==='manual'&&!n.sourceSubscription||source===n.sourceSubscription)&&`${n.name} ${n.server} ${n.protocol}`.toLowerCase().includes(filter.toLowerCase()));
   const editNode=(index:number)=>{void call('readNode',{index}).then(initial=>setNodeEditor({index,initial})).catch(showError);};
@@ -85,7 +89,7 @@ export function WorkspaceView() {
         <div className="wbox-library-title"><button className="wbox-row-main" onClick={()=>void call('selectProfile',{id:c.id}).catch(showError)}><Icon name={s.configPath===c.path?'check':'folder'}/><strong>{c.name}</strong></button>
           <OthersMenu title={`配置操作 · ${c.name}`}>
             <MenuItem icon="edit" onSelect={()=>editProfile(c)}>编辑配置</MenuItem>
-            <MenuItem icon="text_snippet" onSelect={()=>void call('readProfile',{id:c.id}).then(content=>setPreview({name:c.name,content})).catch(showError)}>预览</MenuItem>
+            <MenuItem icon="text_snippet" onSelect={()=>previewProfile(c)}>预览</MenuItem>
             {c.url&&<MenuItem icon="sync" onSelect={()=>void run('updateProfile',{id:c.id})}>同步</MenuItem>}
             <MenuItem icon="settings" onSelect={()=>{if(c.url)setSubscriptionEditor({id:c.id,name:c.name,url:c.url,options:c.subscription});else{setRenaming({id:c.id,name:c.name});setRenameError('');}}}>更多</MenuItem>
             <MenuItem icon="save" onSelect={()=>void window.wbox.exportFile(c.id).catch(showError)}>导出配置</MenuItem>
@@ -124,7 +128,7 @@ export function WorkspaceView() {
     {nodeEditor&&<NodeEditor {...nodeEditor} onClose={()=>setNodeEditor(null)} />}
     {subscriptionEditor&&<SubscriptionEditor value={subscriptionEditor} onClose={()=>setSubscriptionEditor(null)}/>}
     {renaming&&<Dialog onClose={()=>setRenaming(null)}><h3>重命名配置</h3><Field label="名称"><input className="input" autoFocus maxLength={100} value={renaming.name} onChange={e=>setRenaming({...renaming,name:e.target.value})} /></Field>{renameError&&<p role="alert" className="wbox-error">{renameError}</p>}<div className="dialog-actions row-actions"><Button onClick={()=>setRenaming(null)}>取消</Button><Button variant="primary" disabled={busy||!renaming.name.trim()} onClick={async()=>{setBusy(true);try{await call('renameProfile',renaming);setRenaming(null);}catch(e){setRenameError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}}>保存</Button></div></Dialog>}
-    {preview&&<Dialog className="wbox-config-dialog" onClose={()=>setPreview(null)}><h3>预览 · {preview.name}</h3><pre className="wbox-preview-code">{preview.content}</pre><div className="row-actions"><Button onClick={()=>setPreview(null)}>关闭</Button></div></Dialog>}
-    {editing&&<ConfigEditor profile={editing} onClose={()=>setEditing(null)} />}
+    {preview&&<ConfigPreview profile={preview} onClose={closeConfigDialog}/>}
+    {editing&&<ConfigEditor profile={editing} onClose={closeConfigDialog} />}
   </div>;
 }

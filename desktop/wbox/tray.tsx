@@ -8,6 +8,7 @@ import { TrayMenu } from '@dashboard/TrayMenu';
 import { configurePreferenceStorage } from '@dashboard/lib/storage';
 import '@dashboard/styles/globals.css';
 import '@dashboard/styles/shared.css';
+import '@dashboard/WboxPalette.css';
 import { createDesktopHost } from './host';
 
 const host = createDesktopHost(true);

@@ -13,29 +13,31 @@ Windows · Android ｜ mihomo · sing-box
 [![Android](https://img.shields.io/badge/Android-8.0%2B-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 
-[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.1.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
+[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.2.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
 
 </div>
 
-Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以黑白为基调，把完整配置与独立节点整理为两个工作区：需要细致分流时保留原配置，需要轻装连接时只运行所选节点。内核、规则与必要资源随包提供，日常使用不必反复准备环境。
+Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性底色配合柔和强调色，把完整配置与独立节点整理为两个工作区：需要细致分流时保留原配置，需要轻装连接时只运行所选节点。内核、规则与必要资源随包提供，日常使用不必反复准备环境。
 
 ## 界面一览
 
 <div align="center">
-<img src="docs/previews/0.7.1-windows-profiles.png" alt="Windows 配置卡片与操作菜单" width="96%" />
-<br/><sub>Windows：配置集中管理，保存后立即应用。</sub>
+<img src="docs/previews/0.7.2-windows-preview-light.png" alt="Windows 配置预览与语法高亮" width="96%" />
+<br/><sub>Windows：清晰的流量信息、自适应语法预览与可选配色。</sub>
 <br/><br/>
-<img src="docs/previews/0.7.1-android-profiles-light.png" alt="Android 浅色配置卡片" width="32%" />
-<img src="docs/previews/0.7.1-android-profiles-menu.png" alt="Android 配置操作菜单" width="32%" />
-<img src="docs/previews/0.7.1-android-profiles-dark.png" alt="Android 深色配置卡片" width="32%" />
-<br/><sub>Android：大卡片、清晰的流量信息与随手可达的操作。</sub>
+<img src="docs/previews/0.7.2-android-profiles-light.png" alt="Android 浅色配置卡片" width="32%" />
+<img src="docs/previews/0.7.2-android-profiles-menu.png" alt="Android 配置操作菜单" width="32%" />
+<img src="docs/previews/0.7.2-android-profiles-dark.png" alt="Android 深色配置卡片" width="32%" />
+<br/><sub>Android：参考 FlClash 的配置页，集中操作，支持系统字体缩放。</sub>
 </div>
 
-## 0.7.1：每一步都有回应
+## 0.7.2：配置更清楚，编辑更顺手
 
-测速时可以启动内核、选择节点和停止连接。编辑、同步或切换当前配置后，运行连接立即应用更改；新配置无法启动时恢复原数据和连接。测速任务与配置事务独立管理，避免不必要的“处理中”拦截。
+Android 配置页参考 [FlClash](https://github.com/chen08209/FlClash) 的真实配置列表结构，集中更新、排序与添加入口，手机单列、平板自适应多列。蓝色主色与柔和粉紫强调色配合浅深背景，流量和日期更易阅读。编辑支持惯性滚动与系统边缘返回，键盘优先收起，离开未保存修改时确认。
 
-Android 配置与节点订阅使用大圆角卡片，显示已用／总流量、剩余量、有效期和更新时间。逐项菜单提供编辑、预览、同步、更多及删除；右上角支持全部更新与排序。浅色和深色主题覆盖主界面与各编辑页，系统状态栏衔接一致。Windows 同步提供卡片菜单、预览、全部更新和排序。
+Windows 预览与编辑提供 JSON／YAML 高亮、行号、查找和自动换行，随窗口与缩放调整。卡片辅助文字放大至 14px，外观可选黑白、雾蓝与柔粉。右键托盘菜单优先在图标左侧显示，子菜单按可用空间展开。
+
+保留在线配置应用、失败恢复、测速期间连接与选择、停止优先等原有行为。
 
 ## 两个工作区，各自完整
 
@@ -48,10 +50,10 @@ Android 配置与节点订阅使用大圆角卡片，显示已用／总流量、
 
 在 [GitHub Releases](https://github.com/muchaomuicho/Wbox/releases/latest) 下载：
 
-- `Wbox-0.7.1-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
-- `Wbox-0.7.1-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
-- `Wbox-0.7.1-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
-- `SHA256SUMS-0.7.1.txt`：发布文件 SHA256 校验值。
+- `Wbox-0.7.2-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
+- `Wbox-0.7.2-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
+- `Wbox-0.7.2-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
+- `SHA256SUMS-0.7.2.txt`：发布文件 SHA256 校验值。
 
 Windows 关闭窗口后保留托盘，左键恢复主界面，右键打开菜单；支持开机自启、静默启动与自动连接。托盘可切换运行策略组、配置、测速及关闭连接。Android 首次连接授权系统 VPN，支持全部应用、只代理所选应用或绕过所选应用，IPv6 默认开启。
 
@@ -75,7 +77,9 @@ Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，�
 
 ## 验证与历史归档
 
-本轮覆盖双内核核心逻辑、实际转发、测速期间连接与选择、在线配置应用及失败恢复；Android 界面与运行验证使用隔离 API35 模拟器。发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.1-` 开头。
+本轮检查配置列表与编辑导航、字体缩放、Windows 高亮预览与托盘布局，并回归双内核配置行为；Android 界面验证使用隔离 API35 模拟器。发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.2-` 开头。
+
+Android 系统 Back、键盘优先收起、未保存修改保护及惯性滚动已检查；当前模拟器缺少系统边缘手势监听，左右边缘滑动尚未完成真机验证，记录中单独标为未验证。
 
 历史安装包与现存源码归档在 [各版本 Release](https://github.com/muchaomuicho/Wbox/releases)，文件核验见 [历史归档清单](docs/verification/history-archive.json)。**0.1.0 当时的源码包未留存**，该版本仅保存现存安装包和明确的缺失说明；其余历史源码以各版本随附的原始 source ZIP 为准。
 

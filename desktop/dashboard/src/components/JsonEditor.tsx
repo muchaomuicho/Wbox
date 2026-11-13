@@ -133,7 +133,7 @@ const jsonHighlight = HighlightStyle.define([
   { tag: tags.propertyName, color: "var(--info)" },
   { tag: tags.string, color: "var(--good)" },
   { tag: tags.number, color: "var(--medium)" },
-  { tag: [tags.bool, tags.null], color: "var(--bad)" },
+  { tag: [tags.bool, tags.null], color: "var(--wbox-pink, var(--bad))" },
   { tag: tags.comment, color: "var(--text-faint)" },
   { tag: tags.invalid, color: "var(--danger)" },
 ]);
@@ -144,6 +144,8 @@ export function JsonEditor(props: {
   initialValue: string;
   language?: 'json' | 'yaml';
   readOnly?: boolean;
+  lineWrapping?: boolean;
+  ariaLabel?: string;
   schema?: JsonEditorSchema | null;
   onChange?: (value: string, canUndo: boolean, canRedo: boolean) => void;
   onSave?: () => void;
@@ -192,6 +194,11 @@ export function JsonEditor(props: {
             ...searchKeymap,
           ]),
           editorTheme,
+          props.lineWrapping ? EditorView.lineWrapping : [],
+          EditorView.contentAttributes.of({
+            ...(props.ariaLabel ? { 'aria-label': props.ariaLabel } : {}),
+            ...(props.readOnly ? { tabindex: '0', role: 'textbox', 'aria-readonly': 'true' } : {}),
+          }),
           props.readOnly ? [EditorState.readOnly.of(true), EditorView.editable.of(false)] : [],
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {

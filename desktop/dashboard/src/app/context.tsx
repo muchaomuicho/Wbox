@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 import type { DaemonApi } from "../api/daemon";
-import { loadStoredString, removeStoredValue, saveStoredString } from "../lib/storage";
+import { loadStoredString, saveStoredString } from "../lib/storage";
 import { useLatestRef } from "./useLatest";
 
 export const ApiContext = createContext<DaemonApi | null>(null);
@@ -166,11 +166,7 @@ export function loadAccentPreference(): AccentPreference {
 }
 
 export function saveAccentPreference(preference: AccentPreference) {
-  if (preference === "default") {
-    removeStoredValue(ACCENT_KEY);
-  } else {
-    saveStoredString(ACCENT_KEY, preference);
-  }
+  saveStoredString(ACCENT_KEY, preference);
 }
 
 export function applyAccent(preference: AccentPreference) {

@@ -1,5 +1,6 @@
 import { BrowserWindow, screen, type Rectangle } from 'electron';
 import { join } from 'node:path';
+import { trayPlacement } from './tray-position';
 
 // Windows placement follows upstream src/main/trayMenu.ts. The original
 // TrayMenu.tsx and CSS render the panel, cascading groups, and node menu.
@@ -31,16 +32,7 @@ export function createTrayController() {
     opening = true;
     try {
       const display = screen.getDisplayMatching(anchor), area = display.workArea;
-      const width = Math.min(832, area.width);
-      const cx = anchor.x + anchor.width / 2, cy = anchor.y + anchor.height / 2;
-      const side = area.x + area.width - cx >= cx - area.x ? 'right' : 'left';
-      const horizontalTaskbar = cx >= area.x && cx <= area.x + area.width;
-      const above = Math.max(0, Math.min(anchor.y, area.y + area.height) - area.y);
-      const below = Math.max(0, area.y + area.height - Math.max(area.y, anchor.y + anchor.height));
-      const align = !horizontalTaskbar ? 'center' : cy < area.y || below > above ? 'top' : 'bottom';
-      const height = Math.min(480, area.height, align === 'center' ? area.height : Math.max(180, (align === 'top' ? below : above)));
-      const x = Math.max(area.x, Math.min(area.x + area.width - width, Math.round(cx - (side === 'right' ? 170 : width - 170))));
-      const y = align === 'top' ? Math.max(area.y, anchor.y + anchor.height) : align === 'center' ? Math.max(area.y, Math.min(area.y + area.height - height, Math.round(cy - height / 2))) : Math.min(area.y + area.height, anchor.y) - height;
+      const { x, y, width, height, side, align } = trayPlacement(anchor, area);
       if(menu && !menu.isDestroyed()) {
         if(warming)return;
         menu.setBounds({x,y,width,height});

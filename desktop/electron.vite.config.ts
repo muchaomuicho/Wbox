@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "electron-vite";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
 import type { Plugin } from "vite";
 
 
@@ -43,7 +44,7 @@ function contentSecurityPolicy(): Plugin {
 export default defineConfig({
   main: {
     define: {
-      __APP_VERSION__: JSON.stringify("0.5.1"),
+      __APP_VERSION__: JSON.stringify(JSON.parse(readFileSync(resolve(import.meta.dirname, "package.json"), "utf8")).version),
     },
     build: { rollupOptions: { input: { index: resolve(import.meta.dirname, "wbox/main.ts") } } },
     resolve: {

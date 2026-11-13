@@ -1,0 +1,43 @@
+{
+  "version": "0.7.2",
+  "emulator": "emulator-5556",
+  "checks": [
+    "Configuration cards show quota and remaining traffic",
+    "profiles-light status bar shares the page surface",
+    "Profile toolbar exposes link, file and clipboard imports",
+    "File import opens the system document picker",
+    "Each configuration has all five actions",
+    "Preview opens the selectable read-only configuration",
+    "config-preview status bar shares the page surface",
+    "subscription-editor status bar shares the page surface",
+    "config-editor status bar shares the page surface",
+    "Name sorting changes configuration order",
+    "Update all synchronizes both remote configurations",
+    "Configuration sort persists across restart",
+    "profiles-dark status bar shares the page surface",
+    "Quota and remaining traffic remain available at 150% font scale",
+    "profiles-large-font status bar shares the page surface",
+    "Tablet configurations use an adaptive multi-column grid",
+    "profiles-tablet status bar shares the page surface",
+    "subscription-editor-dark status bar shares the page surface",
+    "node-subscriptions status bar shares the page surface",
+    "Subscription preview filters the node workspace to its source",
+    "nodes status bar shares the page surface"
+  ],
+  "screenshots": [
+    "docs\\previews\\0.7.2-android-profiles-light.png",
+    "docs\\previews\\0.7.2-android-profiles-menu.png",
+    "docs\\previews\\0.7.2-android-config-preview.png",
+    "docs\\previews\\0.7.2-android-subscription-editor.png",
+    "docs\\previews\\0.7.2-android-config-editor.png",
+    "docs\\previews\\0.7.2-android-profiles-dark.png",
+    "docs\\previews\\0.7.2-android-profiles-large-font.png",
+    "docs\\previews\\0.7.2-android-profiles-tablet.png",
+    "docs\\previews\\0.7.2-android-subscription-editor-dark.png",
+    "docs\\previews\\0.7.2-android-node-subscriptions.png",
+    "docs\\previews\\0.7.2-android-node-subscription-menu.png",
+    "docs\\previews\\0.7.2-android-nodes.png"
+  ],
+  "failure": null,
+  "testApkSha256": "61cf474f1728e54fd2b23efd3cd3b09766fae6839dfb25c3068a3b1ecc2ce7f0"
+}

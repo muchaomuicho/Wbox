@@ -83,9 +83,9 @@ def screenshot(name,dark=False,verify_bar=True):
     images.append(str(path.relative_to(ROOT)))
     if verify_bar:
         im=Image.open(io.BytesIO(data)).convert('RGB')
-        expected=31 if dark else 250
+        expected=(22,25,32) if dark else (243,244,248)
         pixels=[im.getpixel((x,2)) for x in [2,im.width//2,im.width-3]]
-        check(all(max(abs(v-expected) for v in pixel)<=8 for pixel in pixels),name+' status bar shares the page surface')
+        check(all(max(abs(v-e) for v,e in zip(pixel,expected))<=8 for pixel in pixels),name+' status bar shares the page surface')
 
 def content():
     return json.dumps({'outbounds':[{'type':'selector','tag':'Proxy','outbounds':['DIRECT']},{'type':'direct','tag':'DIRECT'}]})
@@ -107,6 +107,18 @@ try:
     original=adb('shell','run-as','com.wbox.app','cat','files/profiles.json')
 except RuntimeError:
     original=None
+original_font=adb('shell','settings','get','system','font_scale').decode().strip()
+original_size=adb('shell','wm','size').decode()
+original_density=adb('shell','wm','density').decode()
+
+def restore_display():
+    for kind,value in [('size',original_size),('density',original_density)]:
+        match=re.search(r'Override (?:size|density): ([\dx]+)',value)
+        adb('shell','wm',kind,match.group(1) if match else 'reset')
+    if original_font=='null':
+        adb('shell','settings','delete','system','font_scale')
+    else:
+        adb('shell','settings','put','system','font_scale',original_font)
 
 def config_seed(dark=False):
     now=int(time.time()*1000)
@@ -124,6 +136,12 @@ try:
     wait(lambda:has_text('Orion · 出行'))
     check(any('300 GB' in s for s in labels()) and any('剩余' in s for s in labels()),'Configuration cards show quota and remaining traffic')
     screenshot('profiles-light')
+    tap('添加配置','content-desc')
+    check(all(s in labels() for s in ['从链接或文本导入','从文件导入','从剪贴板导入']),'Profile toolbar exposes link, file and clipboard imports')
+    tap('从文件导入')
+    check('com.wbox.app' not in adb('shell','dumpsys','activity','activities').decode().split('mResumedActivity:')[-1].split('\n')[0],'File import opens the system document picker')
+    adb('shell','input','keyevent','4')
+    wait(lambda:has_text('Orion · 出行'))
     tap('配置操作','content-desc')
     check(all(s in labels() for s in ['编辑','预览','同步','更多','删除']),'Each configuration has all five actions')
     screenshot('profiles-menu',verify_bar=False)
@@ -157,6 +175,22 @@ try:
     start(config_seed(True))
     tap('配置')
     screenshot('profiles-dark',dark=True)
+    adb('shell','settings','put','system','font_scale','1.5')
+    start(config_seed(True))
+    tap('配置')
+    check(has_text('剩余') and has_text('300 GB'),'Quota and remaining traffic remain available at 150% font scale')
+    screenshot('profiles-large-font',dark=True)
+    adb('shell','settings','put','system','font_scale','1.0')
+    adb('shell','wm','size','1600x2560')
+    adb('shell','wm','density','240')
+    start(config_seed())
+    tap('配置')
+    positions={n.get('text'):tuple(map(int,re.findall(r'\d+',n.get('bounds')))) for n in nodes() if n.get('text') in ['Orion · 出行','Atlas · 主订阅','本地规则']}
+    check(len(positions)==3 and len({p[0] for p in positions.values()})>1,'Tablet configurations use an adaptive multi-column grid')
+    screenshot('profiles-tablet')
+    restore_display()
+    start(config_seed(True))
+    tap('配置')
     tap('配置操作','content-desc')
     tap('更多')
     wait(lambda:'编辑订阅' in labels())
@@ -186,6 +220,7 @@ finally:
         else:
             adb('shell','run-as','com.wbox.app','rm','-f','files/profiles.json')
     finally:
+        restore_display()
         server.shutdown()
         report=ROOT/f'docs/verification/{VERSION}-android-library.json'
         report.parent.mkdir(parents=True,exist_ok=True)
