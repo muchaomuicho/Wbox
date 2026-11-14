@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "checkedAt": "2026-11-14T06:27:43.793320+00:00",
+  "url": "https://wbox.wucnebssss.hidns.co",
+  "workerVersion": "bba70a2d-5d3b-4d95-8900-204b0199531c",
+  "clientTag": "v0.7.9",
+  "clientCommit": "486b196ee0df136a7c742ad3f7bbe2329532e1c4",
+  "checks": [
+    "Deployed HTML matches website/dist/index.html byte for byte",
+    "Public API and offline fallback both match the latest stable GitHub release",
+    "All four asset names, sizes and download URLs match the published release",
+    "GitHub uploaded asset SHA256 digests matched the local files before publication",
+    "Updated release fallback passed both Worker tests"
+  ],
+  "indexSha256": "7584f955f1d0f4e681e963913c96557a7b846019a1054487a5cbd659c4b99cb1",
+  "release": {
+    "tag_name": "v0.7.9",
+    "published_at": "2026-11-14T06:26:15Z",
+    "html_url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.7.9",
+    "body": "# Wbox 0.7.9\n\n在设置中检查 GitHub 正式版更新，确认后下载并显示进度与速率。下载界面可以收起，再从设置中打开。\n\n- Windows 在主进程下载，隐藏窗口不影响下载；校验安装包后启动安装器，安装结束后清理本次下载文件。\n- Android 使用系统下载与安装服务，校验包名、版本、SHA256 和原签名后交给系统安装；安装文件不长期留在下载目录。\n- 更新失败、取消或权限未授予时保留清楚的恢复入口。\n- Windows 合并重复状态请求，移除未使用的打包依赖；Android 低内存时清空图标缓存引用。下载采用流式写盘，避免整包占用内存。\n\nAndroid versionCode 29，继续使用原签名；双端版本均为 0.7.9。内核保持 mihomo 1.19.33 与 sing-box 1.14.4-wbox.1，保留 26 份离线规则。\n\n验证记录位于 `verification/0.7.9-*`。\n",
+    "assets": [
+      {
+        "name": "SHA256SUMS-0.7.9.txt",
+        "size": 289,
+        "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/SHA256SUMS-0.7.9.txt"
+      },
+      {
+        "name": "Wbox-0.7.9-android-arm64-v8a.apk",
+        "size": 56297777,
+        "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/Wbox-0.7.9-android-arm64-v8a.apk"
+      },
+      {
+        "name": "Wbox-0.7.9-source.zip",
+        "size": 39171666,
+        "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/Wbox-0.7.9-source.zip"
+      },
+      {
+        "name": "Wbox-0.7.9-windows-x64-setup.exe",
+        "size": 159029670,
+        "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/Wbox-0.7.9-windows-x64-setup.exe"
+      }
+    ]
+  }
+}

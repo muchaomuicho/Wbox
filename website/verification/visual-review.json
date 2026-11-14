@@ -1,32 +1,31 @@
 {
   "passed": true,
-  "reviewedAt": "2026-11-14T04:44:53.3121281Z",
+  "reviewedAt": "2026-11-14T06:24:52.6330404Z",
   "sourceHashes": {
-    "index.html": "73873c9e63508c96ad58c37f1969fe3e1895eb466a73189d175046c06da7b008",
+    "index.html": "7584f955f1d0f4e681e963913c96557a7b846019a1054487a5cbd659c4b99cb1",
     "styles.css": "d0cea88a9f3662a905fde489b444d6e6ab82c8e3938f409d30f88bacb8120292",
     "app.js": "c60574e2bd446f4c50d6462f1dd88068ee8d3d3c51d5ecdff24f1a3f0f69f7d7"
   },
-  "scope": "Local isolated browser verification with mocked release API; deployment and GitHub asset availability are verified separately.",
+  "scope": "0.7.9 website update copy, using isolated local browser verification. Release metadata in the existing regression fixture remains synthetic v0.7.8; production deployment and release data are verified separately.",
   "reviewedImages": [
     "desktop-1440.png",
-    "mobile-390-hero.png",
-    "mobile-390-download.png",
-    "mobile-320.png",
-    "mobile-320-hero.png",
-    "mobile-320-download.png",
-    "mobile-320-faq.png",
-    "mobile-390-dark-pink.png"
+    "mobile-320-update-check.png",
+    "mobile-320-update-install.png"
   ],
   "findings": [
-    "Phone and workspace screenshots retain their aspect ratios.",
-    "390px and 320px body, FAQ and action text are readable at the measured 14px minimum; supporting text measures at least 12px.",
-    "320px hero actions use separate rows without word fragmentation.",
-    "Dark appearance with the pink accent retains readable text and controls.",
-    "No clipped page text or controls were observed in the reviewed screenshots."
+    "The experience section describes checking updates, confirmation before download, progress, size, speed and continued downloads after hiding the panel.",
+    "The two new FAQ answers open at 320px with body text at least 14px and no horizontal clipping.",
+    "Windows installer completion cleanup and Android system installation confirmation and download-copy cleanup match the 0.7.9 client flow.",
+    "Current workspace screenshots remain representative. Update fixture screenshots were not added to the homepage because they contain synthetic release versions or the test-package identity.",
+    "The reviewed desktop and expanded mobile FAQ screenshots have readable text and no clipped controls."
+  ],
+  "focusedChecks": [
+    "320px check-update FAQ opens, remains readable and fits the viewport.",
+    "320px installation-and-cleanup FAQ opens, remains readable and fits the viewport."
   ],
   "environmentNotes": [
-    "Host antivirus injected Kaspersky URLs into local HTTP responses; external requests were blocked and retained in the automated report.",
-    "Element screenshot scrolling created a skip-link artifact; final region captures use full-page coordinates and the artifact is absent."
+    "The 46 existing website UI checks passed. Host antivirus injected Kaspersky URLs into local HTTP responses; external requests were blocked and retained in the automated report.",
+    "Focused FAQ screenshots use page coordinates after resetting scroll position; the temporary skip-link capture artifact is absent from final images."
   ],
   "temporaryFilesCleaned": true
 }

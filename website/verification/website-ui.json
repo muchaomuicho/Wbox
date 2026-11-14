@@ -1,13 +1,13 @@
 {
   "passed": true,
-  "checkedAt": "2026-11-14T04:42:11.332Z",
+  "checkedAt": "2026-11-14T06:22:56.572Z",
   "sourceHashes": {
-    "index.html": "73873c9e63508c96ad58c37f1969fe3e1895eb466a73189d175046c06da7b008",
+    "index.html": "7584f955f1d0f4e681e963913c96557a7b846019a1054487a5cbd659c4b99cb1",
     "styles.css": "d0cea88a9f3662a905fde489b444d6e6ab82c8e3938f409d30f88bacb8120292",
     "app.js": "c60574e2bd446f4c50d6462f1dd88068ee8d3d3c51d5ecdff24f1a3f0f69f7d7"
   },
   "engine": "installed Chrome headless via Playwright",
-  "localPort": 11586,
+  "localPort": 52458,
   "network": "All assets and latest/fallback release responses are local; third-party requests are blocked. Host antivirus may inject Kaspersky URLs into HTTP responses; those blocked requests are retained separately from site dependencies.",
   "checks": [
     "Windows card points to the current x64 EXE",
@@ -113,7 +113,7 @@
     {
       "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
       "location": {
-        "url": "http://127.0.0.1:11586/api/release",
+        "url": "http://127.0.0.1:52458/api/release",
         "line": 0,
         "column": 0,
         "lineNumber": 0,
@@ -245,7 +245,7 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "选择节点不会意外启动连接。测速、更新、连接，各自给出清楚的状态反馈。",
+          "text": "在设置中检查新版，确认后开始下载。进度、大小与速率清楚显示；收起后继续下载，随时回到设置查看。",
           "fontSize": 14
         },
         {
@@ -330,6 +330,42 @@
           "kind": "body",
           "minimum": 14,
           "text": "未连接时，单击节点只保存选择，点击启动后才开始连接。已经连接时，选择另一个节点会应用切换。这样，选择和连接始终各自清楚。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "怎样在应用内检查更新？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "从 0.7.9 起，Windows 与 Android 都可在「设置」中点击「检查更新」，检查 GitHub 最新正式版",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "下载时可查看进度、已下载大小和速率。收起更新面板后下载仍会继续，回到设置点击「查看下载进度」即可重新打开；Windows",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "下载完成后，怎样安装和清理？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Windows 完成校验后会关闭 Wbox 并打开安装器，请按提示完成安装；安装器退出后会清理本次安装包。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Android 首次更新可能需要允许 Wbox 安装应用，随后仍需在系统安装器中确认。系统接收完整安装内容后，Wbox ",
           "fontSize": 14
         },
         {
@@ -520,7 +556,7 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "选择节点不会意外启动连接。测速、更新、连接，各自给出清楚的状态反馈。",
+          "text": "在设置中检查新版，确认后开始下载。进度、大小与速率清楚显示；收起后继续下载，随时回到设置查看。",
           "fontSize": 14
         },
         {
@@ -605,6 +641,42 @@
           "kind": "body",
           "minimum": 14,
           "text": "未连接时，单击节点只保存选择，点击启动后才开始连接。已经连接时，选择另一个节点会应用切换。这样，选择和连接始终各自清楚。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "怎样在应用内检查更新？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "从 0.7.9 起，Windows 与 Android 都可在「设置」中点击「检查更新」，检查 GitHub 最新正式版",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "下载时可查看进度、已下载大小和速率。收起更新面板后下载仍会继续，回到设置点击「查看下载进度」即可重新打开；Windows",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "下载完成后，怎样安装和清理？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Windows 完成校验后会关闭 Wbox 并打开安装器，请按提示完成安装；安装器退出后会清理本次安装包。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Android 首次更新可能需要允许 Wbox 安装应用，随后仍需在系统安装器中确认。系统接收完整安装内容后，Wbox ",
           "fontSize": 14
         },
         {
