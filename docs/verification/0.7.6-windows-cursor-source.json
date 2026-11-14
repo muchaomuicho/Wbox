@@ -1,0 +1,168 @@
+{
+  "passed": true,
+  "checks": [
+    "light DPR 1: pointer SVG and scaled hotspot",
+    "light DPR 1: pointer resource decodes at 23 CSS pixels",
+    "light DPR 1: visible hand size matches default Windows hand within 2 px",
+    "light DPR 1: grab SVG and scaled hotspot",
+    "light DPR 1: grab resource decodes at 23 CSS pixels",
+    "light DPR 1: grabbing SVG and scaled hotspot",
+    "light DPR 1: grabbing resource decodes at 23 CSS pixels",
+    "light DPR 1: disabled controls keep default cursor",
+    "light DPR 1: text and window resize cursors are preserved",
+    "dark DPR 1: pointer SVG and scaled hotspot",
+    "dark DPR 1: pointer resource decodes at 23 CSS pixels",
+    "dark DPR 1: visible hand size matches default Windows hand within 2 px",
+    "dark DPR 1: grab SVG and scaled hotspot",
+    "dark DPR 1: grab resource decodes at 23 CSS pixels",
+    "dark DPR 1: grabbing SVG and scaled hotspot",
+    "dark DPR 1: grabbing resource decodes at 23 CSS pixels",
+    "dark DPR 1: disabled controls keep default cursor",
+    "dark DPR 1: text and window resize cursors are preserved",
+    "light DPR 2: pointer SVG and scaled hotspot",
+    "light DPR 2: pointer resource decodes at 23 CSS pixels",
+    "light DPR 2: visible hand size matches default Windows hand within 2 px",
+    "light DPR 2: grab SVG and scaled hotspot",
+    "light DPR 2: grab resource decodes at 23 CSS pixels",
+    "light DPR 2: grabbing SVG and scaled hotspot",
+    "light DPR 2: grabbing resource decodes at 23 CSS pixels",
+    "light DPR 2: disabled controls keep default cursor",
+    "light DPR 2: text and window resize cursors are preserved",
+    "dark DPR 2: pointer SVG and scaled hotspot",
+    "dark DPR 2: pointer resource decodes at 23 CSS pixels",
+    "dark DPR 2: visible hand size matches default Windows hand within 2 px",
+    "dark DPR 2: grab SVG and scaled hotspot",
+    "dark DPR 2: grab resource decodes at 23 CSS pixels",
+    "dark DPR 2: grabbing SVG and scaled hotspot",
+    "dark DPR 2: grabbing resource decodes at 23 CSS pixels",
+    "dark DPR 2: disabled controls keep default cursor",
+    "dark DPR 2: text and window resize cursors are preserved",
+    "Cursor assets and renderers load without errors"
+  ],
+  "errors": [],
+  "failure": null,
+  "nativeWindowsHand": {
+    "canvasWidth": 32,
+    "canvasHeight": 32,
+    "visibleWidth": 17,
+    "visibleHeight": 23,
+    "dpi": 96
+  },
+  "measurements": [
+    {
+      "label": "light DPR 1",
+      "name": "pointer",
+      "width": 23,
+      "height": 23,
+      "dpr": 1,
+      "visibleWidth": 19,
+      "visibleHeight": 21
+    },
+    {
+      "label": "light DPR 1",
+      "name": "grab",
+      "width": 23,
+      "height": 23,
+      "dpr": 1,
+      "visibleWidth": 21,
+      "visibleHeight": 21
+    },
+    {
+      "label": "light DPR 1",
+      "name": "grabbing",
+      "width": 23,
+      "height": 23,
+      "dpr": 1,
+      "visibleWidth": 19,
+      "visibleHeight": 18
+    },
+    {
+      "label": "dark DPR 1",
+      "name": "pointer",
+      "width": 23,
+      "height": 23,
+      "dpr": 1,
+      "visibleWidth": 19,
+      "visibleHeight": 21
+    },
+    {
+      "label": "dark DPR 1",
+      "name": "grab",
+      "width": 23,
+      "height": 23,
+      "dpr": 1,
+      "visibleWidth": 21,
+      "visibleHeight": 21
+    },
+    {
+      "label": "dark DPR 1",
+      "name": "grabbing",
+      "width": 23,
+      "height": 23,
+      "dpr": 1,
+      "visibleWidth": 19,
+      "visibleHeight": 18
+    },
+    {
+      "label": "light DPR 2",
+      "name": "pointer",
+      "width": 23,
+      "height": 23,
+      "dpr": 2,
+      "visibleWidth": 18.5,
+      "visibleHeight": 22
+    },
+    {
+      "label": "light DPR 2",
+      "name": "grab",
+      "width": 23,
+      "height": 23,
+      "dpr": 2,
+      "visibleWidth": 20.5,
+      "visibleHeight": 21.5
+    },
+    {
+      "label": "light DPR 2",
+      "name": "grabbing",
+      "width": 23,
+      "height": 23,
+      "dpr": 2,
+      "visibleWidth": 18,
+      "visibleHeight": 17.5
+    },
+    {
+      "label": "dark DPR 2",
+      "name": "pointer",
+      "width": 23,
+      "height": 23,
+      "dpr": 2,
+      "visibleWidth": 18.5,
+      "visibleHeight": 22
+    },
+    {
+      "label": "dark DPR 2",
+      "name": "grab",
+      "width": 23,
+      "height": 23,
+      "dpr": 2,
+      "visibleWidth": 20.5,
+      "visibleHeight": 21.5
+    },
+    {
+      "label": "dark DPR 2",
+      "name": "grabbing",
+      "width": 23,
+      "height": 23,
+      "dpr": 2,
+      "visibleWidth": 18,
+      "visibleHeight": 17.5
+    }
+  ],
+  "sourceDpr": [
+    1,
+    2
+  ],
+  "packaged": false,
+  "preview": "docs/previews/0.7.6-windows-cursors.png",
+  "isolatedDataRemoved": true
+}

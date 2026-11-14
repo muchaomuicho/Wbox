@@ -1,0 +1,1721 @@
+{
+  "version": "0.7.6",
+  "checks": [
+    "Expected debug version installed: 0.7.6",
+    "Fast return to the app list top does not dismiss the sheet",
+    "Returning content to the top keeps the sheet header stationary",
+    "Returning content stops at the top without rebound",
+    "Normal content inertia continues beyond the finger travel",
+    "Fast reverse scroll returns to the first app row",
+    "Reverse fling reaches the actual top boundary",
+    "title-up retains the app sheet",
+    "title-up stops the sheet at its expanded boundary",
+    "handle-up retains the app sheet",
+    "handle-up stops the sheet at its expanded boundary",
+    "App list scrolls normally to its final filtered row",
+    "apps-bottom keeps the fixed sheet header stationary",
+    "apps-bottom stops content at the edge without rendered rebound",
+    "Long profile picker scrolls normally to its last profile",
+    "picker-bottom keeps the fixed sheet header stationary",
+    "picker-bottom stops content at the edge without rendered rebound",
+    "Fast handle drag still closes the profile picker",
+    "System Back hides the app keyboard before dismissing the sheet",
+    "Next System Back closes the app sheet",
+    "Connection sheet stays stable during fast content swipe",
+    "System Back closes the connection sheet"
+  ],
+  "observations": {
+    "installed_apk_sha256": "d4190e0fcd0812c5a3ad4895df3fa100c0d5d7cdf6cf49b248e4f68b7eca9ec0",
+    "environment": {
+      "serial": "emulator-5556",
+      "api": 35,
+      "recording": "720x1600 rendered H264 frames"
+    },
+    "rendered_before_after_comparisons": {
+      "baseline_075": {
+        "apps-top": {
+          "header": {
+            "max_displacement_video_px": 17,
+            "video_scale": 0.6666666666666666,
+            "samples": [
+              {
+                "seconds": 0.0,
+                "offset_video_px": 0,
+                "pixel_error": 0.526
+              },
+              {
+                "seconds": 1.5442,
+                "offset_video_px": 0,
+                "pixel_error": 0.528
+              },
+              {
+                "seconds": 1.5816,
+                "offset_video_px": 0,
+                "pixel_error": 0.528
+              },
+              {
+                "seconds": 1.6052,
+                "offset_video_px": 0,
+                "pixel_error": 0.528
+              },
+              {
+                "seconds": 1.6429,
+                "offset_video_px": 0,
+                "pixel_error": 0.528
+              },
+              {
+                "seconds": 1.6648,
+                "offset_video_px": 0,
+                "pixel_error": 0.528
+              },
+              {
+                "seconds": 1.6791,
+                "offset_video_px": 0,
+                "pixel_error": 0.528
+              },
+              {
+                "seconds": 1.7143,
+                "offset_video_px": 0,
+                "pixel_error": 0.528
+              },
+              {
+                "seconds": 1.7381,
+                "offset_video_px": 17,
+                "pixel_error": 2.505
+              },
+              {
+                "seconds": 1.7653,
+                "offset_video_px": 14,
+                "pixel_error": 0.995
+              },
+              {
+                "seconds": 1.78,
+                "offset_video_px": 10,
+                "pixel_error": 0.857
+              },
+              {
+                "seconds": 1.8124,
+                "offset_video_px": 7,
+                "pixel_error": 2.316
+              },
+              {
+                "seconds": 1.8455,
+                "offset_video_px": 2,
+                "pixel_error": 0.912
+              },
+              {
+                "seconds": 1.8651,
+                "offset_video_px": 1,
+                "pixel_error": 2.436
+              },
+              {
+                "seconds": 1.8957,
+                "offset_video_px": 0,
+                "pixel_error": 0.672
+              },
+              {
+                "seconds": 1.9223,
+                "offset_video_px": 0,
+                "pixel_error": 0.666
+              },
+              {
+                "seconds": 1.9402,
+                "offset_video_px": 0,
+                "pixel_error": 0.542
+              },
+              {
+                "seconds": 1.9713,
+                "offset_video_px": 0,
+                "pixel_error": 0.287
+              },
+              {
+                "seconds": 1.9982,
+                "offset_video_px": 0,
+                "pixel_error": 0.287
+              },
+              {
+                "seconds": 2.0194,
+                "offset_video_px": 0,
+                "pixel_error": 0.287
+              },
+              {
+                "seconds": 2.0449,
+                "offset_video_px": 0,
+                "pixel_error": 0.002
+              },
+              {
+                "seconds": 5.9397,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              }
+            ]
+          },
+          "content": {
+            "max_displacement_video_px": 241,
+            "video_scale": 0.6666666666666666,
+            "samples": [
+              {
+                "seconds": 0.0,
+                "offset_video_px": -241,
+                "pixel_error": 5.333
+              },
+              {
+                "seconds": 1.5442,
+                "offset_video_px": -237,
+                "pixel_error": 5.235
+              },
+              {
+                "seconds": 1.5816,
+                "offset_video_px": -167,
+                "pixel_error": 5.64
+              },
+              {
+                "seconds": 1.6052,
+                "offset_video_px": -115,
+                "pixel_error": 5.496
+              },
+              {
+                "seconds": 1.6429,
+                "offset_video_px": -41,
+                "pixel_error": 6.544
+              },
+              {
+                "seconds": 1.6648,
+                "offset_video_px": -4,
+                "pixel_error": 5.191
+              },
+              {
+                "seconds": 1.6791,
+                "offset_video_px": 0,
+                "pixel_error": 5.168
+              },
+              {
+                "seconds": 1.7143,
+                "offset_video_px": 0,
+                "pixel_error": 4.867
+              },
+              {
+                "seconds": 1.7381,
+                "offset_video_px": 17,
+                "pixel_error": 6.758
+              },
+              {
+                "seconds": 1.7653,
+                "offset_video_px": 14,
+                "pixel_error": 3.161
+              },
+              {
+                "seconds": 1.78,
+                "offset_video_px": 10,
+                "pixel_error": 2.539
+              },
+              {
+                "seconds": 1.8124,
+                "offset_video_px": 7,
+                "pixel_error": 5.941
+              },
+              {
+                "seconds": 1.8455,
+                "offset_video_px": 2,
+                "pixel_error": 2.45
+              },
+              {
+                "seconds": 1.8651,
+                "offset_video_px": 1,
+                "pixel_error": 5.823
+              },
+              {
+                "seconds": 1.8957,
+                "offset_video_px": 0,
+                "pixel_error": 1.868
+              },
+              {
+                "seconds": 1.9223,
+                "offset_video_px": 0,
+                "pixel_error": 1.868
+              },
+              {
+                "seconds": 1.9402,
+                "offset_video_px": 0,
+                "pixel_error": 1.554
+              },
+              {
+                "seconds": 1.9713,
+                "offset_video_px": 0,
+                "pixel_error": 0.873
+              },
+              {
+                "seconds": 1.9982,
+                "offset_video_px": 0,
+                "pixel_error": 0.873
+              },
+              {
+                "seconds": 2.0194,
+                "offset_video_px": 0,
+                "pixel_error": 0.868
+              },
+              {
+                "seconds": 2.0449,
+                "offset_video_px": 0,
+                "pixel_error": 0.004
+              },
+              {
+                "seconds": 5.9397,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              }
+            ]
+          },
+          "gesture": [
+            540,
+            1100,
+            540,
+            1400,
+            70
+          ],
+          "sheet_dismissed": false
+        },
+        "apps-bottom": {
+          "header": {
+            "max_displacement_video_px": 0,
+            "video_scale": 0.6666666666666666,
+            "samples": [
+              {
+                "seconds": 0.0,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              },
+              {
+                "seconds": 0.2355,
+                "offset_video_px": 0,
+                "pixel_error": 0.012
+              },
+              {
+                "seconds": 0.7503,
+                "offset_video_px": 0,
+                "pixel_error": 0.021
+              },
+              {
+                "seconds": 1.2471,
+                "offset_video_px": 0,
+                "pixel_error": 0.025
+              },
+              {
+                "seconds": 1.5079,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.5393,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.5595,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.6144,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.6495,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.6584,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.7153,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.7504,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.7801,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.8108,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.8474,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.8818,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.9186,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.9386,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.9768,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 1.9993,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 2.0305,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 2.0458,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 2.2516,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 2.7457,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 3.2532,
+                "offset_video_px": 0,
+                "pixel_error": 0.087
+              },
+              {
+                "seconds": 3.7462,
+                "offset_video_px": 0,
+                "pixel_error": 0.329
+              },
+              {
+                "seconds": 4.253,
+                "offset_video_px": 0,
+                "pixel_error": 0.329
+              },
+              {
+                "seconds": 4.7553,
+                "offset_video_px": 0,
+                "pixel_error": 0.329
+              },
+              {
+                "seconds": 5.2699,
+                "offset_video_px": 0,
+                "pixel_error": 0.421
+              },
+              {
+                "seconds": 5.7354,
+                "offset_video_px": 0,
+                "pixel_error": 0.421
+              }
+            ]
+          },
+          "content": {
+            "max_displacement_video_px": 9,
+            "video_scale": 0.6666666666666666,
+            "samples": [
+              {
+                "seconds": 0.0,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              },
+              {
+                "seconds": 0.2355,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              },
+              {
+                "seconds": 0.7503,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              },
+              {
+                "seconds": 1.2471,
+                "offset_video_px": 0,
+                "pixel_error": 0.064
+              },
+              {
+                "seconds": 1.5079,
+                "offset_video_px": -1,
+                "pixel_error": 4.925
+              },
+              {
+                "seconds": 1.5393,
+                "offset_video_px": -5,
+                "pixel_error": 6.693
+              },
+              {
+                "seconds": 1.5595,
+                "offset_video_px": -6,
+                "pixel_error": 7.233
+              },
+              {
+                "seconds": 1.6144,
+                "offset_video_px": -7,
+                "pixel_error": 8.125
+              },
+              {
+                "seconds": 1.6495,
+                "offset_video_px": -7,
+                "pixel_error": 9.151
+              },
+              {
+                "seconds": 1.6584,
+                "offset_video_px": -9,
+                "pixel_error": 9.983
+              },
+              {
+                "seconds": 1.7153,
+                "offset_video_px": -9,
+                "pixel_error": 9.183
+              },
+              {
+                "seconds": 1.7504,
+                "offset_video_px": -7,
+                "pixel_error": 8.029
+              },
+              {
+                "seconds": 1.7801,
+                "offset_video_px": -6,
+                "pixel_error": 7.236
+              },
+              {
+                "seconds": 1.8108,
+                "offset_video_px": -4,
+                "pixel_error": 5.541
+              },
+              {
+                "seconds": 1.8474,
+                "offset_video_px": -2,
+                "pixel_error": 7.304
+              },
+              {
+                "seconds": 1.8818,
+                "offset_video_px": -1,
+                "pixel_error": 6.164
+              },
+              {
+                "seconds": 1.9186,
+                "offset_video_px": -1,
+                "pixel_error": 4.175
+              },
+              {
+                "seconds": 1.9386,
+                "offset_video_px": 0,
+                "pixel_error": 7.007
+              },
+              {
+                "seconds": 1.9768,
+                "offset_video_px": 0,
+                "pixel_error": 4.713
+              },
+              {
+                "seconds": 1.9993,
+                "offset_video_px": 0,
+                "pixel_error": 3.741
+              },
+              {
+                "seconds": 2.0305,
+                "offset_video_px": 0,
+                "pixel_error": 3.06
+              },
+              {
+                "seconds": 2.0458,
+                "offset_video_px": 0,
+                "pixel_error": 3.06
+              },
+              {
+                "seconds": 2.2516,
+                "offset_video_px": 0,
+                "pixel_error": 3.059
+              },
+              {
+                "seconds": 2.7457,
+                "offset_video_px": 0,
+                "pixel_error": 2.769
+              },
+              {
+                "seconds": 3.2532,
+                "offset_video_px": 0,
+                "pixel_error": 2.782
+              },
+              {
+                "seconds": 3.7462,
+                "offset_video_px": 0,
+                "pixel_error": 2.665
+              },
+              {
+                "seconds": 4.253,
+                "offset_video_px": 0,
+                "pixel_error": 2.676
+              },
+              {
+                "seconds": 4.7553,
+                "offset_video_px": 0,
+                "pixel_error": 2.676
+              },
+              {
+                "seconds": 5.2699,
+                "offset_video_px": 0,
+                "pixel_error": 2.557
+              },
+              {
+                "seconds": 5.7354,
+                "offset_video_px": 0,
+                "pixel_error": 2.557
+              }
+            ]
+          },
+          "gesture": [
+            540,
+            2050,
+            540,
+            900,
+            70
+          ]
+        },
+        "picker-bottom": {
+          "header": {
+            "max_displacement_video_px": 0,
+            "video_scale": 0.6666666666666666,
+            "samples": [
+              {
+                "seconds": 0.0,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              },
+              {
+                "seconds": 1.5414,
+                "offset_video_px": 0,
+                "pixel_error": 0.027
+              },
+              {
+                "seconds": 1.5731,
+                "offset_video_px": 0,
+                "pixel_error": 0.027
+              },
+              {
+                "seconds": 1.6262,
+                "offset_video_px": 0,
+                "pixel_error": 0.027
+              },
+              {
+                "seconds": 1.6702,
+                "offset_video_px": 0,
+                "pixel_error": 0.27
+              },
+              {
+                "seconds": 1.7186,
+                "offset_video_px": 0,
+                "pixel_error": 1.156
+              },
+              {
+                "seconds": 1.7679,
+                "offset_video_px": 0,
+                "pixel_error": 1.158
+              },
+              {
+                "seconds": 1.8092,
+                "offset_video_px": 0,
+                "pixel_error": 1.38
+              },
+              {
+                "seconds": 1.8354,
+                "offset_video_px": 0,
+                "pixel_error": 1.38
+              },
+              {
+                "seconds": 1.8823,
+                "offset_video_px": 0,
+                "pixel_error": 1.38
+              },
+              {
+                "seconds": 1.9088,
+                "offset_video_px": 0,
+                "pixel_error": 1.49
+              },
+              {
+                "seconds": 1.9433,
+                "offset_video_px": 0,
+                "pixel_error": 1.49
+              },
+              {
+                "seconds": 1.9834,
+                "offset_video_px": 0,
+                "pixel_error": 1.49
+              },
+              {
+                "seconds": 2.012,
+                "offset_video_px": 0,
+                "pixel_error": 1.49
+              },
+              {
+                "seconds": 2.0277,
+                "offset_video_px": 0,
+                "pixel_error": 1.49
+              }
+            ]
+          },
+          "content": {
+            "max_displacement_video_px": 5,
+            "video_scale": 0.6666666666666666,
+            "samples": [
+              {
+                "seconds": 0.0,
+                "offset_video_px": 0,
+                "pixel_error": 0.0
+              },
+              {
+                "seconds": 1.5414,
+                "offset_video_px": -1,
+                "pixel_error": 1.197
+              },
+              {
+                "seconds": 1.5731,
+                "offset_video_px": -4,
+                "pixel_error": 4.073
+              },
+              {
+                "seconds": 1.6262,
+                "offset_video_px": -5,
+                "pixel_error": 6.006
+              },
+              {
+                "seconds": 1.6702,
+                "offset_video_px": -5,
+                "pixel_error": 4.149
+              },
+              {
+                "seconds": 1.7186,
+                "offset_video_px": -5,
+                "pixel_error": 3.709
+              },
+              {
+                "seconds": 1.7679,
+                "offset_video_px": -4,
+                "pixel_error": 5.761
+              },
+              {
+                "seconds": 1.8092,
+                "offset_video_px": -4,
+                "pixel_error": 2.892
+              },
+              {
+                "seconds": 1.8354,
+                "offset_video_px": -2,
+                "pixel_error": 2.111
+              },
+              {
+                "seconds": 1.8823,
+                "offset_video_px": -2,
+                "pixel_error": 2.108
+              },
+              {
+                "seconds": 1.9088,
+                "offset_video_px": -1,
+                "pixel_error": 2.66
+              },
+              {
+                "seconds": 1.9433,
+                "offset_video_px": 0,
+                "pixel_error": 4.173
+              },
+              {
+                "seconds": 1.9834,
+                "offset_video_px": 0,
+                "pixel_error": 2.179
+              },
+              {
+                "seconds": 2.012,
+                "offset_video_px": 0,
+                "pixel_error": 1.268
+              },
+              {
+                "seconds": 2.0277,
+                "offset_video_px": 0,
+                "pixel_error": 1.266
+              }
+            ]
+          },
+          "gesture": [
+            540,
+            2050,
+            540,
+            900,
+            70
+          ]
+        }
+      },
+      "overscroll_disabled_only_top": {
+        "header": {
+          "max_displacement_video_px": 15,
+          "video_scale": 0.6666666666666666,
+          "samples": [
+            {
+              "seconds": 0.0,
+              "offset_video_px": 0,
+              "pixel_error": 0.546
+            },
+            {
+              "seconds": 1.4984,
+              "offset_video_px": 0,
+              "pixel_error": 0.548
+            },
+            {
+              "seconds": 1.5522,
+              "offset_video_px": 0,
+              "pixel_error": 0.548
+            },
+            {
+              "seconds": 1.6015,
+              "offset_video_px": 0,
+              "pixel_error": 0.548
+            },
+            {
+              "seconds": 1.6412,
+              "offset_video_px": 0,
+              "pixel_error": 0.548
+            },
+            {
+              "seconds": 1.6914,
+              "offset_video_px": 0,
+              "pixel_error": 0.548
+            },
+            {
+              "seconds": 1.749,
+              "offset_video_px": 0,
+              "pixel_error": 0.548
+            },
+            {
+              "seconds": 1.7738,
+              "offset_video_px": 15,
+              "pixel_error": 2.482
+            },
+            {
+              "seconds": 1.8254,
+              "offset_video_px": 11,
+              "pixel_error": 2.478
+            },
+            {
+              "seconds": 1.8835,
+              "offset_video_px": 3,
+              "pixel_error": 2.345
+            },
+            {
+              "seconds": 1.9142,
+              "offset_video_px": 1,
+              "pixel_error": 2.257
+            },
+            {
+              "seconds": 1.9621,
+              "offset_video_px": 0,
+              "pixel_error": 0.316
+            },
+            {
+              "seconds": 2.0172,
+              "offset_video_px": 0,
+              "pixel_error": 0.312
+            },
+            {
+              "seconds": 2.0346,
+              "offset_video_px": 0,
+              "pixel_error": 0.307
+            },
+            {
+              "seconds": 2.0947,
+              "offset_video_px": 0,
+              "pixel_error": 0.0
+            },
+            {
+              "seconds": 2.1322,
+              "offset_video_px": 0,
+              "pixel_error": 0.0
+            }
+          ]
+        },
+        "content": {
+          "max_displacement_video_px": 219,
+          "video_scale": 0.6666666666666666,
+          "samples": [
+            {
+              "seconds": 0.0,
+              "offset_video_px": -219,
+              "pixel_error": 5.31
+            },
+            {
+              "seconds": 1.4984,
+              "offset_video_px": -165,
+              "pixel_error": 5.025
+            },
+            {
+              "seconds": 1.5522,
+              "offset_video_px": -93,
+              "pixel_error": 5.912
+            },
+            {
+              "seconds": 1.6015,
+              "offset_video_px": -57,
+              "pixel_error": 5.912
+            },
+            {
+              "seconds": 1.6412,
+              "offset_video_px": -19,
+              "pixel_error": 5.779
+            },
+            {
+              "seconds": 1.6914,
+              "offset_video_px": 0,
+              "pixel_error": 2.024
+            },
+            {
+              "seconds": 1.749,
+              "offset_video_px": 0,
+              "pixel_error": 2.024
+            },
+            {
+              "seconds": 1.7738,
+              "offset_video_px": 15,
+              "pixel_error": 5.789
+            },
+            {
+              "seconds": 1.8254,
+              "offset_video_px": 11,
+              "pixel_error": 5.771
+            },
+            {
+              "seconds": 1.8835,
+              "offset_video_px": 3,
+              "pixel_error": 5.721
+            },
+            {
+              "seconds": 1.9142,
+              "offset_video_px": 1,
+              "pixel_error": 5.503
+            },
+            {
+              "seconds": 1.9621,
+              "offset_video_px": 0,
+              "pixel_error": 0.862
+            },
+            {
+              "seconds": 2.0172,
+              "offset_video_px": 0,
+              "pixel_error": 0.862
+            },
+            {
+              "seconds": 2.0346,
+              "offset_video_px": 0,
+              "pixel_error": 0.856
+            },
+            {
+              "seconds": 2.0947,
+              "offset_video_px": 0,
+              "pixel_error": 0.0
+            },
+            {
+              "seconds": 2.1322,
+              "offset_video_px": 0,
+              "pixel_error": 0.0
+            }
+          ]
+        },
+        "overshoot_video_px": 15,
+        "gesture": [
+          540,
+          1100,
+          540,
+          1400,
+          70
+        ]
+      },
+      "overscroll_disabled_only_direct_drag": {
+        "title-up": {
+          "max_displacement_video_px": 13,
+          "video_scale": 0.6666666666666666,
+          "samples": [
+            {
+              "seconds": 0.0,
+              "offset_video_px": 0,
+              "pixel_error": 0.0
+            },
+            {
+              "seconds": 1.5099,
+              "offset_video_px": 0,
+              "pixel_error": 0.01
+            },
+            {
+              "seconds": 1.5328,
+              "offset_video_px": -11,
+              "pixel_error": 2.261
+            },
+            {
+              "seconds": 1.566,
+              "offset_video_px": -13,
+              "pixel_error": 2.202
+            },
+            {
+              "seconds": 1.5855,
+              "offset_video_px": -10,
+              "pixel_error": 0.996
+            },
+            {
+              "seconds": 1.6407,
+              "offset_video_px": -4,
+              "pixel_error": 0.824
+            },
+            {
+              "seconds": 1.6558,
+              "offset_video_px": 0,
+              "pixel_error": 0.708
+            },
+            {
+              "seconds": 1.7059,
+              "offset_video_px": 0,
+              "pixel_error": 0.6
+            },
+            {
+              "seconds": 1.7331,
+              "offset_video_px": 0,
+              "pixel_error": 0.6
+            },
+            {
+              "seconds": 1.7579,
+              "offset_video_px": 0,
+              "pixel_error": 0.519
+            },
+            {
+              "seconds": 1.7949,
+              "offset_video_px": 0,
+              "pixel_error": 0.519
+            },
+            {
+              "seconds": 1.8188,
+              "offset_video_px": 0,
+              "pixel_error": 0.519
+            },
+            {
+              "seconds": 1.8468,
+              "offset_video_px": 0,
+              "pixel_error": 0.499
+            },
+            {
+              "seconds": 1.8725,
+              "offset_video_px": 0,
+              "pixel_error": 0.498
+            }
+          ]
+        },
+        "handle-up": {
+          "max_displacement_video_px": 5,
+          "video_scale": 0.6666666666666666,
+          "samples": [
+            {
+              "seconds": 0.0,
+              "offset_video_px": 0,
+              "pixel_error": 0.0
+            },
+            {
+              "seconds": 1.5657,
+              "offset_video_px": 0,
+              "pixel_error": 0.01
+            },
+            {
+              "seconds": 1.6085,
+              "offset_video_px": -5,
+              "pixel_error": 2.234
+            },
+            {
+              "seconds": 1.6417,
+              "offset_video_px": -5,
+              "pixel_error": 2.234
+            },
+            {
+              "seconds": 1.6757,
+              "offset_video_px": -3,
+              "pixel_error": 2.19
+            },
+            {
+              "seconds": 1.7237,
+              "offset_video_px": -1,
+              "pixel_error": 2.226
+            },
+            {
+              "seconds": 1.7627,
+              "offset_video_px": 0,
+              "pixel_error": 0.801
+            },
+            {
+              "seconds": 1.8201,
+              "offset_video_px": 0,
+              "pixel_error": 0.801
+            },
+            {
+              "seconds": 1.8506,
+              "offset_video_px": 0,
+              "pixel_error": 0.801
+            },
+            {
+              "seconds": 1.8855,
+              "offset_video_px": 0,
+              "pixel_error": 0.729
+            },
+            {
+              "seconds": 1.9149,
+              "offset_video_px": 0,
+              "pixel_error": 0.595
+            }
+          ]
+        }
+      }
+    },
+    "apps-top": {
+      "header": {
+        "max_displacement_video_px": 0,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": 0,
+            "pixel_error": 0.01
+          },
+          {
+            "seconds": 1.4455,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.4976,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.532,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.547,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.5858,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.6199,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.6547,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.6758,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.7127,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.7316,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          }
+        ]
+      },
+      "content": {
+        "max_displacement_video_px": 206,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": -206,
+            "pixel_error": 2.398
+          },
+          {
+            "seconds": 1.4455,
+            "offset_video_px": -199,
+            "pixel_error": 6.181
+          },
+          {
+            "seconds": 1.4976,
+            "offset_video_px": -137,
+            "pixel_error": 5.979
+          },
+          {
+            "seconds": 1.532,
+            "offset_video_px": -65,
+            "pixel_error": 5.924
+          },
+          {
+            "seconds": 1.547,
+            "offset_video_px": -51,
+            "pixel_error": 5.903
+          },
+          {
+            "seconds": 1.5858,
+            "offset_video_px": -25,
+            "pixel_error": 5.863
+          },
+          {
+            "seconds": 1.6199,
+            "offset_video_px": -15,
+            "pixel_error": 5.0
+          },
+          {
+            "seconds": 1.6547,
+            "offset_video_px": -5,
+            "pixel_error": 4.879
+          },
+          {
+            "seconds": 1.6758,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.7127,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.7316,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          }
+        ]
+      },
+      "overshoot_video_px": 0,
+      "gesture": [
+        540,
+        1100,
+        540,
+        1400,
+        70
+      ]
+    },
+    "Returning content to the top keeps the sheet header stationary": 0,
+    "Returning content stops at the top without rebound": 0,
+    "Normal content inertia continues beyond the finger travel": 206,
+    "Reverse fling reaches the actual top boundary": {
+      "initial_first_row": [
+        231,
+        768,
+        703,
+        831
+      ],
+      "final_first_row": [
+        231,
+        768,
+        703,
+        831
+      ]
+    },
+    "title-up": {
+      "header": {
+        "max_displacement_video_px": 0,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.4948,
+            "offset_video_px": 0,
+            "pixel_error": 0.01
+          },
+          {
+            "seconds": 1.5442,
+            "offset_video_px": 0,
+            "pixel_error": 0.02
+          },
+          {
+            "seconds": 1.6083,
+            "offset_video_px": 0,
+            "pixel_error": 0.023
+          },
+          {
+            "seconds": 1.6538,
+            "offset_video_px": 0,
+            "pixel_error": 0.092
+          },
+          {
+            "seconds": 1.7342,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 1.7704,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 1.8441,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 1.9016,
+            "offset_video_px": 0,
+            "pixel_error": 0.407
+          },
+          {
+            "seconds": 1.9297,
+            "offset_video_px": 0,
+            "pixel_error": 0.407
+          }
+        ]
+      },
+      "gesture": [
+        540,
+        290,
+        540,
+        90,
+        70
+      ]
+    },
+    "title-up stops the sheet at its expanded boundary": 0,
+    "handle-up": {
+      "header": {
+        "max_displacement_video_px": 0,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.5018,
+            "offset_video_px": 0,
+            "pixel_error": 0.01
+          },
+          {
+            "seconds": 1.5449,
+            "offset_video_px": 0,
+            "pixel_error": 0.02
+          },
+          {
+            "seconds": 1.5811,
+            "offset_video_px": 0,
+            "pixel_error": 0.023
+          },
+          {
+            "seconds": 1.6288,
+            "offset_video_px": 0,
+            "pixel_error": 0.092
+          },
+          {
+            "seconds": 1.6943,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 1.7358,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 1.7724,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 1.8273,
+            "offset_video_px": 0,
+            "pixel_error": 0.407
+          },
+          {
+            "seconds": 1.8609,
+            "offset_video_px": 0,
+            "pixel_error": 0.407
+          }
+        ]
+      },
+      "gesture": [
+        540,
+        126,
+        540,
+        65,
+        70
+      ]
+    },
+    "handle-up stops the sheet at its expanded boundary": 0,
+    "apps-bottom": {
+      "header": {
+        "max_displacement_video_px": 0,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 0.2726,
+            "offset_video_px": 0,
+            "pixel_error": 0.01
+          },
+          {
+            "seconds": 0.754,
+            "offset_video_px": 0,
+            "pixel_error": 0.02
+          },
+          {
+            "seconds": 1.2524,
+            "offset_video_px": 0,
+            "pixel_error": 0.023
+          },
+          {
+            "seconds": 1.5688,
+            "offset_video_px": 0,
+            "pixel_error": 0.092
+          },
+          {
+            "seconds": 1.5885,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 1.755,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 2.2498,
+            "offset_video_px": 0,
+            "pixel_error": 0.325
+          },
+          {
+            "seconds": 2.7357,
+            "offset_video_px": 0,
+            "pixel_error": 0.407
+          },
+          {
+            "seconds": 3.2536,
+            "offset_video_px": 0,
+            "pixel_error": 0.407
+          },
+          {
+            "seconds": 3.7534,
+            "offset_video_px": 0,
+            "pixel_error": 0.41
+          },
+          {
+            "seconds": 4.2449,
+            "offset_video_px": 0,
+            "pixel_error": 0.41
+          },
+          {
+            "seconds": 4.7584,
+            "offset_video_px": 0,
+            "pixel_error": 0.41
+          },
+          {
+            "seconds": 5.2354,
+            "offset_video_px": 0,
+            "pixel_error": 0.41
+          },
+          {
+            "seconds": 5.7513,
+            "offset_video_px": 0,
+            "pixel_error": 0.41
+          }
+        ]
+      },
+      "content": {
+        "max_displacement_video_px": 0,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 0.2726,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 0.754,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.2524,
+            "offset_video_px": 0,
+            "pixel_error": 0.064
+          },
+          {
+            "seconds": 1.5688,
+            "offset_video_px": 0,
+            "pixel_error": 0.767
+          },
+          {
+            "seconds": 1.5885,
+            "offset_video_px": 0,
+            "pixel_error": 1.841
+          },
+          {
+            "seconds": 1.755,
+            "offset_video_px": 0,
+            "pixel_error": 1.855
+          },
+          {
+            "seconds": 2.2498,
+            "offset_video_px": 0,
+            "pixel_error": 1.857
+          },
+          {
+            "seconds": 2.7357,
+            "offset_video_px": 0,
+            "pixel_error": 2.231
+          },
+          {
+            "seconds": 3.2536,
+            "offset_video_px": 0,
+            "pixel_error": 2.231
+          },
+          {
+            "seconds": 3.7534,
+            "offset_video_px": 0,
+            "pixel_error": 2.223
+          },
+          {
+            "seconds": 4.2449,
+            "offset_video_px": 0,
+            "pixel_error": 2.223
+          },
+          {
+            "seconds": 4.7584,
+            "offset_video_px": 0,
+            "pixel_error": 2.223
+          },
+          {
+            "seconds": 5.2354,
+            "offset_video_px": 0,
+            "pixel_error": 2.223
+          },
+          {
+            "seconds": 5.7513,
+            "offset_video_px": 0,
+            "pixel_error": 2.223
+          }
+        ]
+      },
+      "gesture": [
+        540,
+        2050,
+        540,
+        900,
+        70
+      ]
+    },
+    "apps-bottom keeps the fixed sheet header stationary": 0,
+    "apps-bottom stops content at the edge without rendered rebound": 0,
+    "picker-bottom": {
+      "header": {
+        "max_displacement_video_px": 0,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.6277,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.6431,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 3.8923,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          }
+        ]
+      },
+      "content": {
+        "max_displacement_video_px": 0,
+        "video_scale": 0.6666666666666666,
+        "samples": [
+          {
+            "seconds": 0.0,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.6277,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 1.6431,
+            "offset_video_px": 0,
+            "pixel_error": 0.0
+          },
+          {
+            "seconds": 3.8923,
+            "offset_video_px": 0,
+            "pixel_error": 0.016
+          }
+        ]
+      },
+      "gesture": [
+        540,
+        2050,
+        540,
+        900,
+        70
+      ]
+    },
+    "picker-bottom keeps the fixed sheet header stationary": 0,
+    "picker-bottom stops content at the edge without rendered rebound": 0,
+    "handle_drag_frames": 32,
+    "connections-empty": {
+      "max_displacement_video_px": 0,
+      "video_scale": 0.6666666666666666,
+      "samples": [
+        {
+          "seconds": 0.0,
+          "offset_video_px": 0,
+          "pixel_error": 0.0
+        },
+        {
+          "seconds": 0.185,
+          "offset_video_px": 0,
+          "pixel_error": 0.005
+        },
+        {
+          "seconds": 0.2011,
+          "offset_video_px": 0,
+          "pixel_error": 0.014
+        },
+        {
+          "seconds": 0.3124,
+          "offset_video_px": 0,
+          "pixel_error": 0.021
+        },
+        {
+          "seconds": 1.1759,
+          "offset_video_px": 0,
+          "pixel_error": 0.056
+        },
+        {
+          "seconds": 1.5016,
+          "offset_video_px": 0,
+          "pixel_error": 0.194
+        },
+        {
+          "seconds": 1.5171,
+          "offset_video_px": 0,
+          "pixel_error": 0.194
+        },
+        {
+          "seconds": 1.5643,
+          "offset_video_px": 0,
+          "pixel_error": 0.194
+        },
+        {
+          "seconds": 1.5878,
+          "offset_video_px": 0,
+          "pixel_error": 0.194
+        },
+        {
+          "seconds": 2.2018,
+          "offset_video_px": 0,
+          "pixel_error": 0.2
+        },
+        {
+          "seconds": 2.2236,
+          "offset_video_px": 0,
+          "pixel_error": 0.233
+        },
+        {
+          "seconds": 2.2397,
+          "offset_video_px": 0,
+          "pixel_error": 0.233
+        },
+        {
+          "seconds": 2.9279,
+          "offset_video_px": 0,
+          "pixel_error": 0.231
+        },
+        {
+          "seconds": 3.1969,
+          "offset_video_px": 0,
+          "pixel_error": 0.25
+        },
+        {
+          "seconds": 4.1978,
+          "offset_video_px": 0,
+          "pixel_error": 0.25
+        },
+        {
+          "seconds": 4.2114,
+          "offset_video_px": 0,
+          "pixel_error": 0.252
+        },
+        {
+          "seconds": 5.2,
+          "offset_video_px": 0,
+          "pixel_error": 0.252
+        },
+        {
+          "seconds": 5.2174,
+          "offset_video_px": 0,
+          "pixel_error": 0.252
+        }
+      ]
+    },
+    "Connection sheet stays stable during fast content swipe": 0
+  },
+  "failure": null,
+  "preferences_restored": true,
+  "ime_setting_restored": true,
+  "temporary_videos": [
+    ".tools/boundaries-apps-top-final-076.mp4",
+    ".tools/boundaries-title-up-final-076.mp4",
+    ".tools/boundaries-handle-up-final-076.mp4",
+    ".tools/boundaries-apps-bottom-final-076.mp4",
+    ".tools/boundaries-picker-bottom-final-076.mp4",
+    ".tools/boundaries-handle-close-final-076.mp4",
+    ".tools/boundaries-connections-empty-final-076.mp4"
+  ]
+}

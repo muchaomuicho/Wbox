@@ -1,18 +1,22 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class,androidx.compose.foundation.ExperimentalFoundationApi::class)
 package com.wbox.app
 
 import android.os.Build
 import android.view.View
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
+import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
@@ -20,17 +24,44 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.max
+
+/** Content momentum stops at settled anchors and the rendered sheet stays inside its window. */
+private class SheetContentFlingBoundary(private val sheet:SheetState):NestedScrollConnection {
+    var fullHeight=Float.NaN
+    var expandedOffset=Float.NaN
+
+    fun boundedOffset(offset:Float):Float=
+        if(expandedOffset.isNaN()||fullHeight.isNaN())offset else offset.coerceIn(expandedOffset,fullHeight)
+
+    override suspend fun onPostFling(consumed:Velocity,available:Velocity):Velocity {
+        val anchor=when(sheet.currentValue) {
+            SheetValue.Expanded->expandedOffset
+            SheetValue.PartiallyExpanded->fullHeight/2f
+            SheetValue.Hidden->fullHeight
+        }
+        // Material3 1.2.1 otherwise starts a spring at the current anchor with the list's
+        // leftover velocity, moving a stationary sheet before it returns to that anchor.
+        return if(sheet.targetValue==sheet.currentValue&&abs(sheet.requireOffset()-anchor)<=1f)
+            Velocity(0f,available.y)else Velocity.Zero
+    }
+}
 
 /** Full-width sheets join the status-bar surface as they reach the top of the window. */
 @Composable internal fun WboxBottomSheet(
@@ -43,6 +74,7 @@ import kotlinx.coroutines.launch
         if(value==SheetValue.Hidden&&dismissIme[0]())false else latestConfirm.value(value)
     } }
     val sheet=rememberModalBottomSheetState(skipPartiallyExpanded=skipPartiallyExpanded,confirmValueChange=confirm)
+    val flingBoundary=remember(sheet){SheetContentFlingBoundary(sheet)}
     val scope=rememberCoroutineScope()
     val backFocus=remember{FocusRequester()}
     val latestDismiss=rememberUpdatedState(onDismissRequest)
@@ -57,14 +89,26 @@ import kotlinx.coroutines.launch
     var width by remember{mutableIntStateOf(0)}
     val radius by remember(sheet,density,availableWidth) {derivedStateOf {
         // The expanded state may still be a short sheet. Its actual offset determines docking.
-        val offset=try{sheet.requireOffset()}catch(_:IllegalStateException){Float.POSITIVE_INFINITY}
+        val offset=flingBoundary.boundedOffset(try{sheet.requireOffset()}catch(_:IllegalStateException){Float.POSITIVE_INFINITY})
         val radiusPx=with(density){24.dp.toPx()}
         with(density){if(width+1>=availableWidth)offset.coerceIn(0f,radiusPx).toDp()else 24.dp}
     }}
     // Material3 1.2.1 calls its back dismissal even when hide() was vetoed.
     ModalBottomSheet(onDismissRequest={if(!sheet.isVisible)onDismissRequest()},sheetState=sheet,
         properties=ModalBottomSheetProperties(SecureFlagPolicy.Inherit,true,false),
-        modifier=modifier.onSizeChanged{width=it.width}.onPreviewKeyEvent {
+        modifier=modifier.onSizeChanged{width=it.width}.layout{measurable,constraints->
+            val placeable=measurable.measure(constraints)
+            // Match Material3's full parent height and measured surface height for anchors.
+            flingBoundary.fullHeight=constraints.maxHeight.toFloat()
+            flingBoundary.expandedOffset=max(0f,flingBoundary.fullHeight-placeable.height)
+            layout(placeable.width,placeable.height){
+                val rawOffset=sheet.requireOffset()
+                val boundedOffset=flingBoundary.boundedOffset(rawOffset)
+                // The stock inner offset uses toInt(). Match it exactly so the final child
+                // position stays within the physical endpoints without one-pixel jitter.
+                placeable.placeRelative(0,boundedOffset.toInt()-rawOffset.toInt())
+            }
+        }.onPreviewKeyEvent {
             if(it.nativeKeyEvent.keyCode==android.view.KeyEvent.KEYCODE_BACK){
                 if(it.nativeKeyEvent.action==android.view.KeyEvent.ACTION_UP&&!it.nativeKeyEvent.isCanceled)back.value()
                 true
@@ -111,6 +155,10 @@ import kotlinx.coroutines.launch
                 keyboard?.hide();focus.clearFocus();backFocus.requestFocus();true
             }else false
         }}
-        content()
+        CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
+            // Android 12+ stretches scrollable content at its edge. In a movable sheet that
+            // looks like the whole panel overshot and bounced; keep its content stationary.
+            Column(Modifier.fillMaxWidth().nestedScroll(flingBoundary),content=content)
+        }
     }
 }

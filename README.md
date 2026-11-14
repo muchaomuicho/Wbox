@@ -13,7 +13,7 @@ Windows · Android ｜ mihomo · sing-box
 [![Android](https://img.shields.io/badge/Android-8.0%2B-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 
-[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.5.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
+[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.6.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
 
 </div>
 
@@ -31,7 +31,9 @@ Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性
 <br/><sub>Android：长按整张卡片排序，拉起界面支持系统返回，边角与系统栏协调。</sub>
 </div>
 
-## 0.7.5：按自己的顺序整理配置
+## 0.7.6：光标与滚动细节
+
+Windows 圆润手形光标缩小到接近原生默认手形的可见尺寸，点击热点随图形同步调整。Android 连接、分应用代理等拉起面板去除内容边缘拉伸，快速滚回顶部后不再推动整个面板回弹，直接快拖标题或拉手也停在允许的边界内；保留正常惯性滚动和手指拖动关闭。
 
 Android 长按整张配置卡片即可拖动，Windows 直接拖动卡片调整顺序，靠近列表边缘时自动滚动。Windows 点击与抓取光标使用清晰的矢量手形。手动顺序会保存，并同步到概览的配置选择；更新订阅、添加或删除配置时保留已有顺序。
 
@@ -52,10 +54,10 @@ Android 连接、分应用代理等底部面板补齐随窗口挂载的系统返
 
 在 [GitHub Releases](https://github.com/muchaomuicho/Wbox/releases/latest) 下载：
 
-- `Wbox-0.7.5-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
-- `Wbox-0.7.5-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
-- `Wbox-0.7.5-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
-- `SHA256SUMS-0.7.5.txt`：发布文件 SHA256 校验值。
+- `Wbox-0.7.6-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
+- `Wbox-0.7.6-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
+- `Wbox-0.7.6-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
+- `SHA256SUMS-0.7.6.txt`：发布文件 SHA256 校验值。
 
 Windows 关闭窗口后保留托盘，左键恢复主界面，右键打开菜单；支持开机自启、静默启动与自动连接。托盘可切换运行策略组、配置、测速及关闭连接。Android 首次连接授权系统 VPN，支持全部应用、只代理所选应用或绕过所选应用，IPv6 默认开启。
 
@@ -79,7 +81,7 @@ Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，�
 
 ## 验证与历史归档
 
-本轮检查双端日期显示与独立切换、手动排序及重启后的顺序、并发订阅更新与配置增删，以及 Android 拉起界面的返回、键盘和边角。Android 使用隔离 API35 模拟器，发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.5-` 开头。
+本轮检查 Windows 光标可见尺寸、点击热点、主窗口与托盘，以及 Android 拉起面板和内部列表的边界滚动。Android 使用隔离 API35 模拟器，发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.6-` 开头；排序、日期及系统返回的历史检查仍保留。
 
 Android 返回验证要求启用系统边缘手势监听，使用真实左右边缘滑动，并分别检查键盘优先收起与关闭面板；模拟器结果仍不能代替所有厂商手机的实际行为。
 

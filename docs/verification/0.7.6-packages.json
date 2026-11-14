@@ -1,0 +1,19 @@
+{
+  "version": "0.7.6",
+  "checks": [
+    "Core manifest hashes match current binaries and packaged Windows cores",
+    "Both platforms use the documented Wbox unified-delay core derivative",
+    "Android package retains the FlClash profile-layout license",
+    "APK includes only ARM64 native libraries",
+    "APK includes both cores and native tunnel",
+    "Compressed asset decoder license is included and superseded YAML is excluded",
+    "Packaged core and JNI tunnel hashes match current build inputs",
+    "Both packages contain all 26 verified rule sets and identical sanitized node templates",
+    "Release APK has no emulator diagnostic receiver",
+    "Both packages contain verified geoip.metadb",
+    "Both packages contain verified GeoSite.dat",
+    "Both packages contain verified GeoIP.dat",
+    "Release version matches and debuggable flag is absent",
+    "APK retains the existing release signing certificate"
+  ]
+}

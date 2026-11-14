@@ -1,7 +1,7 @@
 :root {
-  --wbox-cursor-pointer: url('./assets/cursors/pointer.svg') 13 4, pointer;
-  --wbox-cursor-grab: url('./assets/cursors/grab.svg') 16 15, grab;
-  --wbox-cursor-grabbing: url('./assets/cursors/grabbing.svg') 16 18, grabbing;
+  --wbox-cursor-pointer: url('./assets/cursors/pointer.svg') 9 3, pointer;
+  --wbox-cursor-grab: url('./assets/cursors/grab.svg') 12 11, grab;
+  --wbox-cursor-grabbing: url('./assets/cursors/grabbing.svg') 12 13, grabbing;
 }
 
 /* Loaded only by Wbox. Preserve text, resize and disabled control cursors. */
