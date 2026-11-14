@@ -25,7 +25,6 @@ import { PageHeader } from "../components/PageHeader";
 import { StreamBanner } from "../components/StreamBanner";
 import { AdaptiveSegmented, Button, Card, DataLine, Dialog, EmptyState, IconButton, Sparkline } from "../components/ui";
 import { ServiceStatus_Type } from "../gen/daemon/started_service_pb";
-import { ProfileCard, SystemProxyCard } from "./ProfileViews";
 import styles from "./OverviewView.module.css";
 import { cx } from "../lib/cx";
 import { WboxProfileCard, WboxMemoryLine } from "../WboxViews";
@@ -113,7 +112,6 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
 
   const isCardVisible = (card: string) => {
     switch (card) {
-      case "systemProxy":
       case "profile":
         return props.host !== null;
       case "clashMode":
@@ -163,11 +161,6 @@ function OverviewCards(props: { config: DashboardCardsConfig; host: DesktopHost 
             <DataLine label={t("Outbound")} value={current ? current.connectionsOut : "..."} />
           </Card>
         );
-      case "systemProxy":
-        if (props.host === null) {
-          return null;
-        }
-        return <SystemProxyCard key={card} host={props.host} />;
       case "clashMode":
         if (modeList.length <= 1) {
           return null;

@@ -8,7 +8,7 @@ public static class StartupPolicy
     public static bool Elevated => new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
     public static int AvailablePort(int preferred, int exclude = -1) {
         var listener = new TcpListener(IPAddress.Loopback, preferred);
-        try { listener.Server.ExclusiveAddressUse = true; listener.Start(); return preferred; }
+        try { listener.Server.ExclusiveAddressUse = true; listener.Start(); var actual=((IPEndPoint)listener.LocalEndpoint).Port;if(actual!=exclude)return actual; }
         catch (SocketException) { }
         finally { listener.Stop(); }
         do { listener = new TcpListener(IPAddress.Loopback, 0); try { listener.Start(); preferred = ((IPEndPoint)listener.LocalEndpoint).Port; } finally { listener.Stop(); } } while (preferred == exclude);

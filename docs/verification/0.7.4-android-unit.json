@@ -1,0 +1,9 @@
+{
+  "tests": 115,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 4,
+  "lintErrors": 0,
+  "lintWarnings": 7,
+  "command": "Gradle assembleDebug testDebugUnitTest lintDebug; JDK21, isolated x86_64 fixture"
+}

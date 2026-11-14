@@ -18,7 +18,8 @@ final class LatencySession implements AutoCloseable {
             String secret=UUID.randomUUID().toString();int mixed,controller;
             try(ServerSocket one=new ServerSocket(0);ServerSocket two=new ServerSocket(0)){mixed=one.getLocalPort();controller=two.getLocalPort();}
             directory=new File(context.getCacheDir(),"latency/"+UUID.randomUUID());directory.mkdirs();
-            File config=new File(directory,"config.json");String compiled=source.compile(secret,mixed,controller,true,directory);
+            if(source.probeResources==null)LatencyResources.capture(source);
+            File config=new File(directory,"config.json");String compiled=LatencyResources.fix(source,source.compile(secret,mixed,controller,true,directory),directory);
             Files.write(config.toPath(),compiled.getBytes(StandardCharsets.UTF_8));
             if(source.engine().equals("mihomo"))Geodata.prepareRequired(directory,Profiles.yamlMap(compiled),Geodata.assets(context),message->{});
             File binary=new File(context.getApplicationInfo().nativeLibraryDir,source.engine().equals("sing-box")?"libsingbox.so":"libmihomo.so");
@@ -26,7 +27,7 @@ final class LatencySession implements AutoCloseable {
             if(source.engine().equals("sing-box"))command.addAll(List.of("run","-c",config.getAbsolutePath(),"-D",directory.getAbsolutePath()));else command.addAll(List.of("-f",config.getAbsolutePath(),"-d",directory.getAbsolutePath()));
             File log=new File(directory,"core.log");
             ProcessBuilder builder=new ProcessBuilder(command).directory(directory).redirectErrorStream(true).redirectOutput(log);
-            builder.environment().put("GOMEMLIMIT","96MiB");process=builder.start();api=new CoreApi(secret,controller);
+            builder.environment().put("GOMEMLIMIT","96MiB");process=builder.start();api=new CoreApi(secret,controller,LatencyResources.proxyNames(source,compiled));
             List<String> rules=CoreApi.requiredRules(source.engine(),compiled);
             long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(120);
             while(System.nanoTime()<deadline){

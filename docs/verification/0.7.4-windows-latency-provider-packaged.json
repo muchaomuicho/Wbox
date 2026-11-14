@@ -1,0 +1,82 @@
+{
+  "passed": true,
+  "checks": [
+    "Main core loads provider A through the original endpoint",
+    "Omitted provider path resolves to proxies/MD5(url) in the main working directory",
+    "The native provider healthcheck API can measure A through the original endpoint",
+    "Main connection still uses the original A after the remote source changes",
+    "A has a visible successful latency result",
+    "Provider latency tests the original runtime endpoint instead of a changed endpoint with the same name",
+    "A fixed provider snapshot does not fetch the changed remote source",
+    "Same-name nodes from different providers are explicitly rejected",
+    "An ambiguous node is never measured or assigned a result from another provider",
+    "Rejecting ambiguous provider latency preserves the main connection",
+    "The provider-backed group forwards through its own A rather than the top-level A",
+    "Top-level and provider name collisions never measure the wrong endpoint",
+    "A provider-name collision leaves the selected runtime endpoint intact"
+  ],
+  "failure": null,
+  "evidence": {
+    "providerUrl": "http://127.0.0.1:57990/provider",
+    "cachePath": "D:\\LL\\Wbox\\.tools\\latency-provider-074-7444\\profiles\\e545d99abcf14268b9fd60e40e13e503\\proxies\\65d78bf361099db7fa41b706428c5469",
+    "providerApi": {
+      "standardProxyStatus": 404,
+      "providerProxyStatus": 200,
+      "providerDelay": 93
+    },
+    "baseline": {
+      "hits": [
+        2,
+        0
+      ],
+      "sourceRequests": 1
+    },
+    "measuredHits": [
+      1,
+      0
+    ],
+    "sourceRequestsDuringTest": 0,
+    "result": {
+      "name": "A",
+      "type": "Http",
+      "delay": 89
+    },
+    "currentForward": "WBOX-0",
+    "groupTestError": "",
+    "ambiguous": {
+      "groupTestError": "配置中的多个来源使用了同名节点「A」，请为它们设置不同的名称后重试。",
+      "measuredHits": [
+        0,
+        0
+      ],
+      "sourceRequestsDuringTest": 0,
+      "nodes": [
+        {
+          "name": "A",
+          "type": "—",
+          "delay": null
+        },
+        {
+          "name": "A",
+          "type": "—",
+          "delay": null
+        }
+      ]
+    },
+    "staticCollision": {
+      "groupTestError": "配置中的多个来源使用了同名节点「A」，请为它们设置不同的名称后重试。",
+      "measuredHits": [
+        0,
+        0
+      ],
+      "nodes": [
+        {
+          "name": "A",
+          "type": "Http",
+          "delay": null
+        }
+      ]
+    }
+  },
+  "build": "packaged"
+}

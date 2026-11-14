@@ -43,7 +43,13 @@ public class SubscriptionUsageTest {
         for(String core:new String[]{"sing-box","mihomo"}){
             p.data.put("engine",core).put("ipv6",false);p.save();p=new Profiles(temp.getRoot());
             String compiled=p.compile("test",31080,31090,true,temp.getRoot());
-            assertTrue(compiled.contains("82"));assertFalse(compiled.contains("83"));assertFalse(p.data.has("ipv6"));
+            JSONObject root=new JSONObject(Profiles.yamlMap(compiled));
+            JSONArray entries=root.getJSONArray(core.equals("sing-box")?"outbounds":"proxies");
+            int httpNodes=0;
+            for(int i=0;i<entries.length();i++)if(entries.getJSONObject(i).optString("type").equals("http")){
+                httpNodes++;assertEquals(82,entries.getJSONObject(i).getInt(core.equals("sing-box")?"server_port":"port"));
+            }
+            assertEquals(1,httpNodes);assertFalse(p.data.has("ipv6"));
             if(core.equals("mihomo"))assertEquals(Boolean.TRUE,Profiles.yamlMap(compiled).get("ipv6"));
         }
     }

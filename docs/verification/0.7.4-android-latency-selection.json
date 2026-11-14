@@ -1,0 +1,92 @@
+{
+  "passed": true,
+  "checks": [
+    "mihomo Emulator host alias reaches the synthetic proxy and origin",
+    "mihomo Final 0.7.4 debug APK is installed",
+    "mihomo Installed APK hash matches the verified debug build",
+    "mihomo Configuration test owns one isolated core",
+    "mihomo Offline node selection keeps the original latency core alive",
+    "mihomo Offline probe results remain visible after node selection",
+    "mihomo Configuration test owns one isolated core",
+    "mihomo Overview profile selection leaves the original configuration probe running",
+    "mihomo Old probe delays do not appear in the newly selected profile",
+    "mihomo Completed probe does not restore an old profile selection",
+    "mihomo Configuration test owns one isolated core",
+    "mihomo Connecting the VPN does not cancel the isolated latency test",
+    "mihomo Results remain available after the VPN starts",
+    "mihomo Configuration test owns one isolated core",
+    "mihomo Live group selection keeps the probe and VPN running",
+    "mihomo Live selection retains completed delay results",
+    "mihomo Configuration test owns one isolated core",
+    "mihomo Live configuration reload preserves the isolated original probe",
+    "mihomo Finishing old probe leaves the new live configuration selected",
+    "mihomo Configuration test owns one isolated core",
+    "mihomo Stopping from the UI cancels both connection and latency",
+    "mihomo Configuration test owns one isolated core",
+    "mihomo Explicit cancel removes the latency core without starting VPN",
+    "sing-box Configuration test owns one isolated core",
+    "sing-box Offline node selection keeps the original latency core alive",
+    "sing-box Offline probe results remain visible after node selection",
+    "sing-box Configuration test owns one isolated core",
+    "sing-box Overview profile selection leaves the original configuration probe running",
+    "sing-box Old probe delays do not appear in the newly selected profile",
+    "sing-box Completed probe does not restore an old profile selection",
+    "sing-box Configuration test owns one isolated core",
+    "sing-box Connecting the VPN does not cancel the isolated latency test",
+    "sing-box Results remain available after the VPN starts",
+    "sing-box Configuration test owns one isolated core",
+    "sing-box Live group selection keeps the probe and VPN running",
+    "sing-box Live selection retains completed delay results",
+    "sing-box Configuration test owns one isolated core",
+    "sing-box Live configuration reload preserves the isolated original probe",
+    "sing-box Finishing old probe leaves the new live configuration selected",
+    "sing-box Configuration test owns one isolated core",
+    "sing-box Stopping from the UI cancels both connection and latency",
+    "sing-box Configuration test owns one isolated core",
+    "sing-box Explicit cancel removes the latency core without starting VPN",
+    "mihomo Provider-native healthcheck produces a positive result",
+    "mihomo Provider snapshot never fetches or tests the changed same-name remote endpoint",
+    "mihomo Provider test preserves the current VPN",
+    "mihomo Standalone node selection continues its batch",
+    "mihomo Standalone tests complete and retain all four delay values"
+  ],
+  "observations": {
+    "fixture_transport": "Emulator 10.0.2.2 host alias; local synthetic servers only",
+    "adb_version": "Android Debug Bridge version 1.0.41\r\nVersion 35.0.2-12147458\r\nInstalled as D:\\LL\\Wbox\\.tools\\adb35\\platform-tools\\adb.exe\r\nRunning on Windows 10.0.26200",
+    "apk_sha256": "7ae970c720e91ae2b450ad9792f7837c63d7c3f94c367207838d49498bb07ef6",
+    "resource_fixtures": [
+      "sing-box bundled rule before custom source file",
+      "mihomo cached YAML rule localized to bundled MRS"
+    ],
+    "installed_apk_sha256": "7ae970c720e91ae2b450ad9792f7837c63d7c3f94c367207838d49498bb07ef6",
+    "provider": {
+      "requests_during_test": 0,
+      "proxy_hits_during_test": [
+        3,
+        0
+      ]
+    },
+    "origin_hits": 2581,
+    "proxy_hits": [
+      1318,
+      0
+    ]
+  },
+  "screenshots": [
+    "docs/previews/0.7.4-android-latency-mihomo-offline-selected.png",
+    "docs/previews/0.7.4-android-latency-mihomo-profile-return.png",
+    "docs/previews/0.7.4-android-latency-mihomo-connected-selected.png",
+    "docs/previews/0.7.4-android-latency-sing-box-offline-selected.png",
+    "docs/previews/0.7.4-android-latency-sing-box-profile-return.png",
+    "docs/previews/0.7.4-android-latency-sing-box-connected-selected.png",
+    "docs/previews/0.7.4-android-latency-mihomo-provider-cached.png",
+    "docs/previews/0.7.4-android-latency-mihomo-standalone-selected.png"
+  ],
+  "failure": null,
+  "preferences_restored": true,
+  "vpn_appops_restored": "ACTIVATE_VPN: allow; time=+8m34s547ms ago",
+  "engines": [
+    "mihomo",
+    "sing-box"
+  ]
+}

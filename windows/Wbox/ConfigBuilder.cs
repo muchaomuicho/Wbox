@@ -32,14 +32,14 @@ public static class ConfigBuilder
         }
         return output.ToString();
     }
-    public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort, bool transient = false, string? workingDirectory = null)
+    public static string Build(Preferences preferences, string secret, int mixedPort = MixedPort, int controllerPort = ControllerPort, bool transient = false, string? workingDirectory = null, string? configContent = null,IReadOnlyDictionary<string,byte[]>? resources = null)
     {
         JsonObject root;
         bool singbox = preferences.Core == "sing-box";
         if (preferences.Mode == "config")
         {
             if (!File.Exists(preferences.ConfigPath)) throw new FileNotFoundException("请先选择配置文件。");
-            var content = File.ReadAllText(preferences.ConfigPath);
+            var content = configContent ?? File.ReadAllText(preferences.ConfigPath);
             root = singbox ? JsonNode.Parse(content, documentOptions: new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip })!.AsObject() : ParseYaml(content);
         }
         else
@@ -99,20 +99,21 @@ public static class ConfigBuilder
             root["ipv6"] ??= true;
         }
         workingDirectory ??= preferences.Mode=="config" ? Path.GetDirectoryName(Path.GetFullPath(preferences.ConfigPath))! : Path.Combine(Store.DirectoryPath,preferences.Core);
-        if(transient && preferences.Mode=="config") RelocateResources(root,Path.GetDirectoryName(Path.GetFullPath(preferences.ConfigPath))!,workingDirectory);
+        if(transient && preferences.Mode=="config") RelocateResources(root,Path.GetDirectoryName(Path.GetFullPath(preferences.ConfigPath))!,workingDirectory,resources);
         BundledRules.Apply(root,singbox,workingDirectory);
         return singbox ? root.ToJsonString(Store.JsonOptions) : SerializeYaml(root);
     }
-    static void RelocateResources(JsonNode node,string source,string target) {
-        if(node is JsonArray array){foreach(var child in array)if(child!=null)RelocateResources(child,source,target);return;}
+    static void RelocateResources(JsonNode node,string source,string target,IReadOnlyDictionary<string,byte[]>? resources = null) {
+        if(node is JsonArray array){foreach(var child in array)if(child!=null)RelocateResources(child,source,target,resources);return;}
         if(node is not JsonObject obj)return;
         foreach(var entry in obj.ToArray()) {
             if(entry.Key=="path" && (obj.ContainsKey("url")||obj.ContainsKey("behavior")||obj["type"]?.ToString() is "file" or "local" or "remote") && entry.Value is JsonValue value && value.TryGetValue<string>(out var path) && path.Length>0) {
                 var original=Path.GetFullPath(path,source);
                 var dest=Path.Combine(target,"resource-"+Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(original)))[..16]+Path.GetExtension(path));
-                if(File.Exists(original))File.Copy(original,dest,true);
+                if(resources?.TryGetValue(original,out var fixedContent)==true)File.WriteAllBytes(dest,fixedContent);
+                else if(File.Exists(original))File.Copy(original,dest,true);
                 obj[entry.Key]=dest;
-            } else if(entry.Value is JsonObject or JsonArray)RelocateResources(entry.Value,source,target);
+            } else if(entry.Value is JsonObject or JsonArray)RelocateResources(entry.Value,source,target,resources);
         }
     }
     public static void PrepareProbe(JsonObject root, bool singbox)

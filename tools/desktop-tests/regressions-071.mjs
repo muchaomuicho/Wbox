@@ -15,7 +15,7 @@ let app,page,tray,failure=null;
 const check=(ok,name)=>{assert(ok,name);checks.push(name);console.log('PASS',name);};
 const wait=async(fn,timeout=30000)=>{const end=Date.now()+timeout;while(Date.now()<end){if(await fn())return;await new Promise(r=>setTimeout(r,100));}throw Error('Timed out');};
 const listen=server=>new Promise(r=>server.listen(0,'127.0.0.1',r));
-const cert=await readFile(join(root,'.tools/regressions-069-cert.pem'),'utf8'),key=await readFile(join(root,'.tools/regressions-069-key.pem'),'utf8');
+const cert=await readFile(join(root,'tools/fixtures/latency-localhost-cert.pem'),'utf8'),key=await readFile(join(root,'tools/fixtures/latency-localhost-key.pem'),'utf8');
 const tls=https.createServer({cert,key},async(req,res)=>{await new Promise(r=>setTimeout(r,60));res.end('TLS');});await listen(tls);
 const origins=await Promise.all([0,1].map(async i=>{const s=http.createServer(async(req,res)=>{await new Promise(r=>setTimeout(r,60));res.end(`WBOX-${i}`);});await listen(s);return s;}));
 const proxies=await Promise.all([0,1].map(async i=>{const s=http.createServer(async(req,res)=>{hits[i]++;await new Promise(r=>setTimeout(r,60));if(rejectProxy[i])res.writeHead(502);res.end(`WBOX-${i}`);});s.on('connect',(req,client,head)=>{hits[i]++;if(rejectProxy[i]){client.end('HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n');return;}const upstream=net.connect(req.url.startsWith('93.184.216.34:')?origins[i].address().port:tls.address().port,'127.0.0.1',()=>{client.write('HTTP/1.1 200 Connection Established\r\n\r\n');if(head.length)upstream.write(head);client.pipe(upstream).pipe(client);});upstream.on('error',()=>client.destroy());client.on('error',()=>upstream.destroy());client.on('close',()=>upstream.destroy());});await listen(s);return s;}));
@@ -118,9 +118,13 @@ try{
  for(const engine of ['mihomo','sing-box']){
   await call('settings',{mode:'nodes',core:engine});await call('selectNode',{index:0});
   await call('delayNodes');
-  await call('start');check((await call('state')).running&&!((await call('state')).delayTesting),engine+' can start during node latency and cleans the temporary tests');
+  await call('start');check((await call('state')).running&&(await call('state')).selectedNode===0,engine+' can start the selected node while isolated latency continues');
+  await wait(async()=>!(await call('state')).delayTesting,45000);
+  check((await call('state')).nodes.every(node=>/ms$|^timeout$/.test(node.delayText)),engine+' starting the connection preserves completed node measurements');
   await call('delayNodes');await call('selectNode',{index:1});await forward(1);
-  check(!((await call('state')).delayTesting),engine+' selecting a node during latency applies the new node immediately');
+  check((await call('state')).selectedNode===1&&(await call('state')).running,engine+' selecting a node during latency applies the new node immediately');
+  await wait(async()=>!(await call('state')).delayTesting,45000);
+  check((await call('state')).nodes.every(node=>/ms$|^timeout$/.test(node.delayText)),engine+' selecting a node preserves results from the isolated test');
   await call('stop');await call('settings',{mode:'config'});
   const profile=(index,tag='Active')=>engine==='mihomo'?JSON.stringify({proxies:[{name:tag,type:'http',server:'127.0.0.1',port:proxies[index].address().port}],'proxy-groups':[{name:'Main',type:'select',proxies:[tag]}],rules:['MATCH,Main']}):JSON.stringify({outbounds:[{type:'http',tag,server:'127.0.0.1',server_port:proxies[index].address().port}],route:{final:tag}});
   await call('createProfile',{name:engine+' Live',content:profile(0)});

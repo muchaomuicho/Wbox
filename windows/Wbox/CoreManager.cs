@@ -40,6 +40,8 @@ public sealed class CoreManager : IDisposable
     string? transientDirectory;
     string activeCore = "";
     List<string> groupOrder = [];
+    Dictionary<string,string?> proxyProviders = [];
+    HashSet<string> declaredProxyProviders = [];
     string? globalTarget;
     long cachedAppMemory, cachedCoreMemory;
     DateTime memorySample;
@@ -49,7 +51,7 @@ public sealed class CoreManager : IDisposable
     public void CancelStartup() { if(starting) sessionCancellation.Cancel(); }
     public event Action<string>? Log;
     public event Action? Exited;
-    public async Task StartAsync(Preferences p, bool transient = false)
+    public async Task StartAsync(Preferences p, bool transient = false, string? configContent = null,IReadOnlyDictionary<string,byte[]>? resources = null)
     {
         if (Running || starting) return;
         var startupWatch=Stopwatch.StartNew();
@@ -61,13 +63,14 @@ public sealed class CoreManager : IDisposable
         var executable = Path.Combine(AppContext.BaseDirectory, "cores", p.Core + ".exe");
         if (!File.Exists(executable)) throw new FileNotFoundException("安装包缺少代理内核：" + executable);
         var secret = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-        ProxyPort = StartupPolicy.AvailablePort(ConfigBuilder.MixedPort);
-        ApiPort = StartupPolicy.AvailablePort(ConfigBuilder.ControllerPort, ProxyPort);
+        ProxyPort = StartupPolicy.AvailablePort(transient ? 0 : ConfigBuilder.MixedPort);
+        ApiPort = StartupPolicy.AvailablePort(transient ? 0 : ConfigBuilder.ControllerPort, ProxyPort);
         var working = p.Mode == "config" ? Path.GetDirectoryName(Path.GetFullPath(p.ConfigPath))! : Path.Combine(Store.DirectoryPath, p.Core);
         if (transient) working = transientDirectory = Path.Combine(Store.DirectoryPath, "latency", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(working);
-        var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort, transient, working);
+        var config = ConfigBuilder.Build(p, secret, ProxyPort, ApiPort, transient, working, configContent,resources);
         groupOrder = ProxyCatalog.Order(p.Core == "sing-box" ? JsonNode.Parse(config)!.AsObject() : ConfigBuilder.ParseYaml(config), p.Core == "sing-box");
+        declaredProxyProviders=p.Core=="mihomo"?(ConfigBuilder.ParseYaml(config)["proxy-providers"] as JsonObject)?.Select(entry=>entry.Key).ToHashSet()??[]:[];
         globalTarget = p.Core == "mihomo" ? GlobalTarget(ConfigBuilder.ParseYaml(config)) : null;
         StartupPolicy.Check(config, p.Core);
         var requiredRules=p.Core=="mihomo" ? (ConfigBuilder.ParseYaml(config)["rule-providers"] as JsonObject)?.Where(e=>e.Value?["type"]?.ToString() is "file" or "http").Select(e=>e.Key).ToArray() ?? [] : [];
@@ -148,7 +151,7 @@ public sealed class CoreManager : IDisposable
             starting = false;
             Log?.Invoke($"Wbox · {p.Core} 已启动（{startupWatch.ElapsedMilliseconds} ms） · 本地代理 127.0.0.1:{ProxyPort}");
         }
-        catch { Stop(); throw; }
+        catch { Stop(transient && sessionCancellation.IsCancellationRequested); throw; }
         finally { starting=false; }
     }
     void CaptureLog(string line) {
@@ -196,6 +199,23 @@ public sealed class CoreManager : IDisposable
     public async Task<List<GroupItem>> GroupsAsync()
     {
         var root = JsonNode.Parse(await api!.GetStringAsync("/proxies"))!["proxies"]!.AsObject();
+        var names=root.Where(entry=>entry.Value?["all"] is JsonArray).SelectMany(entry=>entry.Value!["all"]!.AsArray().Select(value=>value!.ToString())).ToHashSet();
+        var supplied=new Dictionary<string,List<(string Provider,JsonNode Detail)>>();
+        if(activeCore=="mihomo"&&declaredProxyProviders.Count>0) {
+            var providers=JsonNode.Parse(await api.GetStringAsync("/providers/proxies"))!["providers"]!.AsObject();
+            foreach(var provider in providers.Where(entry=>declaredProxyProviders.Contains(entry.Key)))
+                foreach(var detail in (provider.Value?["proxies"] as JsonArray)??[]) {
+                    var name=detail?["name"]?.ToString();if(name==null||!names.Contains(name))continue;
+                    if(!supplied.TryGetValue(name,out var entries))supplied[name]=entries=[];
+                    entries.Add((provider.Key,detail!));
+                }
+        }
+        var identities=new Dictionary<string,string?>();
+        foreach(var entry in supplied) {
+            identities[entry.Key]=!root.ContainsKey(entry.Key)&&entry.Value.Select(value=>value.Provider).Distinct().Count()==1?entry.Value[0].Provider:null;
+            if(identities[entry.Key]!=null)root[entry.Key]=entry.Value[0].Detail.DeepClone();
+        }
+        proxyProviders=identities;
         return root.Where(kv => kv.Value?["all"] is JsonArray && kv.Value?["type"]?.ToString() is "Selector" or "URLTest" or "Fallback" or "LoadBalance")
             .Where(kv => kv.Key != "GLOBAL")
             .OrderBy(kv => {var index=groupOrder.IndexOf(kv.Key);return index<0?int.MaxValue:index;})
@@ -234,7 +254,12 @@ public sealed class CoreManager : IDisposable
         if (activeCore == "sing-box" && uri.Scheme != "https") throw new ArgumentException("sing-box 的测速 API 仅接受 HTTPS 链接，请填写 HTTPS 测试地址。");
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation, sessionCancellation.Token);
         timeout.CancelAfter(TimeSpan.FromSeconds(8));
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/proxies/{Uri.EscapeDataString(node)}/delay?timeout=5000&url={Uri.EscapeDataString(url)}");
+        var path=$"/proxies/{Uri.EscapeDataString(node)}/delay";
+        if(proxyProviders.TryGetValue(node,out var provider)) {
+            if(provider==null)throw new InvalidOperationException($"配置中的多个来源使用了同名节点「{node}」，请为它们设置不同的名称后重试。");
+            path=$"/providers/proxies/{Uri.EscapeDataString(provider)}/{Uri.EscapeDataString(node)}/healthcheck";
+        }
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{path}?timeout=5000&url={Uri.EscapeDataString(url)}");
         // Delay checks can exceed the normal controller request timeout.
         using var client = new HttpClient(new SocketsHttpHandler { UseProxy = false }) { BaseAddress = api!.BaseAddress, Timeout = TimeSpan.FromSeconds(8) };
         client.DefaultRequestHeaders.Authorization = api.DefaultRequestHeaders.Authorization;
@@ -243,7 +268,7 @@ public sealed class CoreManager : IDisposable
         if(value<=0)throw new HttpRequestException("延迟测试超时或未返回有效结果。");
         return value;
     }
-    public void Stop()
+    public void Stop(bool discardTransient = false)
     {
         // Follow boxdd: reset platform options first. A failed reset must not
         // close the listener which Windows may still be using.
@@ -251,13 +276,29 @@ public sealed class CoreManager : IDisposable
         sessionCancellation.Cancel();
         stopping = true;
         if (Running) {
+            // Canceled probes have no persistent cache or platform state to flush.
+            if(discardTransient && transientDirectory!=null){
+                job?.Dispose();job=null;process!.WaitForExit(1000);
+                try{coreProcess?.WaitForExit(1000);}catch(InvalidOperationException){}
+            }
+            else {
             try { process!.StandardInput.WriteLine("stop"); process.StandardInput.Flush(); } catch (IOException) { }
             if (!process!.WaitForExit(6500)) { Log?.Invoke("WARN Wbox: 内核未正常退出，已强制结束。"); process.Kill(true); process.WaitForExit(3000); }
+            }
         }
         coreProcess?.Dispose(); coreProcess = null;
+        proxyProviders=[];
+        declaredProxyProviders=[];
         job?.Dispose(); job = null; process?.Dispose(); process = null; api?.Dispose(); api = null;
         if (runtimePath != null) { try { File.Delete(runtimePath); } catch { } runtimePath = null; }
-        if (transientDirectory != null) { try { Directory.Delete(transientDirectory, true); } catch (IOException) { } transientDirectory = null; }
+        if (transientDirectory != null) {
+            // A killed descendant can briefly retain its current directory even
+            // after the host exits. Keep ownership until deletion succeeds.
+            for(int attempt=0;attempt<4;attempt++) {
+                try {if(Directory.Exists(transientDirectory))Directory.Delete(transientDirectory,true);transientDirectory=null;break;}
+                catch(Exception error)when(error is IOException or UnauthorizedAccessException){if(attempt<3)Thread.Sleep(50);}
+            }
+        }
     }
     public void Dispose() => Stop();
 }

@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "checks": [
+    "Overview filters the old system-proxy card",
+    "Dashboard item management removes system proxy",
+    "Overview fits the window width",
+    "Settings contains TUN mode",
+    "TUN setting describes its existing configuration requirement",
+    "Settings removes the old inbound wording",
+    "Selecting a node has no success toast",
+    "No renderer errors"
+  ],
+  "errors": [],
+  "failure": null,
+  "build": "packaged",
+  "screenshots": [
+    "docs/previews/0.7.4-windows-overview.png"
+  ],
+  "isolatedDataRemoved": true
+}

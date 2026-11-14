@@ -87,7 +87,7 @@ internal data class RuntimeState(
     var groupOrder by mutableStateOf<List<String>>(emptyList())
     var activeGroup by mutableStateOf("")
     private var groupsContext=""
-    private fun proxyContext()=profiles.mode()+"|"+profiles.engine()+"|"+profiles.data.optString("config_"+profiles.engine())+"|"+profiles.data.opt("nodes")+"|"+profiles.data.optString("test_url",Profiles.TEST_URL)+"|"+(if(runtime.running)WboxVpnService.secret else "offline")
+    private fun proxyContext()=LatencyContext.key(profiles)
     var groupsLoading by mutableStateOf(false)
     var connectionsLoading by mutableStateOf(false)
     var groupsError by mutableStateOf("")
@@ -98,6 +98,12 @@ internal data class RuntimeState(
     var logsPaused by mutableStateOf(false)
     val delays = mutableStateMapOf<String,String>()
     private var latencyJob: Job? = null
+    private var latencySource:Profiles? = null
+    private val latencyResults=linkedMapOf<String,MutableMap<String,String>>()
+    private var shownLatencyContext=""
+    private fun showLatencyResults(context:String) {
+        shownLatencyContext=context;delays.clear();delays.putAll(latencyResults[context].orEmpty())
+    }
     private val mutations=Mutex()
     val updatingSources=mutableStateListOf<String>()
     var updatingAllProfiles by mutableStateOf(false); private set
@@ -107,7 +113,7 @@ internal data class RuntimeState(
     val workspace get() = profiles.mode()
     val currentName get() = if(workspace=="config") profiles.activeConfig()?.optString("name") ?: "选择配置" else profiles.data.optString("selected").ifEmpty { "选择节点" }
     val transition get() = runtime.starting || runtime.stopping
-    internal fun reload() { profiles=Profiles(activity);profileStamp=profiles.file.lastModified(); nodes=profiles.nodes().toList(); configs=profiles.configs().objects() }
+    internal fun reload() { profiles=Profiles(activity);profileStamp=profiles.file.lastModified(); nodes=profiles.nodes().toList(); configs=profiles.configs().objects();val context=proxyContext();if(context!=shownLatencyContext)showLatencyResults(context) }
     fun work(action: suspend () -> Unit) { activity.lifecycleScope.launch { try { action() } catch(e: CancellationException){throw e} catch(e: Exception){ message=ErrorMessage.describe(e); WboxVpnService.log("ERROR $message") } } }
     suspend fun refreshDetails(){
         val target=if(page=="proxies")"groups" else sheet
@@ -115,7 +121,7 @@ internal data class RuntimeState(
         if(target !in listOf("groups","connections"))return
         if(target=="groups"){
             val context=proxyContext()
-            if(context!=groupsContext){latencyJob?.cancel();delays.clear();groups=JSONObject();activeGroup="";groupsContext=context}
+            if(context!=groupsContext){showLatencyResults(context);groups=JSONObject();activeGroup="";groupsContext=context}
             try {
                 val snapshot=profiles.copy()
                 val catalog=withContext(Dispatchers.IO){ProxyCatalog.offline(snapshot) to ProxyCatalog.order(ProxyCatalog.source(snapshot),snapshot.engine()=="sing-box")}
@@ -133,6 +139,7 @@ internal data class RuntimeState(
     }
     suspend fun sample() {
         if(!busy&&profiles.file.lastModified()!=profileStamp)reload()
+        if(!busy)latencySource?.let { if(!LatencyContext.valid(profiles,it))cancelLatency() }
         WboxVpnService.wantsGroups = page=="proxies" || sheet=="groups"
         WboxVpnService.wantsConnections = sheet=="connections"
         WboxVpnService.wantsOverview = page=="overview" && sheet.isEmpty()
@@ -153,13 +160,8 @@ internal data class RuntimeState(
         try {
             val stored=withContext(Dispatchers.IO){Profiles(activity)}
             val staged=withContext(Dispatchers.IO){stored.copy().also(action)}
-            // Node probes own their core and do not depend on the selected node.
-            // A configuration probe instead shares its controller and must end before a reload.
-            val probeChanged=stored.mode()!=staged.mode() || stored.engine()!=staged.engine() ||
-                stored.data.optString("test_url",Profiles.TEST_URL)!=staged.data.optString("test_url",Profiles.TEST_URL) ||
-                stored.data.opt("nodes")?.toString()!=staged.data.opt("nodes")?.toString() ||
-                (stored.mode()=="config" && RuntimeChanges.identity(stored)!=RuntimeChanges.identity(staged))
-            if(probeChanged)cancelLatency()
+            // Selection and runtime changes do not alter an isolated probe's source.
+            latencySource?.let { if(!LatencyContext.valid(staged,it))cancelLatency() }
             withContext(Dispatchers.IO){WboxVpnService.commitProfiles(activity,stored,staged.data).get()}
             reload()
         } finally {busy=false}
@@ -190,7 +192,6 @@ internal data class RuntimeState(
         } else {
             connectionRequested=true
             runtime=runtime.copy(starting=true)
-            cancelLatency()
             mutations.withLock {if(connectionRequested&&!WboxVpnService.running&&!WboxVpnService.starting)activity.connect()}
         }
     }
@@ -248,7 +249,7 @@ internal data class RuntimeState(
             check(workspace=="nodes"){"请先切换到节点工作区"}
             val node=nodes.firstOrNull{it.name==name || BundledRules.nodeTag(it.name)==name}?:error("节点不存在")
             changeNodes{it.data.put("selected",node.name)}
-            if(connect&&!WboxVpnService.running&&intentEpoch==connectionEpoch){connectionRequested=true;runtime=runtime.copy(starting=true);cancelLatency();if(connectionRequested&&intentEpoch==connectionEpoch)activity.connect()}
+            if(connect&&!WboxVpnService.running&&intentEpoch==connectionEpoch){connectionRequested=true;runtime=runtime.copy(starting=true);if(connectionRequested&&intentEpoch==connectionEpoch)activity.connect()}
         } else {
             mutations.withLock {
             busy=true
@@ -266,7 +267,6 @@ internal data class RuntimeState(
                     if(WboxVpnService.running)WboxVpnService.proxies=WboxVpnService.api().proxies()
                 }
                 reload();groups=if(WboxVpnService.running)WboxVpnService.proxies else candidate
-                message=if(WboxVpnService.running)"已切换节点" else "已选择节点"
             } finally {busy=false}
             }
         }
@@ -295,20 +295,25 @@ internal data class RuntimeState(
     fun removeSubscription(url: String) = work { changeNodes { p -> val kept=p.nodes().filter{it.source!=url};p.data.put("nodes",JSONArray(kept.map{it.storage()}));p.data.optJSONObject("subscriptions")?.remove(url);p.data.optJSONObject("subscription_settings")?.remove(url);if(kept.none{it.name==p.data.optString("selected")})p.data.put("selected",kept.firstOrNull()?.name ?: "") };SubscriptionUpdates.schedule(activity) }
     fun latency(names: List<String>,expandGroup:Boolean=true) {
         if(testing){if(expandGroup)latencyJob?.cancel();return}
+        testing=true
         latencyJob=activity.lifecycleScope.launch {
-            try {testing=true;val snapshot=profiles.copy();val context=groupsContext
+            var results:MutableMap<String,String>?=null
+            var context=""
+            try {val snapshot=profiles.copy();withContext(Dispatchers.IO){LatencyResources.capture(snapshot)};latencySource=snapshot;context=LatencyContext.key(snapshot)
+                val saved=latencyResults.getOrPut(context){mutableMapOf()};results=saved
+                while(latencyResults.size>8)latencyResults.remove(latencyResults.keys.first())
                 val initial=if(snapshot.mode()=="config")NodeLatencyTester.targets(groups,names,expandGroup)else names
-                initial.forEach{delays[it]="测试中"}
+                initial.forEach{saved[it]="测试中"};if(context==proxyContext())showLatencyResults(context)
                 val updates=kotlinx.coroutines.channels.Channel<Pair<String,String>>(kotlinx.coroutines.channels.Channel.UNLIMITED)
                 val snapshots=kotlinx.coroutines.channels.Channel<JSONObject>(kotlinx.coroutines.channels.Channel.CONFLATED)
                 coroutineScope {
-                    val collect=launch {for((name,value) in updates)if(context==groupsContext)delays[name]=value}
-                    val catalogs=launch {for(value in snapshots)if(context==groupsContext)groups=value}
+                    val collect=launch {for((name,value) in updates){saved[name]=value;if(context==proxyContext())delays[name]=value}}
+                    val catalogs=launch {for(value in snapshots)if(context==proxyContext()&&!runtime.running){ProxyCatalog.applySelections(profiles,value);groups=value}}
                     try {runInterruptible(Dispatchers.IO){NodeLatencyTester.run(activity,snapshot,names,{name,value->updates.trySend(name to value)},{value->snapshots.trySend(value)},expandGroup)}}
                     finally {updates.close();snapshots.close();collect.join();catalogs.join()}
                 }
             } catch(e:CancellationException){throw e} catch(e:Exception){message=e.message ?: "测速失败"}
-            finally {testing=false;delays.keys.toList().forEach{if(delays[it]=="测试中")delays.remove(it)}}
+            finally {testing=false;latencySource=null;results?.entries?.removeAll{it.value=="测试中"};if(context==proxyContext())showLatencyResults(context)}
         }
     }
     fun changeProxyMode(value:String) = work {check(profiles.engine()=="mihomo");withContext(Dispatchers.IO){WboxVpnService.api().setMode(value,WboxVpnService.globalTarget)};proxyMode=value}

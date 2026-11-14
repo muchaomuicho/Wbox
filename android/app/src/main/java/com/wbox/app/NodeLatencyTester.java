@@ -20,16 +20,17 @@ final class NodeLatencyTester {
         try {
             List<Future<?>> pending=new ArrayList<>();
             if(source.mode().equals("config")) {
-                boolean running=WboxVpnService.running;String secret=WboxVpnService.secret;
-                if(!running)session=new LatencySession(context,source);
-                CoreApi api=running?new CoreApi(secret):session.api;
+                // A selection can reload the VPN while this snapshot keeps testing.
+                session=new LatencySession(context,source);
+                CoreApi api=session.api;
                 JSONObject groups=api.proxies();snapshot.accept(groups);
-                for(String target:targets(groups,names,expandGroup))pending.add(workers.submit(()->{
+                Set<String> targets=targets(groups,names,expandGroup);
+                for(String target:targets)api.requireUnambiguous(target);
+                for(String target:targets)pending.add(workers.submit(()->{
                     if(Thread.currentThread().isInterrupted())return;
-                    if(running&&(!WboxVpnService.running||!secret.equals(WboxVpnService.secret)))return;
                     result.accept(target,"测试中");String value;
                     try{value=api.delay(target,url)+" ms";}catch(Exception e){value="Timeout";}
-                    if(!Thread.currentThread().isInterrupted()&&(!running||(WboxVpnService.running&&secret.equals(WboxVpnService.secret))))result.accept(target,value);
+                    if(!Thread.currentThread().isInterrupted())result.accept(target,value);
                 }));
             } else {
                 for(String name:names)pending.add(workers.submit(()->{

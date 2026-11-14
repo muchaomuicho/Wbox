@@ -71,12 +71,23 @@ import java.net.URI
     var applications by remember{mutableStateOf<List<Pair<String,String>>>(emptyList())}
     val selected=remember{mutableStateListOf<String>().apply{addAll(m.profiles.data.optJSONArray("apps")?.strings().orEmpty())}}
     LaunchedEffect(Unit){applications=withContext(Dispatchers.IO){val pm=m.activity.packageManager;pm.getInstalledApplications(0).filter{it.packageName!=m.activity.packageName}.map{it.packageName to pm.getApplicationLabel(it).toString()}.sortedBy{it.second.lowercase()}}}
-    Column {
+    Column(Modifier.fillMaxSize()) {
         Row(Modifier.padding(horizontal=20.dp),verticalAlignment=Alignment.CenterVertically){Text("分应用代理",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge);TextButton(onClick={m.work{require(mode!="include" || selected.isNotEmpty()){ "请选择至少一个应用" };m.saveApps(mode,selected.toList());m.sheet=""}}){Text("保存")}}
         Choice("代理范围",mode,listOf("all" to "全部应用","include" to "只代理所选应用","exclude" to "绕过所选应用")){mode=it}
         if(mode!="all"){
             OutlinedTextField(query,{query=it},Modifier.onFocusChanged{m.textInputFocused=it.isFocused}.fillMaxWidth().padding(16.dp),placeholder={Text("搜索应用")},singleLine=true,shape=RoundedCornerShape(12.dp))
-            LazyColumn {items(applications.filter{(it.first+it.second).contains(query,true)},key={it.first}){(pkg,label)->ListItem(headlineContent={Text(label)},supportingContent={Text(pkg,style=MaterialTheme.typography.bodySmall)},trailingContent={Checkbox(pkg in selected,{if(it)selected.add(pkg) else selected.remove(pkg)})},modifier=Modifier.clickable{if(pkg in selected)selected.remove(pkg) else selected.add(pkg)})}}
+            LazyColumn(Modifier.weight(1f),contentPadding=PaddingValues(start=16.dp,end=16.dp,bottom=16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                items(applications.filter{(it.first+it.second).contains(query,true)},key={it.first}) { (pkg,label) ->
+                    val checked=pkg in selected
+                    val toggle={if(checked)selected.remove(pkg) else selected.add(pkg);Unit}
+                    Surface(onClick=toggle,shape=RoundedCornerShape(16.dp),color=MaterialTheme.colorScheme.surfaceVariant) {
+                        ListItem(headlineContent={Text(label)},supportingContent={Text(pkg,style=MaterialTheme.typography.bodySmall)},
+                            leadingContent={ConnectionIcon(pkg,size=40.dp,description="应用图标 · $label")},
+                            trailingContent={Checkbox(checked,{toggle()})},
+                            colors=ListItemDefaults.colors(containerColor=Color.Transparent))
+                    }
+                }
+            }
         }
     }
 }
@@ -97,7 +108,7 @@ import java.net.URI
     var saving by remember{mutableStateOf(false)}
     val scope=rememberCoroutineScope()
     val title=when(editor.type){"rename"->"重命名配置";"config"->"编辑配置";"node"->"编辑节点";else->if(m.workspace=="config")"添加配置" else "添加节点或订阅"}
-    ModalBottomSheet(onDismissRequest={if(!saving)dismiss()},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true),containerColor=MaterialTheme.colorScheme.surface) {
+    WboxBottomSheet(onDismissRequest={if(!saving)dismiss()},confirmValueChange={it!=SheetValue.Hidden||!saving}) {
         Column(Modifier.fillMaxWidth().imePadding().padding(horizontal=20.dp).heightIn(max=680.dp)) {
             Text(title,Modifier.padding(vertical=12.dp),style=MaterialTheme.typography.titleLarge)
             Column(Modifier.weight(1f,fill=false).verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(14.dp)) {

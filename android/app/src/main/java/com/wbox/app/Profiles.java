@@ -20,6 +20,8 @@ public final class Profiles {
     private JSONArray cachedArray;
     private List<Node> cachedNodes=List.of();
     private boolean writeThrough=true;
+    Map<String,byte[]> probeResources;
+    String probeResourceIdentity;
     public Profiles(Context c) { this(c.getFilesDir(),name->c.getAssets().open("bundled/"+name)); }
     public Profiles(File directory) { this(directory,name->{InputStream in=Profiles.class.getResourceAsStream("/bundled/"+name);if(in==null)throw new FileNotFoundException(name);return in;}); }
     private Profiles(File directory,Geodata.Source source) { file=new File(directory,"profiles.json");bundled=source;load(); }

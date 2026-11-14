@@ -13,25 +13,30 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
 internal data class ConnectionAppIcon(val bitmap:Bitmap,val label:String)
 private val icons=LruCache<String,ConnectionAppIcon>(64)
+private val iconLoads=Semaphore(4)
 private fun loadIcon(context:Context,name:String):ConnectionAppIcon? {
     icons.get(name)?.let{return it}
     return try {
         val pm=context.packageManager;val app=pm.getApplicationInfo(name,0)
-        val bitmap=Bitmap.createBitmap(64,64,Bitmap.Config.ARGB_8888)
-        app.loadIcon(pm).apply{setBounds(0,0,64,64);draw(Canvas(bitmap))}
+        val bitmap=Bitmap.createBitmap(128,128,Bitmap.Config.ARGB_8888)
+        app.loadIcon(pm).apply{setBounds(0,0,128,128);draw(Canvas(bitmap))}
         ConnectionAppIcon(bitmap,app.loadLabel(pm).toString()).also{icons.put(name,it)}
     }catch(_:Exception){null}
 }
-@Composable internal fun ConnectionIcon(packageName:String){
+/** Icons load only for composed rows, with four workers and a bounded 4 MiB bitmap cache. */
+@Composable internal fun ConnectionIcon(packageName:String,modifier:Modifier=Modifier,size:Dp=30.dp,description:String?=null){
     val context=LocalContext.current.applicationContext
-    val app by produceState<ConnectionAppIcon?>(null,packageName){value=if(packageName.isEmpty())null else withContext(Dispatchers.IO){loadIcon(context,packageName)}}
+    val app by produceState<ConnectionAppIcon?>(null,packageName){value=if(packageName.isEmpty())null else iconLoads.withPermit{withContext(Dispatchers.IO){loadIcon(context,packageName)}}}
     val info=app
-    if(info==null)Icon(Icons.Outlined.Apps,"未识别应用",Modifier.size(30.dp))
-    else Image(info.bitmap.asImageBitmap(),info.label,Modifier.size(30.dp))
+    if(info==null)Icon(Icons.Outlined.Apps,description?:"未识别应用",modifier.size(size))
+    else Image(info.bitmap.asImageBitmap(),description?:info.label,modifier.size(size))
 }

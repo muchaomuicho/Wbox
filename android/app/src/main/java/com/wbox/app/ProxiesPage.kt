@@ -67,7 +67,7 @@ import androidx.compose.ui.unit.dp
             }
         }
     }
-    if(choosing)ModalBottomSheet(onDismissRequest={choosing=false},sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=true)){
+    if(choosing)WboxBottomSheet(onDismissRequest={choosing=false}){
         Box(Modifier.fillMaxWidth().padding(horizontal=16.dp)){
             Text("策略组",Modifier.align(Alignment.Center),style=MaterialTheme.typography.titleMedium)
             FilledTonalIconButton(onClick={choosing=false},modifier=Modifier.align(Alignment.CenterEnd)){Icon(Icons.Outlined.Close,"关闭策略组")}

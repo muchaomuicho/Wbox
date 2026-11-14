@@ -1,0 +1,392 @@
+{
+  "checks": [
+    "Final 0.7.4 debug APK installed",
+    "apps-light top corners join the sheet surface",
+    "apps-light shows real application icons",
+    "apps-light icon pixels contain application artwork",
+    "apps-dark top corners join the sheet surface",
+    "apps-dark shows real application icons",
+    "apps-dark icon pixels contain application artwork",
+    "apps-pink top corners join the sheet surface",
+    "apps-pink shows real application icons",
+    "apps-pink icon pixels contain application artwork",
+    "Search filters icons with application rows",
+    "Back closes the keyboard before the app sheet",
+    "Application selection and proxy range persist",
+    "Profile picker top corners join the sheet surface",
+    "Long profile picker scrolls to later profiles",
+    "Connections top corners join the sheet surface",
+    "Connections search is available in full sheet",
+    "Large-font apps top corners join the sheet surface",
+    "Large font preserves app sheet save control",
+    "Short node action sheet retains its lower position",
+    "Short node action sheet keeps a rounded top edge"
+  ],
+  "observations": {
+    "apk_sha256": "4304d60777428e8d335c2306c1610d01b366b21360d76f6a3447c40c0dbd988c",
+    "apps-light top corners join the sheet surface": {
+      "rows": [
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ],
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ],
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ]
+      ],
+      "top_y": 66
+    },
+    "apps-light shows real application icons": 7,
+    "apps-light icon pixels contain application artwork": 1060,
+    "apps-dark top corners join the sheet surface": {
+      "rows": [
+        [
+          [
+            22,
+            25,
+            32
+          ],
+          [
+            22,
+            25,
+            32
+          ],
+          [
+            22,
+            25,
+            32
+          ]
+        ],
+        [
+          [
+            22,
+            25,
+            32
+          ],
+          [
+            22,
+            25,
+            32
+          ],
+          [
+            22,
+            25,
+            32
+          ]
+        ],
+        [
+          [
+            22,
+            25,
+            32
+          ],
+          [
+            22,
+            25,
+            32
+          ],
+          [
+            22,
+            25,
+            32
+          ]
+        ]
+      ],
+      "top_y": 66
+    },
+    "apps-dark shows real application icons": 7,
+    "apps-dark icon pixels contain application artwork": 1081,
+    "apps-pink top corners join the sheet surface": {
+      "rows": [
+        [
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ]
+        ],
+        [
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ]
+        ],
+        [
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ]
+        ]
+      ],
+      "top_y": 66
+    },
+    "apps-pink shows real application icons": 7,
+    "apps-pink icon pixels contain application artwork": 1106,
+    "Profile picker top corners join the sheet surface": {
+      "rows": [
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ],
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ],
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ]
+      ],
+      "top_y": 66
+    },
+    "Connections top corners join the sheet surface": {
+      "rows": [
+        [
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ]
+        ],
+        [
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ]
+        ],
+        [
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ],
+          [
+            248,
+            243,
+            246
+          ]
+        ]
+      ],
+      "top_y": 66
+    },
+    "Large-font apps top corners join the sheet surface": {
+      "rows": [
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ],
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ],
+        [
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ],
+          [
+            243,
+            244,
+            248
+          ]
+        ]
+      ],
+      "top_y": 66
+    },
+    "Short node action sheet retains its lower position": {
+      "first_action_top": 1507
+    },
+    "reused_same_apk_checks": 20,
+    "Short node action sheet keeps a rounded top edge": {
+      "first_curved_row": 1200
+    }
+  },
+  "screenshots": [
+    "docs/previews/0.7.4-android-apps-light.png",
+    "docs/previews/0.7.4-android-apps-dark.png",
+    "docs/previews/0.7.4-android-apps-pink.png",
+    "docs/previews/0.7.4-android-profile-picker.png",
+    "docs/previews/0.7.4-android-connections-pink.png",
+    "docs/previews/0.7.4-android-apps-large-font.png",
+    "docs/previews/0.7.4-android-node-actions.png"
+  ],
+  "failure": null,
+  "preferences_restored": true,
+  "font_scale_restored": "1.0",
+  "vpn_appops_restored": "ACTIVATE_VPN: allow; time=+2m40s730ms ago",
+  "edge_swipe": "not verified; API35 fixture lacks edge listener",
+  "subsequent_production_change": "LatencyResources provider mapping only; UI sources remain unchanged"
+}
