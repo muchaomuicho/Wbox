@@ -1,0 +1,775 @@
+{
+  "passed": true,
+  "checkedAt": "2026-11-14T04:42:11.332Z",
+  "sourceHashes": {
+    "index.html": "73873c9e63508c96ad58c37f1969fe3e1895eb466a73189d175046c06da7b008",
+    "styles.css": "d0cea88a9f3662a905fde489b444d6e6ab82c8e3938f409d30f88bacb8120292",
+    "app.js": "c60574e2bd446f4c50d6462f1dd88068ee8d3d3c51d5ecdff24f1a3f0f69f7d7"
+  },
+  "engine": "installed Chrome headless via Playwright",
+  "localPort": 11586,
+  "network": "All assets and latest/fallback release responses are local; third-party requests are blocked. Host antivirus may inject Kaspersky URLs into HTTP responses; those blocked requests are retained separately from site dependencies.",
+  "checks": [
+    "Windows card points to the current x64 EXE",
+    "Android card points to the current ARM64 APK",
+    "Checksum links point to the matching release",
+    "Platform switching updates the hero Android download",
+    "Switching back updates the hero Windows download",
+    "Dark appearance changes page colors and selected menu state",
+    "Explicit dark appearance persists after reload",
+    "Light appearance restores its palette",
+    "Accent choice mono updates its selected state",
+    "Accent choice blue updates its selected state",
+    "Accent choice pink updates its selected state",
+    "All three accents have distinct page colors",
+    "Accent choice persists after reload",
+    "System appearance follows a dark system change",
+    "System appearance follows a light system change",
+    "Desktop 1440px has no horizontal overflow or clipped controls",
+    "Workspace tabs switch the matching copy",
+    "Workspace tabs switch the product image",
+    "Workspace tabs support keyboard arrows",
+    "FAQ opens its answer",
+    "Opening another FAQ closes the previous answer",
+    "FAQ supports keyboard dismissal",
+    "Mobile 390px light has no horizontal overflow or clipped controls",
+    "Mobile 390px exposes its navigation button",
+    "Mobile 390px navigation opens",
+    "Mobile 390px open navigation has no horizontal overflow or clipped controls",
+    "Mobile 390px navigation follows the link and closes",
+    "Mobile 390px Escape closes navigation",
+    "Mobile 390px dark pink has no horizontal overflow or clipped controls",
+    "Mobile 390px open FAQ has no horizontal overflow or clipped controls",
+    "Mobile 390px has readable body, action and supporting text",
+    "Mobile 320px light has no horizontal overflow or clipped controls",
+    "Mobile 320px exposes its navigation button",
+    "Mobile 320px navigation opens",
+    "Mobile 320px open navigation has no horizontal overflow or clipped controls",
+    "Mobile 320px navigation follows the link and closes",
+    "Mobile 320px Escape closes navigation",
+    "Mobile 320px dark pink has no horizontal overflow or clipped controls",
+    "Mobile 320px open FAQ has no horizontal overflow or clipped controls",
+    "Mobile 320px has readable body, action and supporting text",
+    "Reduced-motion preference disables smooth scrolling and active animations",
+    "Reduced-motion content remains fully visible",
+    "Worker fallback release keeps a valid platform-specific download",
+    "Unavailable release data leaves safe GitHub latest download links",
+    "No JavaScript page errors",
+    "Site rendering and interactions make no third-party network requests (host antivirus injection is separately recorded)"
+  ],
+  "failures": [],
+  "pageErrors": [],
+  "consoleErrors": [
+    {
+      "text": "Failed to load resource: net::ERR_FAILED",
+      "location": {
+        "url": "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_FAILED",
+      "location": {
+        "url": "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_FAILED",
+      "location": {
+        "url": "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_FAILED",
+      "location": {
+        "url": "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: net::ERR_FAILED",
+      "location": {
+        "url": "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+      "location": {
+        "url": "http://127.0.0.1:11586/api/release",
+        "line": 0,
+        "column": 0,
+        "lineNumber": 0,
+        "columnNumber": 0
+      }
+    }
+  ],
+  "blockedRequests": [
+    "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+    "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+    "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+    "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]",
+    "http://gc.kis.v2.scr.kaspersky-labs.com/[external-script]"
+  ],
+  "layouts": [
+    {
+      "label": "Desktop 1440px",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "bodyScrollWidth": 1440,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 390px light",
+      "width": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 390px open navigation",
+      "width": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 390px dark pink",
+      "width": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 390px open FAQ",
+      "width": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 320px light",
+      "width": 320,
+      "scrollWidth": 320,
+      "bodyScrollWidth": 320,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 320px open navigation",
+      "width": 320,
+      "scrollWidth": 320,
+      "bodyScrollWidth": 320,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 320px dark pink",
+      "width": 320,
+      "scrollWidth": 320,
+      "bodyScrollWidth": 320,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
+      "label": "Mobile 320px open FAQ",
+      "width": 320,
+      "scrollWidth": 320,
+      "bodyScrollWidth": 320,
+      "outside": [],
+      "overflowElements": []
+    }
+  ],
+  "readability": [
+    {
+      "width": 390,
+      "elements": [
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "从桌面到掌心，熟悉的界面，顺手的操作。Wbox，让 Windows 与 Android 的连接体验简单一点。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "集中管理完整配置与订阅。流量、到期时间和更新状态，都在一张清晰的卡片里。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "拖动排出自己的顺序，打开预览查看细节。常用的配置，放在最顺手的位置。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "节点与订阅单独管理，搜索、选择、测速，各有自己的位置。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "未连接时，单击只做选择；已连接时，切换立即应用。逐项更新的延迟，让等待也清清楚楚。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "双内核与内置规则随安装包提供，减少额外准备，让注意力留给自己的配置。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择节点不会意外启动连接。测速、更新、连接，各自给出清楚的状态反馈。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "黑白的干净，雾蓝的安静，柔粉的温和。Wbox 的两端，都有你喜欢的那一种。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "在桌面上，把配置、节点与连接安排得井井有条。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "为触屏准备的操作，把从容握在手心。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择对应平台的安装包，完成安装。内核和内置规则已一起备好。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "在配置工作区导入完整配置，或在节点工作区添加已有的节点、订阅链接。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择要用的配置或节点，点击启动。Android 首次连接时，按系统提示允许 VPN 连接。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Wbox 提供节点或订阅吗？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Wbox 是代理客户端，不提供节点或订阅服务。请导入你已有的节点、订阅链接或完整配置，再开始连接。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "我应该选择哪个工作区？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "已有完整 mihomo 或 sing-box 配置时，使用「配置工作区」管理、预览和切换配置。想直接管理节点链接及节点订",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "还需要单独安装内核和下载规则吗？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "安装包已经包含 mihomo、sing-box 及内置规则资源。自己的配置若引用了额外的远程资源，则仍按该配置的规则加载",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择节点会自动开始连接吗？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "未连接时，单击节点只保存选择，点击启动后才开始连接。已经连接时，选择另一个节点会应用切换。这样，选择和连接始终各自清楚。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "怎样确认安装包完整？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "每个版本的发布页提供 SHA256 校验文件。计算下载文件的 SHA256，并与对应文件名的校验值比较即可。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "项目是否开源？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "是的。Wbox 按 GPL-3.0 协议开源，源码、构建说明、发布历史和第三方声明都可以在 GitHub 仓库查看。",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "下载 Windows 版",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "Windows",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "Android",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "配置工作区01",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "节点工作区02",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "黑白",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "雾蓝",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "柔粉",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "下载 Windows 安装包",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "下载 Android 安装包",
+          "fontSize": 14
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "支持 mihomo YAML / JSON 与 sing-box JSON",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "Windows 右键操作，Android 单击选择",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "正在预览雾蓝配色",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "v0.7.8 · 2026.11.14查看版本详情",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "Windows 10 / 11 · x64",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "v0.7.8 · EXE · 151.8 MB",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "Android 8.0 及以上 · ARM64",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "v0.7.8 · APK · 53.7 MB",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "开放的代码，清楚的发布。SHA256 校验 历史版本 获取源码",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "为 Windows 与 Android 而做。GitHubGPL-3.0第三方声明",
+          "fontSize": 12
+        }
+      ]
+    },
+    {
+      "width": 320,
+      "elements": [
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "从桌面到掌心，熟悉的界面，顺手的操作。Wbox，让 Windows 与 Android 的连接体验简单一点。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "集中管理完整配置与订阅。流量、到期时间和更新状态，都在一张清晰的卡片里。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "拖动排出自己的顺序，打开预览查看细节。常用的配置，放在最顺手的位置。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "节点与订阅单独管理，搜索、选择、测速，各有自己的位置。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "未连接时，单击只做选择；已连接时，切换立即应用。逐项更新的延迟，让等待也清清楚楚。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "双内核与内置规则随安装包提供，减少额外准备，让注意力留给自己的配置。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择节点不会意外启动连接。测速、更新、连接，各自给出清楚的状态反馈。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "黑白的干净，雾蓝的安静，柔粉的温和。Wbox 的两端，都有你喜欢的那一种。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "在桌面上，把配置、节点与连接安排得井井有条。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "为触屏准备的操作，把从容握在手心。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择对应平台的安装包，完成安装。内核和内置规则已一起备好。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "在配置工作区导入完整配置，或在节点工作区添加已有的节点、订阅链接。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择要用的配置或节点，点击启动。Android 首次连接时，按系统提示允许 VPN 连接。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Wbox 提供节点或订阅吗？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Wbox 是代理客户端，不提供节点或订阅服务。请导入你已有的节点、订阅链接或完整配置，再开始连接。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "我应该选择哪个工作区？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "已有完整 mihomo 或 sing-box 配置时，使用「配置工作区」管理、预览和切换配置。想直接管理节点链接及节点订",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "还需要单独安装内核和下载规则吗？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "安装包已经包含 mihomo、sing-box 及内置规则资源。自己的配置若引用了额外的远程资源，则仍按该配置的规则加载",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "选择节点会自动开始连接吗？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "未连接时，单击节点只保存选择，点击启动后才开始连接。已经连接时，选择另一个节点会应用切换。这样，选择和连接始终各自清楚。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "怎样确认安装包完整？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "每个版本的发布页提供 SHA256 校验文件。计算下载文件的 SHA256，并与对应文件名的校验值比较即可。",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "项目是否开源？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "是的。Wbox 按 GPL-3.0 协议开源，源码、构建说明、发布历史和第三方声明都可以在 GitHub 仓库查看。",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "下载 Windows 版",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "Windows",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "Android",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "配置工作区01",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "节点工作区02",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "黑白",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "雾蓝",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "柔粉",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "下载 Windows 安装包",
+          "fontSize": 14
+        },
+        {
+          "kind": "button",
+          "minimum": 14,
+          "text": "下载 Android 安装包",
+          "fontSize": 14
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "支持 mihomo YAML / JSON 与 sing-box JSON",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "Windows 右键操作，Android 单击选择",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "正在预览雾蓝配色",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "v0.7.8 · 2026.11.14查看版本详情",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "Windows 10 / 11 · x64",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "v0.7.8 · EXE · 151.8 MB",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "Android 8.0 及以上 · ARM64",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "v0.7.8 · APK · 53.7 MB",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "开放的代码，清楚的发布。SHA256 校验 历史版本 获取源码",
+          "fontSize": 12
+        },
+        {
+          "kind": "secondary",
+          "minimum": 12,
+          "text": "为 Windows 与 Android 而做。GitHubGPL-3.0第三方声明",
+          "fontSize": 12
+        }
+      ]
+    }
+  ],
+  "motionResults": [
+    {
+      "matches": true,
+      "scroll": "auto",
+      "animations": []
+    }
+  ],
+  "screenshots": [
+    "website/verification/desktop-1440.png",
+    "website/verification/mobile-390.png",
+    "website/verification/mobile-390-hero.png",
+    "website/verification/mobile-390-download.png",
+    "website/verification/mobile-390-faq.png",
+    "website/verification/mobile-320.png",
+    "website/verification/mobile-320-hero.png",
+    "website/verification/mobile-320-download.png",
+    "website/verification/mobile-320-faq.png"
+  ]
+}

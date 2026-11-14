@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wbox.wucnebssss.hidns.co/sitemap.xml

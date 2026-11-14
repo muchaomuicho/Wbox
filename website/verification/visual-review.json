@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "reviewedAt": "2026-11-14T04:44:53.3121281Z",
+  "sourceHashes": {
+    "index.html": "73873c9e63508c96ad58c37f1969fe3e1895eb466a73189d175046c06da7b008",
+    "styles.css": "d0cea88a9f3662a905fde489b444d6e6ab82c8e3938f409d30f88bacb8120292",
+    "app.js": "c60574e2bd446f4c50d6462f1dd88068ee8d3d3c51d5ecdff24f1a3f0f69f7d7"
+  },
+  "scope": "Local isolated browser verification with mocked release API; deployment and GitHub asset availability are verified separately.",
+  "reviewedImages": [
+    "desktop-1440.png",
+    "mobile-390-hero.png",
+    "mobile-390-download.png",
+    "mobile-320.png",
+    "mobile-320-hero.png",
+    "mobile-320-download.png",
+    "mobile-320-faq.png",
+    "mobile-390-dark-pink.png"
+  ],
+  "findings": [
+    "Phone and workspace screenshots retain their aspect ratios.",
+    "390px and 320px body, FAQ and action text are readable at the measured 14px minimum; supporting text measures at least 12px.",
+    "320px hero actions use separate rows without word fragmentation.",
+    "Dark appearance with the pink accent retains readable text and controls.",
+    "No clipped page text or controls were observed in the reviewed screenshots."
+  ],
+  "environmentNotes": [
+    "Host antivirus injected Kaspersky URLs into local HTTP responses; external requests were blocked and retained in the automated report.",
+    "Element screenshot scrolling created a skip-link artifact; final region captures use full-page coordinates and the artifact is absent."
+  ],
+  "temporaryFilesCleaned": true
+}

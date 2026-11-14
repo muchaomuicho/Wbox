@@ -1,0 +1,57 @@
+{
+  "passed": true,
+  "url": "https://wbox.wucnebssss.hidns.co",
+  "versionId": "3ef0dda3-0272-42ed-a107-79ced6e19110",
+  "checks": [
+    {
+      "viewport": "desktop",
+      "version": "v0.7.8 · 2026.11.14",
+      "overflow": false,
+      "windows": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.8/Wbox-0.7.8-windows-x64-setup.exe",
+      "android": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.8/Wbox-0.7.8-android-arm64-v8a.apk",
+      "images": true
+    },
+    {
+      "viewport": "mobile",
+      "version": "v0.7.8 · 2026.11.14",
+      "overflow": false,
+      "windows": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.8/Wbox-0.7.8-windows-x64-setup.exe",
+      "android": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.8/Wbox-0.7.8-android-arm64-v8a.apk",
+      "images": true
+    },
+    {
+      "asset": "styles.css",
+      "sha256": "d0cea88a9f3662a905fde489b444d6e6ab82c8e3938f409d30f88bacb8120292"
+    },
+    {
+      "asset": "app.js",
+      "sha256": "c60574e2bd446f4c50d6462f1dd88068ee8d3d3c51d5ecdff24f1a3f0f69f7d7"
+    },
+    {
+      "asset": "assets/wbox.svg",
+      "sha256": "585c0bd39aa38a2ab33ea15f4f489b73cad23d9816ef6a7444881d255ecef151"
+    },
+    {
+      "asset": "assets/windows-configurations.webp",
+      "sha256": "8853ec6ae9f83cedd536597c51aa32be205dee236f303a1162f0df767d2f5bb4"
+    },
+    {
+      "asset": "assets/android-nodes.webp",
+      "sha256": "913b36eddcfd11ff214c74ac622951ce7e0db7c2fd9812eafaa10cac4282427f"
+    },
+    {
+      "asset": "sitemap.xml",
+      "sha256": "ea1cc21ae597bf7874b0b8879d1c1f6c0dd0ea8643a362c1a695b634478e2770"
+    },
+    {
+      "route": "custom 404",
+      "status": 404
+    }
+  ],
+  "errors": [],
+  "release": {
+    "tag": "v0.7.8",
+    "assets": 4,
+    "fallback": false
+  }
+}

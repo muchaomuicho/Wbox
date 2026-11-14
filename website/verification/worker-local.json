@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 20146
+    },
+    {
+      "path": "/styles.css",
+      "status": 200,
+      "bytes": 39218
+    },
+    {
+      "path": "/assets/wbox.svg",
+      "status": 200,
+      "bytes": 204
+    },
+    {
+      "path": "/does-not-exist",
+      "status": 404,
+      "bytes": 955
+    },
+    {
+      "path": "/api/release",
+      "status": 200,
+      "bytes": 1965
+    },
+    {
+      "path": "/api/nope",
+      "status": 404,
+      "bytes": 9
+    }
+  ],
+  "headEmpty": true,
+  "postRejected": true,
+  "releaseTag": "v0.7.7"
+}

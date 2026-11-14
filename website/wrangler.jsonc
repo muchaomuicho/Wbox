@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wbox-website",
+  "account_id": "8e533fa260c04d0e56b3791bc33f73e4",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-30",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    {
+      "pattern": "wbox.wucnebssss.hidns.co",
+      "custom_domain": true,
+      "zone_name": "wucnebssss.hidns.co"
+    }
+  ]
+}
