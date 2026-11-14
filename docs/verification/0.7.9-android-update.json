@@ -1,0 +1,87 @@
+{
+  "passed": true,
+  "version": "0.7.9",
+  "implementation": {
+    "releaseSource": "https://api.github.com/repos/muchaomuicho/Wbox/releases/latest",
+    "channel": "Stable semantic versions only; exact Android ARM64 asset in the same repository.",
+    "download": "DownloadManager persists the transfer. Progress is polled while settings/progress is visible, plus one recovery query when the Activity resumes. No background polling service.",
+    "validation": [
+      "HTTPS GitHub API, exact repository asset URL, official GitHub redirect host allowlist",
+      "Required API asset SHA256 and bounded asset size",
+      "DownloadManager COLUMN_LOCAL_URI, canonical app download directory, current UUID with optional system numeric suffix",
+      "Expected package name and release version; strictly increasing versionCode",
+      "Original release signing certificate pinned and equal to the installed application signer",
+      "64 KiB streaming SHA256 while copying to PackageInstaller, then fsync"
+    ],
+    "installation": "A durable PackageInstaller session owns its fsynced APK copy before the DownloadManager source and partial siblings are removed. System confirmation remains required.",
+    "recovery": "Persists download/session identity and confirmation intent. Unknown-source refusal remains actionable; cancellation is serialized with install advancement; stale callbacks require matching nonce and session. Tagged orphan sessions and strict UUID download families are cleaned.",
+    "memory": "Connection icon LRU evicts references on memory pressure without recycling bitmaps still displayed."
+  },
+  "validation": {
+    "finalBuildCommand": "tools/build-android.ps1 -JavaHome D:/DevTools/JDKs/ms-21.0.9 -SdkPath D:/DevTools/Android/Sdk -Test",
+    "finalFullRun": {
+      "tests": 175,
+      "suites": 36,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "updateSuites": {
+      "com.wbox.app.ConnectionIconMemoryTest": 1,
+      "com.wbox.app.UpdateLifecycleTest": 5,
+      "com.wbox.app.UpdatePackageTest": 4,
+      "com.wbox.app.UpdateReleaseTest": 4,
+      "com.wbox.app.UpdateUiTest": 3
+    },
+    "focusedCommand": "android/gradlew.bat :app:testDebugUnitTest --tests com.wbox.app.UpdateReleaseTest --tests com.wbox.app.UpdatePackageTest --tests com.wbox.app.UpdateLifecycleTest --tests com.wbox.app.UpdateUiTest --tests com.wbox.app.ConnectionIconMemoryTest -Pkotlin.compiler.execution.strategy=in-process --console=plain",
+    "focusedRun": "16 tests passed before adding the renamed-download regression; final release full run includes all 17 current update/memory tests.",
+    "systemCommand": "python tools/android-update-079.py",
+    "systemReport": "docs/verification/0.7.9-android-update-system.json",
+    "systemChecks": [
+      "Only the isolated emulator is used",
+      "Separate fixture version 1 installs",
+      "DownloadManager preserves its job while the app process is killed",
+      "Source APK is removed only after a complete fsynced session copy",
+      "Staged installer session survives app process recreation",
+      "Real confirmation Intent resolves to the system installer and original session",
+      "System unknown-source settings return to the pending installation",
+      "Cancel leaves the original app installed",
+      "Cancel does not leave the downloaded source APK",
+      "Successful self-update retains source cleanup",
+      "MY_PACKAGE_REPLACED restores the successful update state"
+    ],
+    "systemResult": "All 11 checks passed on API 35 with a separate disposable fixture package.",
+    "discoveredRegression": "During an interrupted download, DownloadManager stored the complete APK at a -1.apk URI while the requested filename still referred to an old partial file. Both production and fixture now read the system-returned actual URI; canonical-path, nonce-suffix and partial-family cleanup regressions are included in the final tests.",
+    "uiScreenshots": {
+      "renderer": "Robolectric API 34 native graphics rendering of production Compose components; synthetic 9.0.0 release and progress values.",
+      "files": [
+        "docs/previews/0.7.9-android-update-settings.png",
+        "docs/previews/0.7.9-android-update-progress.png",
+        "docs/previews/0.7.9-android-update-restored.png"
+      ]
+    },
+    "systemScreenshots": [
+      "docs/previews/0.7.9-android-update-system-confirmation.png",
+      "docs/previews/0.7.9-android-update-system-installed.png"
+    ]
+  },
+  "cleanup": {
+    "fixturePackageUninstalled": true,
+    "emulatorClosed": true,
+    "temporaryFixtureDirectoriesRemoved": true,
+    "temporaryLogsRemoved": [
+      "android-update-079-tests.log",
+      "android-update-079-system.log",
+      "emulator-079-out.log",
+      "emulator-079-error.log",
+      "build-android-079.log"
+    ],
+    "failedAndPrematureScreenshotsRemoved": true,
+    "buildCachesAndArtifactsPreserved": true
+  },
+  "limits": [
+    "A future production-signed Wbox-to-Wbox upgrade was not performed on ARM64 hardware; the x86 emulator exercised an independently signed fixture, while Wbox provenance gates were covered by unit tests and final APK signature verification.",
+    "Android requires unknown-source authorization and system installation confirmation. If completion happens in the background, the app keeps a notification/settings recovery entry; it does not force a background Activity to open.",
+    "When notifications are disabled, reopen Wbox settings to resume the pending update."
+  ]
+}

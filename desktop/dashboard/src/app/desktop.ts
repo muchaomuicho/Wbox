@@ -120,6 +120,14 @@ export interface DesktopUpdateInfo {
 }
 
 export interface DesktopUpdatesState {
+  stableOnly?: boolean;
+  currentVersion?: string;
+  downloadBytes?: number;
+  downloadSpeed?: number;
+  phase?: 'idle' | 'available' | 'downloading' | 'verifying' | 'ready' | 'installing' | 'error';
+  error?: string;
+  notice?: string;
+  promptUpdate?: boolean;
   supported: boolean;
   track: DesktopUpdateTrack;
   checkUpdateEnabled: boolean;

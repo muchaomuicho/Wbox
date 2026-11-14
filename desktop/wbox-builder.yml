@@ -11,6 +11,8 @@ directories:
 files:
   - out/**
   - package.json
+  - "!node_modules/**"
+  - "!**/*.map"
 extraResources:
   - from: ../windows/backend-publish
     to: backend

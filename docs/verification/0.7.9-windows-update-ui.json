@@ -1,0 +1,59 @@
+{
+  "version": "0.7.9",
+  "passed": true,
+  "checkedAt": "2026-11-14T06:03:26.777Z",
+  "executable": "D:\\LL\\Wbox\\windows\\desktop-publish\\win-unpacked\\Wbox.exe",
+  "executableSHA256": "fe82b3c498553ccebe514698767d524209714d10b3ec2b1f07707a229c238e11",
+  "archiveSHA256": "e9844a576e9552f07038f7fe35949e75ee4e0307d12a98a8a656fc56cc36b391",
+  "buildFacts": {
+    "archiveBytes": 9993855,
+    "archiveFiles": 47,
+    "imports": {
+      "out/main/index.js": [
+        "electron",
+        "node:child_process",
+        "node:readline",
+        "node:path",
+        "node:fs/promises",
+        "node:os",
+        "node:crypto",
+        "node:util",
+        "node:fs"
+      ],
+      "out/preload/index.cjs": [
+        "electron"
+      ]
+    },
+    "bareImports": [],
+    "nodeModules": [],
+    "sourceMaps": []
+  },
+  "checks": [
+    "Final app.asar excludes node_modules",
+    "Final app.asar excludes source maps",
+    "Main/preload bundles require only Electron and Node builtins",
+    "Packaged application version is 0.7.9",
+    "Version IPC returns app.getVersion 0.7.9",
+    "Isolated fixture starts without proxy, connection or startup registration",
+    "Real GitHub stable check finds no upgrade over installed 0.7.9",
+    "Discovering an update asks before any download",
+    "Download rate is visible with the byte counts and percentage",
+    "Collapsing the dialog leaves a compact progress entry",
+    "Reopening progress never starts a second download",
+    "Main-process progress continues after the normal close releases the renderer",
+    "Normal second-instance reopen restores the same update session",
+    "Recreated renderer receives the latest progress snapshot",
+    "A stalled rate renders as 0 B/s",
+    "No renderer page errors across startup, dialog use and renderer recreation",
+    "No renderer console errors"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "screenshots": [
+    "docs/previews/0.7.9-windows-update-settings.png",
+    "docs/previews/0.7.9-windows-update-progress.png"
+  ],
+  "fixture": "Real final win-unpacked, isolated WBOX_DATA_DIR. Real GitHub no-update check first; positive progress injected through an in-memory Electron IPC fixture. No real package download or installer launch.",
+  "cleanup": "Test application exited; isolated data directory removed. No user installation or uninstall registry changes.",
+  "failure": null
+}

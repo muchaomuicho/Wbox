@@ -23,6 +23,9 @@ import kotlinx.coroutines.withContext
 internal data class ConnectionAppIcon(val bitmap:Bitmap,val label:String)
 private val icons=LruCache<String,ConnectionAppIcon>(64)
 private val iconLoads=Semaphore(4)
+internal fun trimConnectionIcons(level:Int) {
+    if(level>=android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW)icons.evictAll()
+}
 private fun loadIcon(context:Context,name:String):ConnectionAppIcon? {
     icons.get(name)?.let{return it}
     return try {

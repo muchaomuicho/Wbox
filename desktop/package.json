@@ -1,6 +1,6 @@
 {
   "name": "wbox",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "desktopName": "wbox.desktop",
   "private": true,
   "description": "Wbox dual-core proxy client, derived from sing-box-for-desktop.",

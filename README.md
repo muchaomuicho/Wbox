@@ -13,7 +13,7 @@ Windows · Android ｜ mihomo · sing-box
 [![Android](https://img.shields.io/badge/Android-8.0%2B-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 
-[官网](https://wbox.wucnebssss.hidns.co/) · [下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.8.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
+[官网](https://wbox.wucnebssss.hidns.co/) · [下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.9.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
 
 </div>
 
@@ -31,7 +31,15 @@ Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性
 <br/><sub>Android：配置长按排序，节点单击选定，三点菜单就近展开。</sub>
 </div>
 
-## 0.7.8：精简菜单与批量测速反馈
+## 0.7.9：应用更新与资源占用
+
+两端在「设置」中检查 GitHub 最新正式版；发现更新后先询问，确认才下载。下载显示进度、已下载大小与速率，界面可以收起，再从设置中查看进度。安装前校验文件大小与 SHA256；Android 另核对包名、版本和原签名。
+
+Windows 在主进程下载，隐藏主窗口不影响下载；安装时安全停止内核，交由独立安装助手等待安装器结束并清理本次安装文件。Android 使用系统下载和安装服务，系统接收完整安装内容后清理下载副本，安装仍需按系统提示确认。
+
+下载过程流式写盘，不把整个安装包读入内存。完整配置、双内核、内置规则与个人数据继续保留。
+
+## 操作体验
 
 两端节点菜单只保留编辑、克隆与移除，移除操作统一标红。批量测速开始后，本次参与测试的所有节点立即转圈，包括仍在排队的节点；收到结果后逐个显示新延迟，未参与测试的节点保持原样。节点工作区和配置工作区的代理组采用同样的反馈。
 
@@ -58,10 +66,10 @@ Android 连接、分应用代理等底部面板补齐随窗口挂载的系统返
 
 在 [GitHub Releases](https://github.com/muchaomuicho/Wbox/releases/latest) 下载：
 
-- `Wbox-0.7.8-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
-- `Wbox-0.7.8-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
-- `Wbox-0.7.8-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
-- `SHA256SUMS-0.7.8.txt`：发布文件 SHA256 校验值。
+- `Wbox-0.7.9-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
+- `Wbox-0.7.9-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
+- `Wbox-0.7.9-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
+- `SHA256SUMS-0.7.9.txt`：发布文件 SHA256 校验值。
 
 Windows 关闭窗口后保留托盘，左键恢复主界面，右键打开菜单；支持开机自启、静默启动与自动连接。托盘可切换运行策略组、配置、测速及关闭连接。Android 首次连接授权系统 VPN，支持全部应用、只代理所选应用或绕过所选应用，IPv6 默认开启。
 
@@ -81,11 +89,11 @@ Windows 在设置中选择系统代理；使用“TUN 模式”时，配置本�
 
 ## 轻量设计
 
-Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，托盘预加载以缩短首次打开等待。Android 使用 Kotlin、Compose 与 Material 3，长列表按可见区域创建，发布版启用 R8 和资源裁剪；数据库无损压缩，固定规则共享磁盘缓存。后台停止界面采样，不持有唤醒锁。内置 [26 份规则集与分流模板](docs/BUNDLED-RULES.md) 随版本固定，首次启动无需下载这些资源。
+Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，托盘预加载以缩短首次打开等待。多个界面共享状态读取，合并连续通知，减少重复请求与节点数据复制；打包排除未使用的运行依赖。Android 使用 Kotlin、Compose 与 Material 3，长列表按可见区域创建，发布版启用 R8 和资源裁剪；数据库无损压缩，固定规则共享磁盘缓存。后台停止界面采样，不持有唤醒锁；低内存时清空图标缓存引用，不回收仍由界面使用的 Bitmap。内置 [26 份规则集与分流模板](docs/BUNDLED-RULES.md) 随版本固定，首次启动无需下载这些资源。
 
 ## 验证与历史归档
 
-本轮检查双端精简后的节点菜单，以及节点与配置代理组的批量测速待测状态、逐项完成和取消清理。Android 使用隔离 API35 模拟器，发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.8-` 开头；节点选择、排序、日期、系统返回及边界滚动的历史检查仍保留。
+本轮检查应用更新的版本判断、安装包校验、下载进度、收起恢复、安装交接与清理，并验证共享状态读取。Android 使用隔离 API35 模拟器；发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.9-` 开头；此前菜单、批量测速、节点选择、排序、日期、系统返回及边界滚动检查仍保留。
 
 Android 返回验证要求启用系统边缘手势监听，使用真实左右边缘滑动，并分别检查键盘优先收起与关闭面板；模拟器结果仍不能代替所有厂商手机的实际行为。
 

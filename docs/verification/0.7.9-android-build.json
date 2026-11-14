@@ -1,0 +1,50 @@
+{
+  "tests": 175,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 4,
+  "suites": 36,
+  "lint": {
+    "Error": 0,
+    "Warning": 12
+  },
+  "passed": true,
+  "completedAt": "2026-11-14T06:17:19.723053+00:00",
+  "build": {
+    "command": "tools/build-android.ps1 -JavaHome D:/DevTools/JDKs/ms-21.0.9 -SdkPath D:/DevTools/Android/Sdk -Test",
+    "gradleUserHome": "D:/DevData/Gradle",
+    "releaseMinified": true,
+    "signed": true,
+    "signatureVerified": true,
+    "gradleDuration": "4m 32s",
+    "temporaryRepackedApksRemoved": true
+  },
+  "apk": {
+    "path": "dist/Wbox-0.7.9-android-arm64-v8a.apk",
+    "version": "0.7.9",
+    "versionCode": 29,
+    "bytes": 56297777,
+    "sha256": "6cad2b9b4eb13e81e90624b29c95ef958b0236fbc6ff6d6897d942688a5c9684",
+    "abis": [
+      "arm64-v8a"
+    ],
+    "signerSha256": "774e7eef8410a54c9d80fe18ebd3980d07701afb176d7e94ddfee5b796c7b026",
+    "signerMatches078": true,
+    "badging": "android/apk-0.7.9-badging.log",
+    "signatureReport": "docs/verification/0.7.9-apk-signature.txt"
+  },
+  "updateRegressionTests": {
+    "com.wbox.app.ConnectionIconMemoryTest": 1,
+    "com.wbox.app.UpdateLifecycleTest": 5,
+    "com.wbox.app.UpdatePackageTest": 4,
+    "com.wbox.app.UpdateReleaseTest": 4,
+    "com.wbox.app.UpdateUiTest": 3
+  },
+  "systemFixture": {
+    "report": "docs/verification/0.7.9-android-update-system.json",
+    "passed": true,
+    "checks": 11,
+    "scope": "Separate disposable package on API 35; standard DownloadManager and PackageInstaller flows, not an end-to-end production-signed Wbox upgrade."
+  },
+  "lintBaseline": "12 existing warnings; zero errors."
+}

@@ -10,7 +10,7 @@ import type {
 import { showError } from "../app/errorStore";
 import { useI18n } from "../app/i18n";
 import { GitHubMarkdown } from "../components/GitHubMarkdown";
-import { Button, Dialog } from "../components/ui";
+import { Button, Card, DataLine, Dialog, Spinner, Switch } from "../components/ui";
 import styles from "./UpdateViews.module.css";
 
 let updateDialogVisible = false;
@@ -76,6 +76,9 @@ export function UpdatesGate(props: { host: DesktopHost }) {
   const dialogVisible = useSyncExternalStore(subscribeUpdateDialog, () => updateDialogVisible);
 
   useEffect(() => host.updates.onPresentRequested(openUpdateDialog), [host]);
+  useEffect(() => {
+    if (state?.promptUpdate || (state?.stableOnly && (state.downloading || state.installing))) openUpdateDialog();
+  }, [state?.promptUpdate, state?.stableOnly, state?.downloading, state?.installing]);
 
   const currentVersion = state?.info?.versionName;
   useEffect(() => {
@@ -91,11 +94,66 @@ export function UpdatesGate(props: { host: DesktopHost }) {
   return (
     <>
       {!state.prompted && <UpdateCheckPromptDialog host={host} />}
-      {dialogVisible && state.info !== null && (
-        <UpdateDialog host={host} info={state.info} state={state} />
-      )}
+      {dialogVisible && state.info !== null && (state.stableOnly
+        ? <WboxUpdateDialog host={host} state={state} info={state.info} />
+        : <UpdateDialog host={host} info={state.info} state={state} />)}
+      {!dialogVisible && state.stableOnly && (state.downloading || state.installing || (state.error && state.info)) &&
+        <button className={styles.minimizedProgress} onClick={openUpdateDialog} type="button">
+          查看下载进度 <span>{state.error ? '需要重试' : state.installing ? '准备安装' : `${Math.round(state.downloadProgress * 100)}%`}</span>
+        </button>}
     </>
   );
+}
+
+export function WboxUpdateSettings({ host }: { host: DesktopHost }) {
+  const state = useUpdatesState(host);
+  const [message, setMessage] = useState('');
+  if (!state) return null;
+  if (!state.supported) return state.error ? <Card title="应用更新" icon="sync"><p className={styles.updateError}>{state.error}</p></Card> : null;
+  const check = () => {
+    setMessage('');
+    void host.updates.check().then(info => { if (info) openUpdateDialog(); else setMessage('当前已是最新稳定版。'); }).catch(showError);
+  };
+  return <Card title="应用更新" icon="sync">
+    <DataLine label="当前版本" value={state.currentVersion ?? '…'} />
+    <div className="wbox-row"><span className="wbox-grow">自动检查更新<small>仅检查 GitHub 稳定版，确认后才下载</small></span>
+      <Switch label="自动检查更新" value={state.checkUpdateEnabled} onChange={value => {
+        void host.updates.setCheckUpdateEnabled(value).then(() => { if (value) check(); }).catch(showError);
+      }} /></div>
+    <div className="row-actions">
+      <Button onClick={check} disabled={state.checking || state.downloading || state.installing}>{state.checking && <Spinner />}检查更新</Button>
+      {state.info && <Button variant="primary" onClick={openUpdateDialog}>{state.downloading || state.installing ? '查看下载进度' : '查看更新'}</Button>}
+    </div>
+    {(message || state.notice) && <p className="wbox-hint" role="status">{message || state.notice}</p>}
+    {state.error && <p className={styles.updateError} role="alert">{state.error}</p>}
+  </Card>;
+}
+
+function WboxUpdateDialog({ host, state, info }: { host: DesktopHost; state: DesktopUpdatesState; info: DesktopUpdateInfo }) {
+  const busy = state.downloading || state.installing;
+  const progress = Math.max(0, Math.min(100, Math.round(state.downloadProgress * 100)));
+  const label = state.installing ? '正在准备安装…' : state.phase === 'verifying' ? '正在校验安装包…' : '正在下载…';
+  return <Dialog onClose={closeUpdateDialog} className={styles.updateDialog}>
+    <h3>{busy ? '正在更新 Wbox' : '发现新版本'}</h3>
+    <p className="dialog-message">{state.currentVersion} → {info.versionName} · {formatBytes(info.fileSize)}</p>
+    {info.releaseNotes && <div className={styles.releaseNotes}><GitHubMarkdown text={info.releaseNotes} /></div>}
+    {busy && <div className={styles.progressRow}>
+      <div className={styles.progressDetails}><span>{label}</span><span>{progress}%</span></div>
+      <div className={styles.progressTrack} role="progressbar" aria-label="更新下载进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+        <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+      </div>
+      <div className={styles.progressDetails}><span>{formatBytes(state.downloadBytes ?? 0)} / {formatBytes(info.fileSize)}</span><span>{formatBytes(state.downloadSpeed ?? 0)}/s</span></div>
+      <p className="wbox-hint">收起或关闭主窗口后，下载仍会继续。</p>
+    </div>}
+    {!busy && <p className="wbox-hint">确认后开始下载。下载完成将关闭 Wbox 并打开安装器，结束后恢复原来的连接状态，并清理本次安装包。</p>}
+    {state.error && <p className={styles.updateError} role="alert">{state.error}</p>}
+    <div className="row-actions dialog-actions">
+      <Button href={info.releaseURL} target="_blank" rel="noreferrer">查看发布说明</Button>
+      <span className={styles.actionsSpacer} />
+      <Button onClick={closeUpdateDialog}>{busy ? '收起' : '暂不更新'}</Button>
+      {!busy && <Button variant="primary" onClick={() => { void host.updates.downloadAndInstall().catch(showError); }}>{state.error ? '重试更新' : '下载并安装'}</Button>}
+    </div>
+  </Dialog>;
 }
 
 function UpdateCheckPromptDialog(props: { host: DesktopHost }) {

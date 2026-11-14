@@ -26,7 +26,7 @@ try {
     New-Item -ItemType Directory -Force "$repo/dist" | Out-Null
     $repacked = "$repo/android/app/build/outputs/apk/release/wbox-repacked.apk"
     $aligned = "$repo/android/app/build/outputs/apk/release/wbox-aligned.apk"
-    $destination = "$repo/dist/Wbox-0.7.8-android-arm64-v8a.apk"
+    $destination = "$repo/dist/Wbox-0.7.9-android-arm64-v8a.apk"
     try {
         & python "$repo/tools/optimize-apk.py" app/build/outputs/apk/release/app-release.apk $repacked
         if ($LASTEXITCODE -ne 0) { throw 'APK recompression failed' }

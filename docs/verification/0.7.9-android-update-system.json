@@ -1,0 +1,60 @@
+{
+  "passed": true,
+  "checks": [
+    "Only the isolated emulator is used",
+    "Separate fixture version 1 installs",
+    "DownloadManager preserves its job while the app process is killed",
+    "Source APK is removed only after a complete fsynced session copy",
+    "Staged installer session survives app process recreation",
+    "Real confirmation Intent resolves to the system installer and original session",
+    "System unknown-source settings return to the pending installation",
+    "Cancel leaves the original app installed",
+    "Cancel does not leave the downloaded source APK",
+    "Successful self-update retains source cleanup",
+    "MY_PACKAGE_REPLACED restores the successful update state"
+  ],
+  "observations": {
+    "cancel_status": "3",
+    "final_state": {
+      "phase": "installed",
+      "reason": "0",
+      "local_size": "20821",
+      "session": "1643953562",
+      "download_broadcast": "true",
+      "replaced": "true",
+      "sha": "f77da975b16649e3fe0c3896119b75a82d26535be979ae8aff8ac18815fe0182",
+      "intent": "intent:#Intent;action=android.content.pm.action.CONFIRM_INSTALL;package=com.google.android.packageinstaller;i.android.content.pm.extra.SESSION_ID=1643953562;end",
+      "result": "0",
+      "download": "20",
+      "file": "/storage/emulated/0/Android/data/com.wbox.updatefixture/files/Download/candidate-2c58fcb8-778f-4f89-8f64-7924b7a3266d.apk",
+      "confirm_action": "android.content.pm.action.CONFIRM_INSTALL",
+      "bytes": "20821",
+      "system_installer": "true",
+      "local_uri": "file:///storage/emulated/0/Android/data/com.wbox.updatefixture/files/Download/candidate-2c58fcb8-778f-4f89-8f64-7924b7a3266d.apk",
+      "status": "8",
+      "source_removed": "true",
+      "session_matches": "true"
+    },
+    "fixture_uninstalled": true,
+    "emulator_closed": true,
+    "temporary_files_removed": true,
+    "duration_seconds": 42.8,
+    "requests": [
+      {
+        "path": "/fixture.apk",
+        "range": null
+      },
+      {
+        "path": "/fixture.apk",
+        "range": null
+      }
+    ],
+    "scope": "Separate disposable fixture package exercises standard Android APIs. It does not bypass Wbox production signature/metadata validation or install a new Wbox release.",
+    "discarded_capture": "The unknown-source screenshot was taken before its dialog frame appeared; it was excluded. The setting transition and return to installation were verified by the successful UI actions and subsequent installer callback."
+  },
+  "screenshots": [
+    "docs/previews/0.7.9-android-update-system-confirmation.png",
+    "docs/previews/0.7.9-android-update-system-installed.png"
+  ],
+  "failure": null
+}

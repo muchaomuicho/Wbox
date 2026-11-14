@@ -1,0 +1,38 @@
+{
+  "version": "0.7.9",
+  "passed": true,
+  "tests": 7,
+  "failures": 0,
+  "command": "node --test desktop/dashboard/src/WboxState.test.mjs",
+  "recordedAt": "2026-11-14T06:05:26Z",
+  "executionNote": "Recorded from the previously completed passing run (tool output 42ea1c); tests were not rerun. recordedAt is the report creation time, not the test execution time.",
+  "checks": [
+    "three consumers share initial RPC and one backend listener",
+    "50 notifications coalesce while serial responses remain visible",
+    "events during a follow-up read retain the final state",
+    "continuous events show every completed read without waiting for the burst to end",
+    "errors preserve the last snapshot and later notifications recover",
+    "unsubscribe and resubscribe isolate stale responses and errors",
+    "stale completion cannot release a new subscription pending request"
+  ],
+  "rpcScenario": {
+    "consumers": 3,
+    "notifications": 50,
+    "before": 153,
+    "after": 2,
+    "reductionPercent": 98.7
+  },
+  "continuousEventsScenario": {
+    "notificationRounds": 5,
+    "notificationsPerRound": 10,
+    "completedReadsPublished": 6,
+    "result": "Every completed read is published, including the final follow-up read."
+  },
+  "sourceHashes": {
+    "algorithm": "SHA256",
+    "desktop/dashboard/src/WboxState.ts": "08c1599ea93ac1aa4d36bb0c51d7ec80c2021b3e901678d733e05fbfa7db7183",
+    "desktop/dashboard/src/WboxState.test.mjs": "286e8b45b9338520347aa683d31c02aca64e22b4a63fbbaa39c82b21364bb957"
+  },
+  "buildNotRunForThisReport": true,
+  "applicationNotStartedForThisReport": true
+}

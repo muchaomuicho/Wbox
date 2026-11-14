@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "entries": 1812,
+  "reviewedFiles": 62,
+  "checks": [
+    "Every ZIP entry matches the current workspace bytes",
+    "Every reviewed client file is included",
+    "Every ZIP entry belongs to the release commit",
+    "CRC check passes",
+    "README local links and preview assets exist",
+    "Signing data, caches, .tools build runtimes and user preferences are excluded",
+    "README attribution is preserved",
+    "All reviewed ZIP files match Git index bytes; 31 unchanged files differ only by Git checkout line endings"
+  ],
+  "unchangedCheckoutLineEndings": 31
+}

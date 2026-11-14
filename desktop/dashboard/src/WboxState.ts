@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { showError } from './app/errorStore';
 import { call } from '../../wbox/transport';
 
@@ -17,8 +17,39 @@ export interface WboxState {
   subscriptionLastAttempt: string; subscriptionLastSuccess: string; subscriptionUpdateError: string; subscriptionUpdating: boolean;
   subscriptionUpdatingSources: string[];
 }
-export function useWboxState() {
-  const [state, setState] = useState<WboxState | null>(null);
-  useEffect(() => { let active = true; let token = 0; const reload = () => { const request = ++token; call('state').then(s => {if (active && request === token) setState(s);}).catch(showError); }; reload(); const off = window.wbox.onChanged(reload); return () => {active = false; off();}; }, []);
-  return state;
+export function createWboxStateStore(read: () => Promise<WboxState>, onChanged: (listener: () => void) => () => void, onError: (error: unknown) => void) {
+  let state: WboxState | null = null;
+  const listeners = new Set<() => void>();
+  let off: (() => void) | undefined;
+  let epoch = 0, pending = false, dirty = false;
+  const refresh = async () => {
+    dirty = true;
+    if (pending || !listeners.size) return;
+    pending = true;
+    const requestEpoch = epoch;
+    try {
+      do {
+        dirty = false;
+        try {
+          const next = await read();
+          if (requestEpoch !== epoch) return;
+          // Reads are serial: publish progress even while more changes arrive.
+          state = next; listeners.forEach(listener => listener());
+        } catch (error) { if (requestEpoch !== epoch) return; onError(error); }
+      } while (dirty && listeners.size);
+    } finally { if (requestEpoch === epoch) pending = false; }
+  };
+  return {
+    getSnapshot: () => state,
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      if (listeners.size === 1) { epoch++; off = onChanged(() => { void refresh(); }); void refresh(); }
+      return () => {
+        listeners.delete(listener);
+        if (!listeners.size) { epoch++; off?.(); off = undefined; state = null; pending = false; dirty = false; }
+      };
+    },
+  };
 }
+const stateStore = createWboxStateStore(() => call('state'), listener => window.wbox.onChanged(listener), showError);
+export function useWboxState() { return useSyncExternalStore(stateStore.subscribe, stateStore.getSnapshot); }

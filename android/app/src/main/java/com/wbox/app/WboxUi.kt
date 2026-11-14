@@ -148,6 +148,7 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
             }
         }
         if(!fullPage)editor?.let { EditSheet(m,it){editor=null} }
+        AppUpdateDialog(m)
     }
 }
 

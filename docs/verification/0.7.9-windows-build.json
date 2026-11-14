@@ -1,0 +1,79 @@
+{
+  "version": "0.7.9",
+  "passed": true,
+  "checkedAt": "2026-11-14T06:08:40.6242749Z",
+  "commands": [
+    {
+      "cwd": ".",
+      "command": "& ./tools/build-desktop.ps1",
+      "startedAt": "2026-11-14T05:56:26.019Z",
+      "exitCode": 0,
+      "detail": "Complete backend publish, dashboard build, Electron packaging and Inno compile succeeded."
+    },
+    {
+      "cwd": ".",
+      "command": "& ./.tools/inno/ISCC.exe tools/Wbox.Desktop.iss",
+      "startedAt": "2026-11-14T06:04:55.328Z",
+      "exitCode": 0,
+      "compileSeconds": 171.687,
+      "detail": "Recompiled only the installer after release notes were frozen, ensuring the final notes are embedded."
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "dist/Wbox-0.7.9-windows-x64-setup.exe",
+      "bytes": 159029670,
+      "lastWriteUtc": "2026-11-14T06:07:37.3032957Z",
+      "sha256": "8626a8690e36526d7e68e1522aea828da89b9adb7dbf655a46a28464f22248d2"
+    },
+    {
+      "path": "windows/desktop-publish/win-unpacked/Wbox.exe",
+      "bytes": 239075840,
+      "lastWriteUtc": "2026-11-14T05:57:10.9933330Z",
+      "sha256": "fe82b3c498553ccebe514698767d524209714d10b3ec2b1f07707a229c238e11"
+    },
+    {
+      "path": "windows/desktop-publish/win-unpacked/resources/app.asar",
+      "bytes": 9993855,
+      "lastWriteUtc": "2026-11-14T05:57:09.9028534Z",
+      "sha256": "e9844a576e9552f07038f7fe35949e75ee4e0307d12a98a8a656fc56cc36b391"
+    },
+    {
+      "path": "docs/RELEASE-0.7.9.md",
+      "bytes": 905,
+      "lastWriteUtc": "2026-11-14T05:59:00.0192524Z",
+      "sha256": "3faf8203a858be007ae680e2189b883001c0f42835680d201fa497737c204b2d"
+    }
+  ],
+  "validation": {
+    "updateLogicReport": "docs/verification/0.7.9-windows-update.json",
+    "updateLogicTests": 15,
+    "updateLogicPassed": 15,
+    "packagedUiReport": "docs/verification/0.7.9-windows-update-ui.json",
+    "packagedUiChecks": 17,
+    "packagedUiPassed": 17,
+    "sourceHashesVerified": 14,
+    "packageHashesMatchUiReport": true,
+    "archiveFiles": 47,
+    "archiveExcludesNodeModules": true,
+    "archiveExcludesSourceMaps": true,
+    "mainAndPreloadRequireOnlyBuiltins": true
+  },
+  "screenshots": [
+    "docs/previews/0.7.9-windows-update-settings.png",
+    "docs/previews/0.7.9-windows-update-progress.png"
+  ],
+  "warnings": [
+    "The backend publish emitted existing IL2026 trimming warnings; publish and packaging succeeded."
+  ],
+  "cleanup": {
+    "remainingTestFixtureDirectories": 0,
+    "touchedUserInstallation": false,
+    "touchedUninstallRegistry": false,
+    "touchedUserProxyConfiguration": false
+  },
+  "limits": [
+    "The packaged application was exercised with isolated data. The real GitHub stable check ran; a positive download uses an in-memory test fixture.",
+    "The real installer was compiled, not executed against the user installation. Installer lifecycle, cancellation, validation and cleanup are covered by isolated synthetic-installer tests."
+  ]
+}

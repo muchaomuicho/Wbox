@@ -1,0 +1,122 @@
+{
+  "version": "0.7.9",
+  "status": "passed",
+  "checkedAt": "2026-11-14T06:08:40.6242749Z",
+  "platform": "Windows; system Windows PowerShell 5.1; .NET Framework csc builds isolated synthetic installers",
+  "commands": [
+    {
+      "cwd": "desktop",
+      "command": "node node_modules/typescript/bin/tsc -p tsconfig.wbox.json --pretty false",
+      "exitCode": 0
+    },
+    {
+      "cwd": "desktop",
+      "command": "node --import tsx --test wbox/updates.test.ts wbox/update-installer.test.ts",
+      "exitCode": 0,
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 38980.0362
+    },
+    {
+      "cwd": "desktop",
+      "command": "node --import tsx --test --test-name-pattern=\"real helper survives\" wbox/update-installer.test.ts",
+      "exitCode": 0,
+      "tests": 1,
+      "passed": 1,
+      "detail": "Rechecked the final launcher with a cache path containing spaces, ampersand, Chinese characters and apostrophe."
+    }
+  ],
+  "verified": [
+    "Stable semantic version comparison: 0.7.10 > 0.7.9; drafts, prereleases, duplicates and wrong architecture rejected.",
+    "Only official Wbox GitHub asset URLs accepted; HTTPS and exact CDN host redirect allowlist.",
+    "SHA256SUMS and optional GitHub asset digest agree; size and SHA256 are streamed before installation.",
+    "Checking metadata never downloads an EXE; explicit acceptance starts one main-process job.",
+    "Progress and speed continue without renderer subscribers; speed drops to zero when bytes stop, sampler stops on completion.",
+    "Ready download can be retried after handoff failure; interrupted downloads become retryable after restart.",
+    "Installer helper waits for Wbox and backend exit and rechecks SHA256 before starting the package.",
+    "Synthetic installer success (0), user cancellation (2/5), failure (3), wrapped Windows elevation-required (740) then UAC refusal (1223).",
+    "Package exists while the installer runs, is removed only after confirmed exit, and app restart preserves the reconnect decision.",
+    "The actual helper survives termination of the Node process which launched it; no detached console lifetime assumption.",
+    "Locked package is retained for next startup cleanup; completed record ignores stale PID, orphan record compares PID, creation time and exact executable path.",
+    "Updater directory initialization failure disables update controls with a visible message and allows normal app startup.",
+    "Persisted path traversal cannot delete files outside updater-owned validated filenames."
+  ],
+  "cleanup": {
+    "testFixtures": "Each test creates a uniquely named temporary directory, verifies its absolute prefix before recursive removal, waits for child processes, and removes synthetic EXEs/sources/metadata.",
+    "production": "Update package and partial file cleanup is constrained to validated Wbox filenames. Helper code runs from the bundled string, creating no script file. Session/lock/result metadata is removed by the restarted app after helper release. Occupied files retain the session for retry at a later startup.",
+    "touchedUserInstallation": false,
+    "touchedUninstallRegistry": false,
+    "touchedUserProxyConfiguration": false
+  },
+  "limits": [
+    "UAC refusal is simulated using a test-only PowerShell cmdlet double throwing wrapped Win32 errors; no production validation bypass exists.",
+    "The actual installer was compiled but not installed over the user environment. Packaged UI, renderer release/reopen and archive dependency checks passed; see the linked reports."
+  ],
+  "sourceHashes": [
+    {
+      "path": "desktop/wbox/main.ts",
+      "sha256": "463f53837f99e28711f5cbe26e1b0a19936a8e50ab61ad3ec6cbbc6e1e30efa7"
+    },
+    {
+      "path": "desktop/wbox/preload.ts",
+      "sha256": "318913f6c8dc86893e72eef5020207eccc081d85dd7becb142e6cb8f106c7c66"
+    },
+    {
+      "path": "desktop/wbox/host.ts",
+      "sha256": "d9e02d1d31986cdfead1a80be1a2a68dad2dadea7fb026e1493e8f582af6a15c"
+    },
+    {
+      "path": "desktop/wbox/transport.ts",
+      "sha256": "3f8612d2092af18077f694befd2462ba07da119290b9ac140ff31b5edc6519d7"
+    },
+    {
+      "path": "desktop/wbox/bridge.d.ts",
+      "sha256": "e89c4f1f1612dc46f67923997bf5cb8aa6435e87090ea921fec1f0723bd9de07"
+    },
+    {
+      "path": "desktop/wbox/updates.ts",
+      "sha256": "c354b9943000104beaa272646504bfe2d59db04f9cf8cb5cdd77fee98766afa9"
+    },
+    {
+      "path": "desktop/wbox/update-installer.ts",
+      "sha256": "1156c496319cf43ce87fb7f497d37d4280cedecfd5e8594f2cdd79c1b894dcd9"
+    },
+    {
+      "path": "desktop/wbox/updates.test.ts",
+      "sha256": "35cd627b0f701467ac39366d4c3d2b3fb6ac9c3a7372fbc3943e9026d719f196"
+    },
+    {
+      "path": "desktop/wbox/update-installer.test.ts",
+      "sha256": "4e2aee1cd9852ceb3bb8f59427183e510f764f80fbbe52cf9c724cbde9dabd16"
+    },
+    {
+      "path": "desktop/dashboard/src/WboxViews.tsx",
+      "sha256": "dedf761a44b93fc88bf79b536f3d3cf630c4ebfafa2f1dab088ee6c89ed391e0"
+    },
+    {
+      "path": "desktop/dashboard/src/app/desktop.ts",
+      "sha256": "ecc400857af674715504c35bc2c3d7b12306847631adce069c35aa81da4deda8"
+    },
+    {
+      "path": "desktop/dashboard/src/views/UpdateViews.tsx",
+      "sha256": "500aa0755b49bdcd94cfe83c319e3366a00ed6570eec15339111bf401f466a07"
+    },
+    {
+      "path": "desktop/dashboard/src/views/UpdateViews.module.css",
+      "sha256": "5483592b459dd788b01a8eeb0ee7f92271a20b5d7ba19ca82b315a93dd6f1eeb"
+    },
+    {
+      "path": "tools/Wbox.Desktop.iss",
+      "sha256": "d7b51d4f6c694c03839a82698e678eebd13a0f7cc230c71f691d15f7c1ed9c51"
+    }
+  ],
+  "packagedValidation": {
+    "buildReport": "docs/verification/0.7.9-windows-build.json",
+    "uiReport": "docs/verification/0.7.9-windows-update-ui.json",
+    "checks": 17,
+    "passed": 17,
+    "sourceHashesVerified": true
+  }
+}

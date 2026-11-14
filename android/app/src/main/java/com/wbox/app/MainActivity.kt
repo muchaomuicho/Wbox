@@ -20,6 +20,9 @@ import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     internal lateinit var model: MobileModel
+    internal val updates by lazy { AppUpdate.get(applicationContext) }
+    private val updatePermission=registerForActivityResult(ActivityResultContracts.StartActivityForResult()){updates.permissionResult()}
+    private val updateInstaller=registerForActivityResult(ActivityResultContracts.StartActivityForResult()){}
     private var exportContent = ""
     private val vpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) startVpn() else {model.connectionRequested=false;model.runtime=model.runtime.copy(starting=false);model.message = "需要 VPN 权限才能接管流量"}
@@ -40,6 +43,19 @@ class MainActivity : ComponentActivity() {
         model.page = state?.getString("page") ?: "overview"
         exportContent = state?.getString("export") ?: ""
         setContent { WboxApp(model) }
+        if(intent.action==AppUpdate.SHOW_UPDATE){model.page="settings";updates.show()}
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                updates.refresh()
+                while(isActive) {
+                    if(updates.state.value.phase !in setOf("idle","current","available","checking","installed","failed")) {
+                        updates.refresh(progress=updates.panelOpen.value||model.page=="settings")
+                        updates.advance(this@MainActivity)
+                    }
+                    delay(1000)
+                }
+            }
+        }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 WboxVpnService.setVisible(true)
@@ -50,6 +66,11 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) notifications.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
     override fun onSaveInstanceState(out: Bundle) { out.putString("page", model.page); out.putString("export", exportContent); super.onSaveInstanceState(out) }
+    override fun onTrimMemory(level:Int) {super.onTrimMemory(level);trimConnectionIcons(level)}
+    override fun onLowMemory() {super.onLowMemory();trimConnectionIcons(ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL)}
+    override fun onNewIntent(intent:Intent) {super.onNewIntent(intent);setIntent(intent);if(intent.action==AppUpdate.SHOW_UPDATE){model.page="settings";updates.show()}}
+    internal fun openUpdateInstaller(intent:Intent) {updateInstaller.launch(intent)}
+    internal fun requestUpdatePermission() {try{updatePermission.launch(Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,android.net.Uri.parse("package:$packageName")))}catch(e:Exception){model.message="无法打开安装授权设置：${e.message}"}}
     internal fun connect() { val intent = VpnService.prepare(this); if (intent != null) vpnPermission.launch(intent) else startVpn() }
     private fun startVpn() {if(!model.connectionRequested)return;model.runtime = model.runtime.copy(starting = true, status = "连接中"); startForegroundService(Intent(this, WboxVpnService::class.java)) }
     internal fun pickFile() { importFile.launch(arrayOf("*/*")) }

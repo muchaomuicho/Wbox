@@ -56,6 +56,7 @@ import java.net.URI
                 Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){TextButton(onClick={testUrl=Profiles.TEST_URL}){Text("恢复默认")};Button(onClick={m.work{val uri=URI(testUrl);require(uri.scheme in listOf("https","http") && uri.host!=null){"请填写 HTTP / HTTPS 地址"};require(m.profiles.engine()!="sing-box" || uri.scheme=="https"){"sing-box 延迟测试需要 HTTPS 地址"};m.setting("test_url",testUrl.trim())}}){Text("保存")}}
             }
         }}
+        item {SettingsPanel("应用更新"){UpdateSettingsRow(m)}}
         item {Column(Modifier.padding(16.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){Text("Wbox "+m.activity.packageManager.getPackageInfo(m.activity.packageName,0).versionName,style=MaterialTheme.typography.titleMedium);Text("sing-box 1.14.4-wbox.1 · mihomo 1.19.33",style=MaterialTheme.typography.bodySmall);Text("界面参考 sing-box for Android · GPL-3.0\n后台按需采样 · 同时仅运行所选内核",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
     }
 }

@@ -1,7 +1,7 @@
 [Setup]
 AppId={{49D04E75-742E-4E26-B77D-412E21C1D2AC}
 AppName=Wbox
-AppVersion=0.7.8
+AppVersion=0.7.9
 AppPublisher=Wbox
 DefaultDirName={localappdata}\Programs\Wbox
 DefaultGroupName=Wbox
@@ -10,7 +10,7 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=Wbox-0.7.8-windows-x64-setup
+OutputBaseFilename=Wbox-0.7.9-windows-x64-setup
 SetupIconFile=..\resources\wbox.ico
 UninstallDisplayIcon={app}\Wbox.exe
 Compression=lzma2/max
@@ -30,7 +30,7 @@ Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: 
 Source: "..\windows\desktop-publish\win-unpacked\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pdb"
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\docs\RELEASE-0.7.8.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\RELEASE-0.7.9.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\resources\cores\licenses\*"; DestDir: "{app}\licenses"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
@@ -49,4 +49,15 @@ Filename: "{app}\resources\backend\Wbox.Backend.exe"; Parameters: "--remove-star
 Filename: "{sys}\compact.exe"; Parameters: "/C /S /I /Q /EXE:LZX *"; WorkingDir: "{app}"; StatusMsg: "正在压缩安装文件以减少磁盘占用…"; Flags: runhidden waituntilterminated
 ; ShellExecute honors RUNASADMIN compatibility settings and allows Windows to
 ; request elevation instead of failing CreateProcess with error 740.
-Filename: "{app}\Wbox.exe"; WorkingDir: "{app}"; Description: "启动 Wbox"; Flags: shellexec nowait postinstall skipifsilent runasoriginaluser
+Filename: "{app}\Wbox.exe"; WorkingDir: "{app}"; Description: "启动 Wbox"; Flags: shellexec nowait postinstall skipifsilent runasoriginaluser; Check: not IsWboxUpdate
+
+[Code]
+function IsWboxUpdate: Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if CompareText(ParamStr(I), '/WBOXUPDATE') = 0 then
+      Result := True;
+end;

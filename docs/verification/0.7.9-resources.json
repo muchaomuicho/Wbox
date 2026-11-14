@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "baseline": {
+    "version": "0.7.8",
+    "windowsInstallerBytes": 159127374,
+    "windowsUnpackedBytes": 549839465,
+    "androidApkBytes": 56281393,
+    "androidNativeExtractedBytes": 147494320,
+    "excludedUnusedNpmBytes": 673278
+  },
+  "current": {
+    "version": "0.7.9",
+    "windowsInstallerBytes": 159029670,
+    "windowsUnpackedBytes": 549230544,
+    "androidApkBytes": 56297777,
+    "androidNativeExtractedBytes": 147494320
+  },
+  "deltaBytes": {
+    "windowsInstallerBytes": -97704,
+    "windowsUnpackedBytes": -608921,
+    "androidApkBytes": 16384,
+    "androidNativeExtractedBytes": 0
+  },
+  "notes": [
+    "Windows unpacked size is logical bytes, not filesystem allocation after LZX installation compression.",
+    "Unused Windows npm runtime files were removed; all new packaged bundles use Electron/Node built-ins only.",
+    "Android APK adds 16 KiB while retaining both cores and all bundled rules.",
+    "Shared-state fixture reduces 153 RPCs to 2; this is not a measured process-memory percentage.",
+    "Android low-memory callback drops up to 4 MiB of cache references; visible images retain their references.",
+    "Downloads and hashing stream through bounded buffers. No long-duration physical-device memory benchmark was run."
+  ]
+}
