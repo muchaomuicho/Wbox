@@ -1,0 +1,44 @@
+{
+  "checks": [
+    "Current 0.7.5 debug APK installed",
+    "SystemUI has a real edge-swipe monitor",
+    "App sheet top corners remain continuous",
+    "Left edge closes app sheet",
+    "Right edge closes reopened app sheet",
+    "App edge Back hides IME before sheet",
+    "App sheet closes on the next edge Back",
+    "Left edge closes profile picker",
+    "Right edge closes profile picker",
+    "Connection sheet top corners remain continuous",
+    "Left edge closes connection sheet",
+    "Right edge closes connection sheet",
+    "Connection edge Back hides IME before sheet",
+    "Connection sheet closes on the next edge Back",
+    "Updated text defaults to relative time",
+    "Expiry switches to remaining days",
+    "Expiry switches back to the date",
+    "Updated time switches independently both ways",
+    "Time taps preserve the selected configuration",
+    "Native long-press drag persists card order",
+    "Card drag does not select another configuration",
+    "Restart and overview picker keep manual order"
+  ],
+  "observations": {
+    "apk_sha256": "afa51be51ddfa8c71576a150820dd4fd16f3a315c3557df27c8adeb9beeb1cc0",
+    "gesture_environment": "qemu.hw.mainkeys=0 set temporarily, Android framework restarted; no AVD configuration changed",
+    "native_drag": "finger tool type, one downTime, 900ms hold, first MOVE >35% of the path",
+    "Restart and overview picker keep manual order": [
+      "Orion 02",
+      "Orion 03",
+      "Orion 01"
+    ]
+  },
+  "screenshots": [
+    "docs/previews/0.7.5-android-apps.png",
+    "docs/previews/0.7.5-android-connections.png",
+    "docs/previews/0.7.5-android-profiles.png"
+  ],
+  "failure": null,
+  "preferences_restored": true,
+  "edgeGesturesVerified": true
+}

@@ -2,6 +2,7 @@
 package com.wbox.app
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,9 +31,11 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
 @Composable internal fun LibraryCard(
     name:String,subtitle:String,updated:Long,usage:JSONObject?,remote:Boolean,
     active:Boolean=false,updating:Boolean=false,onClick:()->Unit,actions:List<LibraryAction>,
-    menuDescription:String,tag:String,onUpdate:(()->Unit)?=null
+    menuDescription:String,tag:String,onUpdate:(()->Unit)?=null,modifier:Modifier=Modifier
 ) {
     var menu by remember{mutableStateOf(false)}
+    var relativeExpiry by rememberSaveable(tag){mutableStateOf(false)}
+    var relativeUpdate by rememberSaveable(tag){mutableStateOf(true)}
     val used=usage?.takeIf{it.has("upload")&&it.has("download")}?.let{it.optLong("upload").toDouble()+it.optLong("download").toDouble()}
     val total=usage?.optLong("total")?.takeIf{it>0}
     val quota=remote&&used!=null&&total!=null
@@ -42,13 +47,9 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
         else->"未提供流量信息"
     }
     val expire=usage?.takeIf{it.has("expire")}?.optLong("expire")
-    val expires=expire?.let { if(it==0L)"长期有效" else {
-        val remaining=it*1000.0-System.currentTimeMillis()
-        val days=kotlin.math.ceil(remaining/86400000.0).toLong()
-        if(remaining<=0)"已到期" else if(days==1L)"1 天内到期" else "${days} 天后到期"
-    } }
+    val expires=LibraryTimeText.expiry(expire,relativeExpiry)
     // FlClash ProfileItem: compact title/subtitle, trailing update time and selection badge.
-    Surface(onClick=onClick,modifier=Modifier.fillMaxWidth().testTag(tag),shape=RoundedCornerShape(20.dp),
+    Surface(onClick=onClick,modifier=modifier.fillMaxWidth().testTag(tag),shape=RoundedCornerShape(20.dp),
         color=if(active)MaterialTheme.colorScheme.primaryContainer.copy(alpha=.48f) else MaterialTheme.colorScheme.surfaceVariant,
         border=if(active)BorderStroke(1.dp,MaterialTheme.colorScheme.primary.copy(alpha=.45f))else null) {
         Column(Modifier.padding(start=16.dp,end=8.dp,top=10.dp,bottom=14.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
@@ -70,26 +71,20 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
                     }
                 }
             }
-            Text(traffic+(expires?.let{" · $it"}?:""),Modifier.padding(end=8.dp),
-                style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            FlowRow(Modifier.fillMaxWidth().padding(end=8.dp),horizontalArrangement=Arrangement.spacedBy(4.dp)) {
+                Text(traffic,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                if(expires!=null)Text("· $expires",Modifier.testTag("$tag-expiry").clickable(
+                    role=Role.Button,onClickLabel=if(relativeExpiry)"显示具体到期日期" else "显示相对到期时间"
+                ){relativeExpiry=!relativeExpiry},style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             if(quota)LinearProgressIndicator(progress={(used!!/total!!).toFloat().coerceIn(0f,1f)},modifier=Modifier.fillMaxWidth().padding(end=8.dp).height(4.dp).clip(CircleShape),color=MaterialTheme.colorScheme.primary,trackColor=MaterialTheme.colorScheme.primary.copy(alpha=.12f))
             FlowRow(Modifier.fillMaxWidth().padding(end=8.dp),horizontalArrangement=Arrangement.spacedBy(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 if(quota)Text("剩余 "+MainActivity.bytes((total!!-used!!).coerceAtLeast(0.0).toLong()),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("更新于 "+compactUpdateTime(updated),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(LibraryTimeText.update(updated,relativeUpdate),Modifier.testTag("$tag-updated").clickable(
+                    role=Role.Button,onClickLabel=if(relativeUpdate)"显示具体更新时间" else "显示相对更新时间"
+                ){relativeUpdate=!relativeUpdate},style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-    }
-}
-
-private fun compactUpdateTime(updated:Long):String {
-    if(updated<=0)return "未更新"
-    val elapsed=(System.currentTimeMillis()-updated).coerceAtLeast(0)
-    return when {
-        elapsed<60_000->"刚刚"
-        elapsed<3_600_000->"${elapsed/60_000} 分钟前"
-        elapsed<86_400_000->"${elapsed/3_600_000} 小时前"
-        elapsed<604_800_000->"${elapsed/86_400_000} 天前"
-        else->java.text.SimpleDateFormat("M/d",java.util.Locale.getDefault()).format(java.util.Date(updated))
     }
 }
 
@@ -102,7 +97,7 @@ private fun compactUpdateTime(updated:Long):String {
     Box{
         IconButton(onClick={sorting=true}){Icon(Icons.Outlined.Sort,"排序订阅")}
         DropdownMenu(sorting,{sorting=false}){
-            listOf("default" to "默认顺序","name" to "名称","updated" to "最近更新").forEach{(key,label)->
+            listOf("default" to if(config)"手动顺序" else "默认顺序","name" to "名称","updated" to "最近更新").forEach{(key,label)->
                 DropdownMenuItem(text={Text(label)},onClick={sorting=false;m.sortLibrary(config,key)},trailingIcon={if(sort==key)Icon(Icons.Outlined.Check,null)})
             }
         }

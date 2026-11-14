@@ -2,8 +2,10 @@
 package com.wbox.app
 
 import android.os.Build
+import android.view.View
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
@@ -15,6 +17,8 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -40,9 +44,10 @@ import kotlinx.coroutines.launch
     } }
     val sheet=rememberModalBottomSheetState(skipPartiallyExpanded=skipPartiallyExpanded,confirmValueChange=confirm)
     val scope=rememberCoroutineScope()
+    val backFocus=remember{FocusRequester()}
     val latestDismiss=rememberUpdatedState(onDismissRequest)
     val back=rememberUpdatedState<()->Unit> {
-        if(!dismissIme[0]())scope.launch {
+        if(!dismissIme[0]()&&latestConfirm.value(SheetValue.Hidden))scope.launch {
             sheet.hide()
             if(!sheet.isVisible)latestDismiss.value()
         }
@@ -60,11 +65,11 @@ import kotlinx.coroutines.launch
     ModalBottomSheet(onDismissRequest={if(!sheet.isVisible)onDismissRequest()},sheetState=sheet,
         properties=ModalBottomSheetProperties(SecureFlagPolicy.Inherit,true,false),
         modifier=modifier.onSizeChanged{width=it.width}.onPreviewKeyEvent {
-            if(Build.VERSION.SDK_INT<33&&it.nativeKeyEvent.keyCode==android.view.KeyEvent.KEYCODE_BACK){
-                if(it.nativeKeyEvent.action==android.view.KeyEvent.ACTION_UP)back.value()
+            if(it.nativeKeyEvent.keyCode==android.view.KeyEvent.KEYCODE_BACK){
+                if(it.nativeKeyEvent.action==android.view.KeyEvent.ACTION_UP&&!it.nativeKeyEvent.isCanceled)back.value()
                 true
             }else false
-        },
+        }.focusRequester(backFocus).focusable(),
         shape=RoundedCornerShape(topStart=radius,topEnd=radius),
         containerColor=MaterialTheme.colorScheme.surface,contentColor=MaterialTheme.colorScheme.onSurface,
         tonalElevation=0.dp) {
@@ -72,19 +77,38 @@ import kotlinx.coroutines.launch
         val focus=LocalFocusManager.current
         val keyboard=LocalSoftwareKeyboardController.current
         val imeVisible=WindowInsets.ime.getBottom(LocalDensity.current)>0
+        LaunchedEffect(view) {backFocus.requestFocus()}
         // The stock sheet registers PRIORITY_OVERLAY, which precedes the IME.
         // Default priority lets Android close the keyboard before dismissing a sheet.
         DisposableEffect(view) {
             if(Build.VERSION.SDK_INT>=33){
-                val dispatcher=view.findOnBackInvokedDispatcher()
                 val callback=OnBackInvokedCallback{back.value()}
-                dispatcher?.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT,callback)
-                onDispose {dispatcher?.unregisterOnBackInvokedCallback(callback)}
+                var dispatcher:OnBackInvokedDispatcher?=null
+                fun unregister() {
+                    dispatcher?.unregisterOnBackInvokedCallback(callback)
+                    dispatcher=null
+                }
+                fun register() {
+                    val attached=view.findOnBackInvokedDispatcher()?:return
+                    if(dispatcher===attached)return
+                    unregister()
+                    attached.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT,callback)
+                    dispatcher=attached
+                }
+                // Popup content can compose before its window is attached. Re-register for
+                // each attachment so edge Back reaches this window rather than the activity.
+                val listener=object:View.OnAttachStateChangeListener {
+                    override fun onViewAttachedToWindow(v:View)=register()
+                    override fun onViewDetachedFromWindow(v:View)=unregister()
+                }
+                view.addOnAttachStateChangeListener(listener)
+                if(view.isAttachedToWindow)register()
+                onDispose {view.removeOnAttachStateChangeListener(listener);unregister()}
             }else onDispose{}
         }
         SideEffect {dismissIme[0]={
             if(imeVisible||ViewCompat.getRootWindowInsets(view)?.isVisible(WindowInsetsCompat.Type.ime())==true){
-                keyboard?.hide();focus.clearFocus();true
+                keyboard?.hide();focus.clearFocus();backFocus.requestFocus();true
             }else false
         }}
         content()

@@ -65,6 +65,7 @@ async function registerStartup(autoStart: boolean, silent: boolean) {
   if (app.isPackaged && !process.env.WBOX_DATA_DIR)
     await rpc('startup', { executable: process.execPath, enabled: autoStart, silent });
 }
+methods.add('reorderLibrary');
 ipcMain.handle('wbox:call', async (event, method: string, args: any = {}) => {
   if (closing || quitting) throw new Error('Wbox 正在退出。');
   if (event.sender === window?.webContents && method === 'memory') return app.getAppMetrics().reduce((sum, p) => sum + (p.memory.privateBytes ?? p.memory.workingSetSize) * 1024, 0) + await rpc('memory');

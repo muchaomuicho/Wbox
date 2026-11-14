@@ -32,10 +32,12 @@ if (args.Length == 2 && args[0] is "--subscription" or "--nodes-subscription") {
 }
 int checks = 0;
 void Check(bool condition, string label) { if (!condition) throw new Exception("FAILED: " + label); checks++; Console.WriteLine("PASS " + label); }
+if(args.Contains("--library-order")){LibraryOrderChecks.Run(Check);Console.WriteLine($"{checks} library order checks passed.");return;}
 if(args.Contains("--forwarding")){await ForwardingChecks.Run(Check);Console.WriteLine($"{checks} forwarding checks passed.");return;}
 if (args.Contains("--proxy-native")) { await ProxyNativeChecks.Run(Check); Console.WriteLine($"{checks} native proxy checks passed."); return; }
 BundledRuleChecks.Run(Check);
 SubscriptionChecks.Run(Check);
+LibraryOrderChecks.Run(Check);
 await ReliabilityChecks.Run(Check);
 await ImportChecks.Run(Check);
 await IsolationChecks.Run(Check);

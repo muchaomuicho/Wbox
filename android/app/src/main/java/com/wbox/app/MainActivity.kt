@@ -70,7 +70,7 @@ internal data class RuntimeState(
     var profiles by mutableStateOf(Profiles(activity)); private set
     private var profileStamp=profiles.file.lastModified()
     var nodes by mutableStateOf(profiles.nodes().toList()); private set
-    var configs by mutableStateOf(profiles.configs().objects()); private set
+    var configs by mutableStateOf(profiles.orderedConfigs()); private set
     var page by mutableStateOf("overview")
     var sheet by mutableStateOf("")
     var editing by mutableStateOf(false)
@@ -113,7 +113,7 @@ internal data class RuntimeState(
     val workspace get() = profiles.mode()
     val currentName get() = if(workspace=="config") profiles.activeConfig()?.optString("name") ?: "选择配置" else profiles.data.optString("selected").ifEmpty { "选择节点" }
     val transition get() = runtime.starting || runtime.stopping
-    internal fun reload() { profiles=Profiles(activity);profileStamp=profiles.file.lastModified(); nodes=profiles.nodes().toList(); configs=profiles.configs().objects();val context=proxyContext();if(context!=shownLatencyContext)showLatencyResults(context) }
+    internal fun reload() { profiles=Profiles(activity);profileStamp=profiles.file.lastModified(); nodes=profiles.nodes().toList(); configs=profiles.orderedConfigs();val context=proxyContext();if(context!=shownLatencyContext)showLatencyResults(context) }
     fun work(action: suspend () -> Unit) { activity.lifecycleScope.launch { try { action() } catch(e: CancellationException){throw e} catch(e: Exception){ message=ErrorMessage.describe(e); WboxVpnService.log("ERROR $message") } } }
     suspend fun refreshDetails(){
         val target=if(page=="proxies")"groups" else sheet
@@ -170,6 +170,9 @@ internal data class RuntimeState(
     fun switchWorkspace(value: String) = work { change{it.setWorkspace(value)}; sheet="";if(value=="nodes")page="library" else if(page=="proxies")page="overview" }
     fun setting(key: String, value: Any) = work { change { it.data.put(key,value); if(key=="engine")it.data.put("node_engine",value) };if(key.startsWith("subscription_"))SubscriptionUpdates.schedule(activity) }
     fun sortLibrary(config:Boolean,order:String) {require(order in listOf("default","name","updated"));setting(if(config)"config_sort" else "subscription_sort",order)}
+    fun reorderProfiles(order:List<String>,onFinished:()->Unit) = work {
+        try {change{it.reorderConfigs(order)}} finally {onFinished()}
+    }
     suspend fun editSubscription(id:String,oldUrl:String,name:String,url:String,enabled:Boolean,minutes:Int) {
         val address=url.trim()
         val download=if(address!=oldUrl)withContext(Dispatchers.IO){SubscriptionFetch.download(address)} else null

@@ -86,6 +86,25 @@ public final class Profiles {
         else {JSONObject p=activeConfig();if(p!=null)activateConfig(p.getString("id"));}
     }
     public JSONArray configs(){JSONArray a=data.optJSONArray("configs");return a==null?new JSONArray():a;}
+    /** Keep ordering separate from profile content so downloads and removals merge independently. */
+    public List<JSONObject> orderedConfigs() {
+        Map<String,JSONObject> remaining=new LinkedHashMap<>();JSONArray configs=configs();
+        for(int i=0;i<configs.length();i++){JSONObject p=configs.optJSONObject(i);if(p!=null)remaining.put(p.optString("id"),p);}
+        List<JSONObject> result=new ArrayList<>();JSONArray order=data.optJSONArray("config_order");
+        if(order!=null)for(int i=0;i<order.length();i++){JSONObject p=remaining.remove(order.optString(i));if(p!=null)result.add(p);}
+        result.addAll(remaining.values());
+        switch(data.optString("config_sort")) {
+            case "name" -> result.sort(Comparator.comparing(p->p.optString("name").toLowerCase(Locale.ROOT)));
+            case "updated" -> result.sort(Comparator.comparingLong((JSONObject p)->p.optLong("updated")).reversed());
+        }
+        return result;
+    }
+    public void reorderConfigs(List<String> ids)throws JSONException {
+        Set<String> remaining=new LinkedHashSet<>();for(JSONObject p:orderedConfigs())remaining.add(p.optString("id"));
+        JSONArray order=new JSONArray();for(String id:ids)if(remaining.remove(id))order.put(id);
+        for(String id:remaining)order.put(id);
+        data.put("config_order",order).put("config_sort","default");
+    }
     public JSONObject activeConfig(){JSONArray a=configs();for(int i=0;i<a.length();i++){JSONObject p=a.optJSONObject(i);if(p!=null&&p.optString("id").equals(data.optString("active_config")))return p;}return a.optJSONObject(0);}
     public void activateConfig(String id)throws Exception {for(int i=0;i<configs().length();i++){JSONObject p=configs().getJSONObject(i);if(p.getString("id").equals(id)){data.put("active_config",id);data.put("config_"+p.getString("core"),p.getString("content"));if(mode().equals("config"))data.put("engine",p.getString("core"));return;}}throw new IllegalArgumentException("配置已移除，请重新选择");}
     public String importConfig(String body,String source,String id)throws Exception {

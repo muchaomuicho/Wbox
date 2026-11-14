@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "checks": [
+    "Configuration cards themselves are draggable",
+    "Direct card drag reorders within the same grid row",
+    "Direct card drag reorders across grid rows",
+    "Dragging does not select another configuration or connect",
+    "Long card grids use the content scroll container",
+    "Dragging near the window edge scrolls and can reach the final row",
+    "Dragging under name sort switches to the visible manual order",
+    "Overview and tray pickers share card order",
+    "Expiry and update toggles remain normal inside draggable cards",
+    "Card menus remain clickable",
+    "Updating a draggable card preserves its manual position",
+    "Dragging retains simultaneous additions and edits and respects deletions",
+    "A pending subscription response preserves the newly saved order",
+    "A deleted drag anchor is ignored without losing configurations",
+    "Dragging under recent-update sort also returns to manual order",
+    "Direct drag also reorders the single-column minimum window",
+    "Dragging cards and insertion markers fit the minimum window width",
+    "The actual overview configuration dropdown displays the same manual order",
+    "Manual order and selection survive an application restart",
+    "Manual order is stored in the actual preferences file",
+    "Node subscription cards use the same direct drag behavior",
+    "No renderer errors"
+  ],
+  "errors": [],
+  "failure": null,
+  "build": "packaged",
+  "screenshots": [
+    "docs/previews/0.7.5-windows-order.png"
+  ],
+  "isolatedDataRemoved": true
+}

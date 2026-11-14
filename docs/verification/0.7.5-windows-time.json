@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "checks": [
+    "Expiry defaults to the exact date with 到期",
+    "Update defaults to relative time with 更新于",
+    "Displayed version matches 0.7.5",
+    "Packaged cards load the SVG grab cursor and its hotspot",
+    "Packaged time buttons load the SVG pointer and its hotspot",
+    "Cursor resources decode in the actual packaged renderer",
+    "Expiry click displays remaining days",
+    "Time modes are independent between cards and kinds",
+    "Update click displays the exact date and time",
+    "Expiry supports native button Enter activation",
+    "Update supports native button Space activation",
+    "Time clicks and keyboard activation preserve selection and do not connect",
+    "Mode stays attached to each card across state refresh and sorting",
+    "Permanent expiry has no misleading toggle",
+    "Missing expiry remains readable without a toggle",
+    "Past expiry has no negative remaining days",
+    "Date buttons fit the desktop window",
+    "Date buttons fit the minimum window width",
+    "Node subscription shares expiry and update defaults",
+    "Node subscription supports both independent time toggles",
+    "No renderer errors"
+  ],
+  "errors": [],
+  "failure": null,
+  "build": "packaged",
+  "screenshots": [
+    "docs/previews/0.7.5-windows-time.png"
+  ],
+  "isolatedDataRemoved": true
+}

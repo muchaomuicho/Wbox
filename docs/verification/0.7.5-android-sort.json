@@ -1,0 +1,28 @@
+{
+  "checks": [
+    "Current 0.7.5 debug APK installed",
+    "SystemUI has a real edge-swipe monitor",
+    "Updated text defaults to relative time",
+    "Expiry switches to remaining days",
+    "Expiry switches back to the date",
+    "Updated time switches independently both ways",
+    "Time taps preserve the selected configuration",
+    "Card drag does not select another configuration",
+    "Restart and overview picker keep manual order"
+  ],
+  "observations": {
+    "apk_sha256": "afa51be51ddfa8c71576a150820dd4fd16f3a315c3557df27c8adeb9beeb1cc0",
+    "gesture_environment": "qemu.hw.mainkeys=0 set temporarily, Android framework restarted; no AVD configuration changed",
+    "Restart and overview picker keep manual order": [
+      "Orion 02",
+      "Orion 03",
+      "Orion 01"
+    ]
+  },
+  "screenshots": [
+    "docs/previews/0.7.5-android-profiles.png"
+  ],
+  "failure": null,
+  "preferences_restored": true,
+  "edgeGesturesVerified": false
+}

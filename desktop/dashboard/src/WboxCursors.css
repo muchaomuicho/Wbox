@@ -1,0 +1,22 @@
+:root {
+  --wbox-cursor-pointer: url('./assets/cursors/pointer.svg') 13 4, pointer;
+  --wbox-cursor-grab: url('./assets/cursors/grab.svg') 16 15, grab;
+  --wbox-cursor-grabbing: url('./assets/cursors/grabbing.svg') 16 18, grabbing;
+}
+
+/* Loaded only by Wbox. Preserve text, resize and disabled control cursors. */
+:root :is(button, a[href], summary, [role='button'], [role='switch'], input[type='checkbox'], input[type='radio'], input[type='color']):not(:disabled):not([aria-disabled='true']):not(.static) {
+  cursor: var(--wbox-cursor-pointer);
+}
+
+:root .wbox-library-card[draggable='true'] {
+  cursor: var(--wbox-cursor-grab);
+}
+
+:root .wbox-library-card[data-dragging] {
+  cursor: var(--wbox-cursor-grabbing);
+}
+
+:root :is(button:disabled, input[type='checkbox']:disabled, input[type='radio']:disabled, input[type='color']:disabled, [aria-disabled='true']) {
+  cursor: default;
+}

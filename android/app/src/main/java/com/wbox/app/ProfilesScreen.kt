@@ -1,4 +1,4 @@
-@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class,androidx.compose.foundation.ExperimentalFoundationApi::class)
 package com.wbox.app
 
 // Compose adaptation of FlClash's profiles.dart / add.dart at
@@ -21,18 +21,14 @@ import org.json.JSONObject
     showNodes:(String)->Unit, add:()->Unit
 ) {
     var removing by remember { mutableStateOf<Pair<String,()->Unit>?>(null) }
-    val profiles=when(m.profiles.data.optString("config_sort")) {
-        "name"->m.configs.sortedBy{it.optString("name").lowercase()}
-        "updated"->m.configs.sortedByDescending{it.optLong("updated")}
-        else->m.configs
-    }
+    val storedProfiles=m.configs
     val urls=m.profiles.data.optJSONObject("subscriptions")?.keys()?.asSequence()?.toList().orEmpty()
     val subscriptions=when(m.profiles.data.optString("subscription_sort")) {
         "name"->urls.sortedBy{SubscriptionUpdates.name(m.profiles,it).lowercase()}
         "updated"->urls.sortedByDescending{SubscriptionUpdates.options(m.profiles,"",it)?.optLong("last_success")?:0}
         else->urls
     }
-    if(if(config)profiles.isEmpty() else subscriptions.isEmpty()) {
+    if(if(config)storedProfiles.isEmpty() else subscriptions.isEmpty()) {
         Box(Modifier.fillMaxSize().padding(32.dp),contentAlignment=Alignment.Center) {
             Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Surface(shape=MaterialTheme.shapes.extraLarge,color=MaterialTheme.colorScheme.primaryContainer) {
@@ -45,14 +41,20 @@ import org.json.JSONObject
         }
     } else BoxWithConstraints(Modifier.fillMaxSize()) {
         val columns=((maxWidth.value-32f+8f)/(300f+8f)).toInt().coerceIn(1,3)
-        LazyVerticalGrid(columns=GridCells.Fixed(columns),modifier=Modifier.fillMaxSize().testTag("profiles-grid"),
+        val grid=rememberLazyGridState()
+        val keys=storedProfiles.map{it.getString("id")}
+        val reorder=rememberProfileCardReorder(grid,keys,m::reorderProfiles)
+        val byId=storedProfiles.associateBy{it.getString("id")}
+        val profiles=reorder.displayedKeys(keys).mapNotNull{byId[it]}
+        LazyVerticalGrid(columns=GridCells.Fixed(columns),state=grid,userScrollEnabled=!config||reorder.dragging==null,
+            modifier=Modifier.fillMaxSize().testTag("profiles-grid").then(if(config)Modifier.reorderProfileCards(reorder)else Modifier),
             contentPadding=PaddingValues(start=16.dp,end=16.dp,top=12.dp,bottom=if(!m.runtime.running&&!m.runtime.stopping)96.dp else 20.dp),
             verticalArrangement=Arrangement.spacedBy(8.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
             if(config) items(profiles,key={it.getString("id")}) { profile ->
                 val id=profile.getString("id");val url=profile.optString("url");val name=profile.optString("name")
                 LibraryCard(name,profile.optString("core")+" · "+if(url.isEmpty())"本地配置" else "远程配置",
                     profile.optLong("updated"),profile.optJSONObject("subscription")?.optJSONObject("usage"),url.isNotEmpty(),
-                    active=id==m.profiles.data.optString("active_config"),updating=m.isUpdating(id),onClick={m.selectProfile(id)},
+                    active=id==m.profiles.data.optString("active_config"),updating=m.isUpdating(id),onClick={if(reorder.dragging==null)m.selectProfile(id)},
                     onUpdate=if(url.isNotEmpty())({m.updateProfile(profile)})else null,
                     actions=buildList {
                         add(LibraryAction("编辑",Icons.Outlined.Edit){edit(Editor("config",profile))})
@@ -60,7 +62,8 @@ import org.json.JSONObject
                         add(LibraryAction("更多",Icons.Outlined.Tune){editSubscription(SubscriptionEdit(id,url,name))})
                         add(LibraryAction("导出文件",Icons.Outlined.FileUpload){m.activity.export(profile)})
                         add(LibraryAction("删除",Icons.Outlined.DeleteOutline,destructive=true){removing=name to {m.removeProfile(id)}})
-                    },menuDescription="配置操作",tag="profile-$id")
+                    },menuDescription="配置操作",tag="profile-$id",
+                    modifier=(if(reorder.dragging==id)Modifier else Modifier.animateItemPlacement()).then(reorder.cardModifier(id)))
             } else items(subscriptions,key={it}) { url ->
                 val name=SubscriptionUpdates.name(m.profiles,url);val options=SubscriptionUpdates.options(m.profiles,"",url)
                 val open={editSubscription(SubscriptionEdit(url=url,name=name))}

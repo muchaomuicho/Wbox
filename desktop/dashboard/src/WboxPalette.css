@@ -1,3 +1,5 @@
+@import './WboxCursors.css';
+
 :root {
   --wbox-pink: #a75882;
   --wbox-pink-soft: rgb(167 88 130 / 10%);

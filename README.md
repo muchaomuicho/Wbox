@@ -13,7 +13,7 @@ Windows · Android ｜ mihomo · sing-box
 [![Android](https://img.shields.io/badge/Android-8.0%2B-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 
-[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.4.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
+[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.5.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
 
 </div>
 
@@ -22,24 +22,24 @@ Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性
 ## 界面一览
 
 <div align="center">
-<img src="docs/previews/0.7.4-windows-overview.png" alt="Windows 概览" width="96%" />
-<br/><sub>Windows：概览集中显示状态与配置，系统代理和 TUN 模式统一在设置中管理。</sub>
+<img src="docs/previews/0.7.5-windows-order.png" alt="Windows 配置手动排序" width="96%" />
+<br/><sub>Windows：配置卡片支持直接拖动排序，时间信息可独立切换显示。</sub>
 <br/><br/>
-<img src="docs/previews/0.7.4-android-apps-light.png" alt="Android 分应用代理与应用图标" width="32%" />
-<img src="docs/previews/0.7.4-android-connections-pink.png" alt="Android 连接拉起界面" width="32%" />
-<img src="docs/previews/0.7.4-android-apps-dark.png" alt="Android 深色分应用代理" width="32%" />
-<br/><sub>Android：拉起界面与系统栏协调，应用图标让分应用代理更易辨认。</sub>
+<img src="docs/previews/0.7.5-android-profiles.png" alt="Android 配置排序与日期" width="32%" />
+<img src="docs/previews/0.7.5-android-connections.png" alt="Android 连接拉起界面" width="32%" />
+<img src="docs/previews/0.7.5-android-apps.png" alt="Android 分应用代理" width="32%" />
+<br/><sub>Android：长按整张卡片排序，拉起界面支持系统返回，边角与系统栏协调。</sub>
 </div>
 
-## 0.7.4：选择与测速更顺畅
+## 0.7.5：按自己的顺序整理配置
 
-双端延迟测试使用独立的配置快照，测速期间选择节点、切换配置或启动连接可继续进行。结果归到对应来源，切换后不会显示另一份配置的结果；手动取消与停止连接优先生效。节点选择不再弹出成功提示，错误仍会明确显示。
+Android 长按整张配置卡片即可拖动，Windows 直接拖动卡片调整顺序，靠近列表边缘时自动滚动。Windows 点击与抓取光标使用清晰的矢量手形。手动顺序会保存，并同步到概览的配置选择；更新订阅、添加或删除配置时保留已有顺序。
 
-Android 统一连接、分应用代理等底部拉起界面的边角与系统栏背景，解决贴近顶部时两角露出灰色缺口的问题。分应用代理显示真实应用图标，支持搜索、选择和保存。
+双端流量信息旁默认显示具体日期和“到期”，点击可切换为剩余天数。更新时间默认显示“更新于 X 时间前”，点击可切换为具体日期时间；两种时间独立切换，点击不会选择配置或启动连接。
 
-Windows 概览移除系统 HTTP 代理开关，在设置中统一管理“系统代理”和“TUN 模式”。双端保留独立订阅更新圆环、黑白／雾蓝／柔粉配色和配置编辑能力。
+Android 连接、分应用代理等底部面板补齐随窗口挂载的系统返回回调和 Back 按键兼容入口，保留键盘优先收起及边角适配。
 
-保留在线配置应用、失败恢复、测速期间连接与选择、停止优先等原有行为。
+保留双端测速期间的节点与配置选择、独立订阅更新圆环、黑白／雾蓝／柔粉配色和配置编辑能力。
 
 ## 两个工作区，各自完整
 
@@ -52,10 +52,10 @@ Windows 概览移除系统 HTTP 代理开关，在设置中统一管理“系统
 
 在 [GitHub Releases](https://github.com/muchaomuicho/Wbox/releases/latest) 下载：
 
-- `Wbox-0.7.4-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
-- `Wbox-0.7.4-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
-- `Wbox-0.7.4-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
-- `SHA256SUMS-0.7.4.txt`：发布文件 SHA256 校验值。
+- `Wbox-0.7.5-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
+- `Wbox-0.7.5-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
+- `Wbox-0.7.5-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
+- `SHA256SUMS-0.7.5.txt`：发布文件 SHA256 校验值。
 
 Windows 关闭窗口后保留托盘，左键恢复主界面，右键打开菜单；支持开机自启、静默启动与自动连接。托盘可切换运行策略组、配置、测速及关闭连接。Android 首次连接授权系统 VPN，支持全部应用、只代理所选应用或绕过所选应用，IPv6 默认开启。
 
@@ -79,9 +79,9 @@ Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，�
 
 ## 验证与历史归档
 
-本轮检查双端测速与选择并发、切换配置后的结果归属、停止与取消，以及 Android 拉起界面的边角、系统栏和应用图标。Android 界面验证使用隔离 API35 模拟器；发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.4-` 开头。
+本轮检查双端日期显示与独立切换、手动排序及重启后的顺序、并发订阅更新与配置增删，以及 Android 拉起界面的返回、键盘和边角。Android 使用隔离 API35 模拟器，发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.5-` 开头。
 
-Android 系统 Back、键盘优先收起、未保存修改保护及惯性滚动已检查；当前模拟器缺少系统边缘手势监听，左右边缘滑动尚未完成真机验证，记录中单独标为未验证。
+Android 返回验证要求启用系统边缘手势监听，使用真实左右边缘滑动，并分别检查键盘优先收起与关闭面板；模拟器结果仍不能代替所有厂商手机的实际行为。
 
 历史安装包与现存源码归档在 [各版本 Release](https://github.com/muchaomuicho/Wbox/releases)，文件核验见 [历史归档清单](docs/verification/history-archive.json)。**0.1.0 当时的源码包未留存**，该版本仅保存现存安装包和明确的缺失说明；其余历史源码以各版本随附的原始 source ZIP 为准。
 

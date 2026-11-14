@@ -183,9 +183,9 @@ object State() => new {
     delayTesting,
     groupTestError,
     prefs.LibrarySort, prefs.Core, prefs.Mode, prefs.ConfigPath, prefs.DelayUrl, prefs.Silent, prefs.AutoStart, prefs.AutoConnect, prefs.SystemProxy, prefs.NativeInbounds, prefs.SelectedNode,
-    configs = prefs.Configs.Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated, c.Subscription }),
+    configs = LibraryOrder.Configs(prefs).Select(c => new { c.Id, c.Name, c.Core, c.Path, c.Url, c.Updated, c.Subscription }),
     nodes = prefs.Nodes.Select((n, i) => new { index = i, n.Name, n.Protocol, n.Server, n.Port, n.SourceSubscription, tag = ConfigBuilder.Tag(n, i), n.DelayText }),
-    prefs.Subscriptions, running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
+    subscriptions = LibraryOrder.Subscriptions(prefs), running = core.Ready, starting = core.Starting, startedAt = core.Ready ? new DateTimeOffset(core.StartedAt).ToUnixTimeMilliseconds() : 0
     ,prefs.SubscriptionSettings,prefs.SubscriptionAutoUpdate,prefs.SubscriptionUpdateMinutes,prefs.SubscriptionLastAttempt,prefs.SubscriptionLastSuccess,prefs.SubscriptionUpdateError,subscriptionUpdating=subscriptionTask!=null||subscriptionApplying||!subscriptionDownloads.IsEmpty,
     subscriptionUpdatingSources=subscriptionBatchSources.Concat(subscriptionDownloads.Values).Distinct().ToArray()
 };
@@ -414,10 +414,10 @@ async Task<object?> Handle(string method, JsonElement a,long? intentEpoch=null) 
             } else next.Nodes.AddRange(nodes);
             await CommitNodes(next); return nodes.Count;
         }
-        case "profiles": return new { selectedId = prefs.Mode == "nodes" ? (prefs.Nodes.Count > 0 ? "nodes" : null) : prefs.Configs.FirstOrDefault(p => p.Path == prefs.ConfigPath)?.Id, profiles = prefs.Mode == "nodes" ? new[] { new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = 0L } } : prefs.Configs.Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = c.Url.Length > 0 ? "remote" : "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = new DateTimeOffset(c.Updated).ToUnixTimeMilliseconds() }).ToArray() };
+        case "profiles": return new { selectedId = prefs.Mode == "nodes" ? (prefs.Nodes.Count > 0 ? "nodes" : null) : prefs.Configs.FirstOrDefault(p => p.Path == prefs.ConfigPath)?.Id, profiles = prefs.Mode == "nodes" ? new[] { new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = 0L } } : LibraryOrder.Configs(prefs).Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = c.Url.Length > 0 ? "remote" : "local", autoUpdate = false, autoUpdateIntervalMinutes = 0, lastUpdated = new DateTimeOffset(c.Updated).ToUnixTimeMilliseconds() }).ToArray() };
         case "createProfile": { var url = S("remoteUrl"); var download = url.Length > 0 ? await Download(url) : null; var p = ProfileImport.SaveConfig(prefs, download?.Content ?? S("content"), S("name", "配置"), url); if(p.Subscription!=null)p.Subscription.Usage=download?.Usage; if(!core.Running&&!core.Starting){prefs.Mode = "config"; prefs.ConfigPath = p.Path; prefs.Core = p.Core;} Save(); return null; }
         case "trayProfiles": {
-            var entries = prefs.Configs.Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = "local" }).ToList();
+            var entries = LibraryOrder.Configs(prefs).Select(c => new { id = c.Id, name = c.Name + " · " + c.Core, type = "local" }).ToList();
             if (prefs.Nodes.Count > 0) entries.Add(new { id = "nodes", name = $"节点工作区 · {prefs.Nodes.Count} 个节点", type = "local" });
             return new { selectedId = prefs.Mode == "nodes" ? "nodes" : prefs.Configs.FirstOrDefault(c => c.Path == prefs.ConfigPath)?.Id, profiles = entries };
         }
@@ -446,6 +446,13 @@ async Task<object?> Handle(string method, JsonElement a,long? intentEpoch=null) 
         case "sortLibrary": {
             var order=S("order");if(order is not ("default" or "name" or "updated"))throw new ArgumentException("未知排序方式。");
             prefs.LibrarySort=order;Save();return null;
+        }
+        case "reorderLibrary": {
+            if(a.TryGetProperty("ids",out var ids)) {
+                if(S("kind")!="config")throw new ArgumentException("未知配置列表。");
+                LibraryOrder.MergeConfigs(prefs,ids.Deserialize<string[]>()??[]);Save();
+            } else if(LibraryOrder.Move(prefs,S("kind"),S("id"),S("anchor"),a.GetProperty("after").GetBoolean()))Save();
+            return null;
         }
         default: throw new ArgumentException("未知操作：" + method);
     }

@@ -65,4 +65,47 @@ class LibraryUiTest {
         ui.onNodeWithText("Subscribed",substring=false).assertExists()
         ui.onNodeWithText("Manual",substring=false).assertDoesNotExist()
     }
+    @Test fun dateTogglesAreIndependentAndDoNotSelectConfiguration(){
+        val now=System.currentTimeMillis()
+        val updated=now-7_200_000
+        val expire=(now+2*86_400_000+60_000)/1000
+        var first="";var second="";var saved=""
+        ui.runOnIdle{
+            val p=Profiles(ui.activity)
+            first=p.configs().getJSONObject(0).getString("id")
+            second=p.configs().getJSONObject(1).getString("id")
+            p.configs().objects().forEach{it.put("updated",updated).getJSONObject("subscription").put("usage",JSONObject().put("upload",0).put("download",1024).put("total",4096).put("expire",expire))}
+            p.data.put("active_config",second);p.save();saved=p.data.toString();m.reload()
+        }
+        val firstExpiry=ui.onNodeWithTag("profile-$first-expiry")
+        val firstUpdated=ui.onNodeWithTag("profile-$first-updated")
+        val secondExpiry=ui.onNodeWithTag("profile-$second-expiry")
+        firstExpiry.assertTextEquals("· "+LibraryTimeText.expiry(expire,false))
+        firstUpdated.assertTextEquals("更新于 2 小时前")
+        firstExpiry.performTouchInput{click()}.assertTextEquals("· 3 天后到期")
+        firstUpdated.assertTextEquals("更新于 2 小时前")
+        secondExpiry.assertTextEquals("· "+LibraryTimeText.expiry(expire,false))
+        firstUpdated.performTouchInput{click()}.assertTextEquals(LibraryTimeText.update(updated,false))
+        firstExpiry.assertTextEquals("· 3 天后到期")
+        ui.onNodeWithTag("profile-$second-updated").assertTextEquals("更新于 2 小时前")
+        ui.runOnIdle{assertEquals(second,m.profiles.data.optString("active_config"));assertEquals(saved,Profiles(ui.activity).data.toString());assertFalse(m.runtime.running)}
+        firstExpiry.performClick().assertTextEquals("· "+LibraryTimeText.expiry(expire,false))
+        firstUpdated.performClick().assertTextEquals("更新于 2 小时前")
+    }
+    @Test fun subscriptionDateTogglesDoNotOpenTheEditor(){
+        val url="https://example.org/time-toggle"
+        val updated=System.currentTimeMillis()-7_200_000
+        val expire=(System.currentTimeMillis()+2*86_400_000+60_000)/1000
+        var saved=""
+        ui.runOnIdle{
+            val p=Profiles(ui.activity);p.setWorkspace("nodes");p.importNodes(ProfilesTest.SS,url)
+            SubscriptionUpdates.options(p,"",url)!!.put("last_success",updated).put("usage",JSONObject().put("expire",expire))
+            p.save();saved=p.data.toString();m.reload();m.page="library"
+        }
+        ui.onNodeWithText("订阅",substring=false).performClick()
+        ui.onNodeWithTag("subscription-$url-expiry").performTouchInput{click()}.assertTextEquals("· 3 天后到期")
+        ui.onNodeWithTag("subscription-$url-updated").performTouchInput{click()}.assertTextEquals(LibraryTimeText.update(updated,false))
+        ui.onNodeWithText("编辑订阅",substring=false).assertDoesNotExist()
+        ui.runOnIdle{assertEquals(saved,Profiles(ui.activity).data.toString());assertFalse(m.runtime.running)}
+    }
 }

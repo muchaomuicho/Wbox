@@ -1,4 +1,4 @@
-param([string]$Version = '0.7.4', [string]$AndroidVersion = '0.7.4')
+param([string]$Version = '0.7.5', [string]$AndroidVersion = '0.7.5')
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $output = Join-Path $repo "dist/Wbox-$Version-source.zip"
@@ -18,7 +18,7 @@ try {
         -g '!windows/performance-*/**' -g '!windows/startup-ui-runtime/**' -g '!windows/reliability-runtime/**' `
         -g '!resources/cores/windows/**' -g '!resources/cores/android/**' -g '!*.log' -g '!docs/previews/**'
     # Publish reviewed synthetic previews, not the working folder's entire screenshot history.
-    $paths += & rg --files docs/previews -g '0.6.11-*.png' -g '0.7.0-*.png' -g '0.7.1-*.png' -g '0.7.2-*.png' -g '0.7.3-*.png' -g '0.7.4-*.png' -g '!*-failure.png'
+    $paths += & rg --files docs/previews -g '0.6.11-*.png' -g '0.7.0-*.png' -g '0.7.1-*.png' -g '0.7.2-*.png' -g '0.7.3-*.png' -g '0.7.4-*.png' -g '0.7.5-*.png' -g '!*-failure.png'
     $paths += @('docs/previews/windows-overview.png','docs/previews/android-overview.png',
         'docs/previews/0.3-windows-overview.png','docs/previews/0.3-windows-config.png',
         'docs/previews/0.3-android-overview.png','docs/previews/0.3-android-config.png',

@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "checks": [
+    "Self-contained SVG pointer",
+    "Self-contained SVG grab",
+    "Self-contained SVG grabbing",
+    "SVGs decode at 32px with DPR 1",
+    "light DPR 1: enabled controls use the SVG pointer",
+    "light DPR 1: card grab and dragging cursors remain distinct",
+    "light DPR 1: disabled controls retain default cursor",
+    "light DPR 1: text and resize cursors remain unchanged",
+    "dark DPR 1: enabled controls use the SVG pointer",
+    "dark DPR 1: card grab and dragging cursors remain distinct",
+    "dark DPR 1: disabled controls retain default cursor",
+    "dark DPR 1: text and resize cursors remain unchanged",
+    "SVGs decode at 32px with DPR 2",
+    "light DPR 2: enabled controls use the SVG pointer",
+    "light DPR 2: card grab and dragging cursors remain distinct",
+    "light DPR 2: disabled controls retain default cursor",
+    "light DPR 2: text and resize cursors remain unchanged",
+    "dark DPR 2: enabled controls use the SVG pointer",
+    "dark DPR 2: card grab and dragging cursors remain distinct",
+    "dark DPR 2: disabled controls retain default cursor",
+    "dark DPR 2: text and resize cursors remain unchanged",
+    "All CSS and SVG resources resolve without errors"
+  ],
+  "errors": [],
+  "failure": null,
+  "preview": "docs/previews/0.7.5-windows-cursors.png",
+  "sourceOnly": true,
+  "electronNotLaunched": true
+}
