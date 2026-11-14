@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "checks": [
+    "Right-click menu opens at the pointer and extends to its right",
+    "Configuration right-click exposes all existing actions",
+    "Escape dismisses the configuration context menu",
+    "Three-dot and card context menus share the same actions",
+    "Three-dot menu remains anchored to its own button",
+    "Right-click preview opens the clicked configuration and restores focus to that card",
+    "Right-click and menu dismissal do not select, connect, edit or reorder configurations",
+    "Configuration cards save vertical space without shrinking readable text",
+    "Time switches remain clickable inside compact draggable cards",
+    "Direct card drag still reorders without selecting or connecting",
+    "Context menu remains inside the narrow window near the right and bottom edges",
+    "Keyboard focus uses the selected theme color",
+    "Long names and exact dates fit compact cards at minimum window width",
+    "One click persists and highlights an offline node without starting the core",
+    "Opening another node context menu does not change the selected node",
+    "Clicking a node latency action preserves the offline selection",
+    "Explicit double-click still connects the chosen node",
+    "Single-click switches nodes while an existing connection is running",
+    "Latency text sits at the bottom-right, aligned with protocol text, with its full click target",
+    "Proxy-card latency measurement leaves the main core disconnected",
+    "Proxy cards with long node names fit the minimum window",
+    "No renderer errors"
+  ],
+  "errors": [],
+  "measurements": {
+    "contextMenu": {
+      "point": {
+        "x": 738,
+        "y": 229
+      },
+      "rect": {
+        "x": 738,
+        "y": 229,
+        "width": 180,
+        "height": 171.5
+      }
+    },
+    "compact": {
+      "height": 162.28125,
+      "title": 18,
+      "meta": 14
+    },
+    "legacyHeight": 188.28125,
+    "delay": {
+      "right": 13,
+      "bottom": 11,
+      "baselineDifference": 0,
+      "clickHeight": 28
+    }
+  },
+  "failure": null,
+  "build": "packaged",
+  "screenshots": [
+    "docs/previews/0.7.7-windows-configurations.png",
+    "docs/previews/0.7.7-windows-configurations-narrow.png",
+    "docs/previews/0.7.7-windows-proxy-latency.png"
+  ],
+  "isolatedDataRemoved": true
+}

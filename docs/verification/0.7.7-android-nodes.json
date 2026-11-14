@@ -1,0 +1,339 @@
+{
+  "passed": true,
+  "checks": [
+    "setup Only the isolated emulator is targeted",
+    "setup Native SystemUI edge-swipe monitor is enabled",
+    "setup Debug APK exists",
+    "setup Debug APK installs successfully",
+    "setup Version 0.7.7 is installed",
+    "setup Installed APK exactly matches the tested build",
+    "setup Raw non-PTY HTTP reaches the local proxy unchanged",
+    "mihomo Single tap persists Node1 while staying disconnected",
+    "mihomo The selected node survives application restart without connecting",
+    "mihomo Node actions form a compact menu beside their button",
+    "mihomo Opening another node menu does not select or connect it",
+    "mihomo Back closes the floating node menu",
+    "mihomo Node actions form a compact menu beside their button",
+    "mihomo Left edge Back closes the floating node menu",
+    "mihomo Node actions form a compact menu beside their button",
+    "mihomo Right edge Back closes the floating node menu",
+    "mihomo Explicit start forwards through the saved Node1",
+    "mihomo Single-tap live selection reconnects traffic through Node0",
+    "mihomo Tapping the current node keeps the existing connection",
+    "mihomo A UI node tap keeps the original latency batch running",
+    "mihomo The node selected during latency carries the new traffic",
+    "mihomo Both held latency requests finish and preserve the latest selection",
+    "mihomo Both nodes remeasure successfully once the gate is released",
+    "mihomo Choosing a node after UI stop stays disconnected",
+    "sing-box Single tap persists Node1 while staying disconnected",
+    "sing-box The selected node survives application restart without connecting",
+    "sing-box Node actions form a compact menu beside their button",
+    "sing-box Opening another node menu does not select or connect it",
+    "sing-box Back closes the floating node menu",
+    "sing-box Node actions form a compact menu beside their button",
+    "sing-box Left edge Back closes the floating node menu",
+    "sing-box Node actions form a compact menu beside their button",
+    "sing-box Right edge Back closes the floating node menu",
+    "sing-box Explicit start forwards through the saved Node1",
+    "sing-box Single-tap live selection reconnects traffic through Node0",
+    "sing-box Tapping the current node keeps the existing connection",
+    "sing-box Choosing a node after UI stop stays disconnected",
+    "sing-box All transient latency directories are cleaned"
+  ],
+  "observations": {
+    "gesture_setup": "Temporarily set qemu.hw.mainkeys=0 and restart Android framework; AVD files untouched",
+    "apk_sha256": "b66cf67500f4629e90b06c72094ebc460ce94171989e676607adab05fc0fa4b7",
+    "installed_apk_sha256": "b66cf67500f4629e90b06c72094ebc460ce94171989e676607adab05fc0fa4b7",
+    "fixture_transport": "Local synthetic proxies via emulator 10.0.2.2; no public endpoint or trust changes",
+    "mihomo Node actions form a compact menu beside their button": {
+      "button": [
+        944,
+        825,
+        997,
+        872
+      ],
+      "menu_text": [
+        603,
+        961,
+        858,
+        1647
+      ],
+      "screen": [
+        1080,
+        2400
+      ]
+    },
+    "mihomo Explicit start forwards through the saved Node1": {
+      "status": 200,
+      "body": "WBOX-1"
+    },
+    "mihomo Single-tap live selection reconnects traffic through Node0": {
+      "status": 200,
+      "body": "WBOX-0"
+    },
+    "mihomo The node selected during latency carries the new traffic": {
+      "status": 200,
+      "body": "WBOX-1"
+    },
+    "mihomo Both held latency requests finish and preserve the latest selection": [
+      "3949 ms",
+      "973 ms"
+    ],
+    "mihomo Both nodes remeasure successfully once the gate is released": [
+      "967 ms",
+      "744 ms"
+    ],
+    "sing-box Node actions form a compact menu beside their button": {
+      "button": [
+        944,
+        825,
+        997,
+        872
+      ],
+      "menu_text": [
+        603,
+        961,
+        858,
+        1647
+      ],
+      "screen": [
+        1080,
+        2400
+      ]
+    },
+    "sing-box Explicit start forwards through the saved Node1": {
+      "status": 200,
+      "body": "WBOX-1"
+    },
+    "sing-box Single-tap live selection reconnects traffic through Node0": {
+      "status": 200,
+      "body": "WBOX-0"
+    },
+    "proxy_hits": [
+      7,
+      33
+    ],
+    "latency_hits": [
+      2,
+      2
+    ],
+    "proxy_requests": [
+      [
+        0,
+        "GET",
+        "http://93.184.216.34/forward"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        0,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        0,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "1.1.1.1:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        1,
+        "CONNECT",
+        "[2606:4700:4700::1111]:853"
+      ],
+      [
+        0,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        1,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        1,
+        "CONNECT",
+        "mtalk.google.com:5228"
+      ],
+      [
+        1,
+        "CONNECT",
+        "www.google.com:443"
+      ],
+      [
+        1,
+        "CONNECT",
+        "www.google.com:443"
+      ],
+      [
+        1,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        1,
+        "CONNECT",
+        "www.google.com:443"
+      ],
+      [
+        1,
+        "CONNECT",
+        "www.google.com:443"
+      ],
+      [
+        1,
+        "CONNECT",
+        "mtalk.google.com:5228"
+      ],
+      [
+        1,
+        "CONNECT",
+        "www.google.com:443"
+      ],
+      [
+        1,
+        "CONNECT",
+        "www.google.com:443"
+      ],
+      [
+        0,
+        "CONNECT",
+        "mtalk.google.com:5228"
+      ],
+      [
+        0,
+        "CONNECT",
+        "93.184.216.34:80"
+      ],
+      [
+        0,
+        "CONNECT",
+        "mtalk.google.com:5228"
+      ]
+    ],
+    "vpn_appops_restored": true,
+    "runtime_files_restored": true,
+    "emulator_closed": true,
+    "temporary_host_files_removed": true,
+    "duration_seconds": 229.5
+  },
+  "screenshots": [
+    "docs/previews/0.7.7-android-nodes-menu.png",
+    "docs/previews/0.7.7-android-nodes-connected.png"
+  ],
+  "failure": null,
+  "preferences_restored": true,
+  "original_vpn_appops": "ACTIVATE_VPN: allow; time=+1h42m10s565ms ago",
+  "engines": [
+    "mihomo",
+    "sing-box"
+  ]
+}

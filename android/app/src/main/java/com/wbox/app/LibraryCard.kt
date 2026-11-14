@@ -62,6 +62,7 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
                 Box{
                     IconButton(onClick={menu=true},modifier=Modifier.size(40.dp).semantics{contentDescription=menuDescription}){Icon(Icons.Outlined.MoreVert,null,Modifier.size(21.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)}
                     DropdownMenu(expanded=menu,onDismissRequest={menu=false}){
+                        PopupWindowBackHandler{menu=false}
                         actions.forEachIndexed{index,action->
                             if(action.destructive&&index>0)HorizontalDivider()
                             DropdownMenuItem(text={Text(action.label,color=if(action.destructive)MaterialTheme.colorScheme.error else Color.Unspecified)},
@@ -97,6 +98,7 @@ internal data class LibraryAction(val label:String,val icon:ImageVector,val enab
     Box{
         IconButton(onClick={sorting=true}){Icon(Icons.Outlined.Sort,"排序订阅")}
         DropdownMenu(sorting,{sorting=false}){
+            PopupWindowBackHandler{sorting=false}
             listOf("default" to if(config)"手动顺序" else "默认顺序","name" to "名称","updated" to "最近更新").forEach{(key,label)->
                 DropdownMenuItem(text={Text(label)},onClick={sorting=false;m.sortLibrary(config,key)},trailingIcon={if(sort==key)Icon(Icons.Outlined.Check,null)})
             }

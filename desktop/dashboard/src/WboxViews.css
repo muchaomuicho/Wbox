@@ -69,6 +69,17 @@
 .wbox-library-title strong { overflow-wrap:anywhere; font-weight:500; }
 .wbox-library-meta { display:block; margin-top:12px; color:var(--text-secondary); font-size:14px; line-height:1.65; overflow-wrap:anywhere; }
 .wbox-library-card .wbox-subscription-traffic progress { max-width:none; height:5px; }
+.wbox-config-grid { gap:12px; }
+.wbox-config-card { padding:14px 18px; border-radius:18px; }
+.wbox-config-card:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.wbox-config-card .wbox-library-title { gap:10px; margin-bottom:8px; }
+.wbox-config-card .wbox-library-actions { gap:4px; }
+.wbox-config-card .wbox-subscription-traffic { gap:4px; margin-top:6px; }
+.wbox-config-card .wbox-library-meta { margin-top:8px; }
+.wbox-config-card[data-drop-axis="horizontal"][data-drop-position="before"]::after { left:-8px; }
+.wbox-config-card[data-drop-axis="horizontal"][data-drop-position="after"]::after { right:-8px; }
+.wbox-config-card[data-drop-axis="vertical"][data-drop-position="before"]::after { top:-8px; }
+.wbox-config-card[data-drop-axis="vertical"][data-drop-position="after"]::after { bottom:-8px; }
 .wbox-preview-code { white-space:pre-wrap; overflow:auto; max-height:65vh; font:12px/1.7 var(--font-mono); }
 .wbox-accent-options { display:flex; flex-wrap:wrap; gap:6px; }
 .wbox-accent-options button { display:inline-flex; align-items:center; gap:7px; padding:6px 10px; border:1px solid var(--border); border-radius:9px; color:var(--text-secondary); background:var(--card); font:inherit; cursor:pointer; }

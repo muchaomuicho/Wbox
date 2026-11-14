@@ -5,8 +5,12 @@ package com.wbox.app
 // (a548a7903e96266a0046018562c73b192edbfc18), GPL-3.0-or-later.
 // Wbox supplies the dual-core/workspace model; profile layouts also adapt FlClash.
 import android.content.res.Configuration
+import android.os.Build
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
+import android.view.View
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.*
@@ -31,8 +35,10 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -96,7 +102,7 @@ internal data class Editor(val type: String, val profile: JSONObject?=null, val 
                 if(m.page=="library"&&(m.workspace=="config"||librarySubscriptions))LibraryToolbarActions(m,m.workspace=="config")
                 if(m.page=="library")ProfileImportMenu(m){editor=it}
                 Box { IconButton(onClick={showWorkspace=true}){Icon(Icons.Outlined.SwapHoriz,"切换工作区")}
-                    DropdownMenu(showWorkspace,{showWorkspace=false}){listOf("config" to "配置工作区","nodes" to "节点工作区").forEach{(key,label)->DropdownMenuItem(text={Text(label)},onClick={showWorkspace=false;m.switchWorkspace(key)},leadingIcon={Icon(if(key=="config")Icons.Outlined.Folder else Icons.Outlined.Dns,null)},trailingIcon={if(m.workspace==key)Icon(Icons.Outlined.Check,null)})}}
+                    DropdownMenu(showWorkspace,{showWorkspace=false}){PopupWindowBackHandler{showWorkspace=false};listOf("config" to "配置工作区","nodes" to "节点工作区").forEach{(key,label)->DropdownMenuItem(text={Text(label)},onClick={showWorkspace=false;m.switchWorkspace(key)},leadingIcon={Icon(if(key=="config")Icons.Outlined.Folder else Icons.Outlined.Dns,null)},trailingIcon={if(m.workspace==key)Icon(Icons.Outlined.Check,null)})}}
             }})},
             snackbarHost={SnackbarHost(snackbar){data->Snackbar(
                 snackbarData=data,
@@ -208,7 +214,6 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
     var query by rememberSaveable {mutableStateOf("")}
     var source by rememberSaveable {mutableStateOf<String?>(null)}
     val selected=m.selectedRow
-    var nodeMenu by remember {mutableStateOf<Node?>(null)}
 
     val config=m.workspace=="config"
     Column(Modifier.fillMaxSize()) {
@@ -231,20 +236,71 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
                 if(visible.isEmpty())item{EmptyState("没有匹配的节点","可粘贴节点链接或添加订阅地址。",Icons.Outlined.Dns)}
                 items(visible,key={it.name}){node->
                     val active=m.profiles.data.optString("selected")==node.name
-                    Surface(shape=RoundedCornerShape(14.dp),color=if(active)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,border=if(selected==node.name)BorderStroke(1.dp,MaterialTheme.colorScheme.outline) else null){
-                        Column(Modifier.fillMaxWidth().combinedClickable(onClick={m.selectedRow=node.name},onDoubleClick={m.selectNode(node.name,connect=true)},onLongClick={nodeMenu=node}).padding(start=14.dp,end=6.dp,top=8.dp,bottom=10.dp)){
-                            Row(verticalAlignment=Alignment.CenterVertically){if(active){Icon(Icons.Outlined.CheckCircle,null,Modifier.size(17.dp));Spacer(Modifier.width(8.dp))};Text(node.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall,maxLines=2,overflow=TextOverflow.Ellipsis);IconButton(onClick={nodeMenu=node},Modifier.size(40.dp)){Icon(Icons.Outlined.MoreVert,"节点操作",Modifier.size(20.dp))}}
+                    var menu by remember(node.name){mutableStateOf(false)}
+                    Surface(modifier=Modifier.testTag("node-${node.name}").semantics{this.selected=active},shape=RoundedCornerShape(14.dp),color=if(active)MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,border=if(selected==node.name)BorderStroke(1.dp,MaterialTheme.colorScheme.outline) else null){
+                        Column(Modifier.fillMaxWidth().combinedClickable(onClick={m.selectedRow=node.name;m.selectNode(node.name)},onLongClick={menu=true}).padding(start=14.dp,end=6.dp,top=8.dp,bottom=10.dp)){
+                            Row(verticalAlignment=Alignment.CenterVertically){
+                                if(active){Icon(Icons.Outlined.CheckCircle,null,Modifier.size(17.dp));Spacer(Modifier.width(8.dp))}
+                                Text(node.name,Modifier.weight(1f),style=MaterialTheme.typography.titleSmall,maxLines=2,overflow=TextOverflow.Ellipsis)
+                                Box {
+                                    IconButton(onClick={menu=true},Modifier.size(40.dp).testTag("node-menu-${node.name}")){Icon(Icons.Outlined.MoreVert,"节点操作",Modifier.size(20.dp))}
+                                    DropdownMenu(expanded=menu,onDismissRequest={menu=false},modifier=Modifier.widthIn(min=208.dp,max=280.dp).testTag("node-actions-${node.name}")){
+                                        PopupWindowBackHandler{menu=false}
+                                        val actions=listOf(
+                                            LibraryAction("连接此节点",Icons.Outlined.PlayArrow){m.selectNode(node.name,connect=true)},
+                                            LibraryAction("设为当前节点",Icons.Outlined.CheckCircle){m.selectedRow=node.name;m.selectNode(node.name)},
+                                            LibraryAction("测试延迟",Icons.Outlined.Speed){m.latency(listOf(node.name),expandGroup=false)},
+                                            LibraryAction("编辑节点",Icons.Outlined.Edit){edit(Editor("node",index=m.nodes.indexOfFirst{it.name==node.name}))},
+                                            LibraryAction("克隆为手动节点",Icons.Outlined.ContentCopy){m.cloneNode(m.nodes.indexOfFirst{it.name==node.name})},
+                                            LibraryAction("移除节点",Icons.Outlined.Delete,destructive=true){m.removeNode(node.name)}
+                                        )
+                                        actions.forEach{action->
+                                            if(action.destructive)HorizontalDivider()
+                                            DropdownMenuItem(text={Text(action.label,color=if(action.destructive)MaterialTheme.colorScheme.error else Color.Unspecified)},
+                                                leadingIcon={Icon(action.icon,null,tint=if(action.destructive)MaterialTheme.colorScheme.error else LocalContentColor.current)},
+                                                onClick={menu=false;action.run()})
+                                        }
+                                    }
+                                }
+                            }
                             Row(Modifier.padding(end=8.dp)){Muted(proxyTypeLabel(node.protocol)+" · "+node.server+":"+node.port,Modifier.weight(1f));NodeDelay(node.name,m.delays[node.name],!m.testing&&!m.transition,{m.latency(listOf(node.name),expandGroup=false)})}
                         }
                     }
                 }
         }
     }
-    nodeMenu?.let{node->ActionSheet(node.name,{nodeMenu=null},listOf("连接此节点" to {m.selectNode(node.name,connect=true)},"设为当前节点" to {m.selectNode(node.name)},"测试延迟" to {m.latency(listOf(node.name))},"编辑节点" to {edit(Editor("node",index=m.nodes.indexOfFirst{it.name==node.name}))},"克隆为手动节点" to {m.cloneNode(m.nodes.indexOfFirst{it.name==node.name})},"移除节点" to {m.removeNode(node.name)}))}
-
 }
 
-@Composable private fun ActionSheet(title:String,dismiss:()->Unit,actions:List<Pair<String,()->Unit>>) {WboxBottomSheet(onDismissRequest=dismiss,skipPartiallyExpanded=false){SelectionContainer{Text(title,Modifier.heightIn(max=180.dp).verticalScroll(rememberScrollState()).padding(horizontal=24.dp,vertical=12.dp),style=MaterialTheme.typography.titleLarge)};actions.forEach{(label,action)->ListItem(headlineContent={Text(label)},modifier=Modifier.clickable{dismiss();action()},colors=ListItemDefaults.colors(containerColor=Color.Transparent))};Spacer(Modifier.height(16.dp))} }
+/** Compose UI 1.6 popups only handle legacy Back keys, so register with their own window on 13+. */
+@Composable internal fun PopupWindowBackHandler(onBack:()->Unit) {
+    val view=LocalView.current
+    val latestBack=rememberUpdatedState(onBack)
+    DisposableEffect(view) {
+        if(Build.VERSION.SDK_INT>=33) {
+            val callback=OnBackInvokedCallback{latestBack.value()}
+            var dispatcher:OnBackInvokedDispatcher?=null
+            fun unregister() {
+                dispatcher?.unregisterOnBackInvokedCallback(callback)
+                dispatcher=null
+            }
+            fun register() {
+                val attached=view.findOnBackInvokedDispatcher()?:return
+                if(dispatcher===attached)return
+                unregister()
+                attached.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT,callback)
+                dispatcher=attached
+            }
+            val listener=object:View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v:View)=register()
+                override fun onViewDetachedFromWindow(v:View)=unregister()
+            }
+            view.addOnAttachStateChangeListener(listener)
+            if(view.isAttachedToWindow)register()
+            onDispose{view.removeOnAttachStateChangeListener(listener);unregister()}
+        }else onDispose{}
+    }
+}
+
 private fun host(url:String):String=try{URI(url).host ?: "订阅"}catch(_:Exception){"订阅"}
 
 @Composable private fun ProfilePicker(m:MobileModel) {Column{Text("选择配置",Modifier.padding(20.dp),style=MaterialTheme.typography.titleLarge);LazyColumn{items(m.configs,key={it.optString("id")}){p->ListItem(headlineContent={Text(p.optString("name"))},supportingContent={Muted(p.optString("core"))},trailingContent={if(p.optString("id")==m.profiles.data.optString("active_config"))Icon(Icons.Outlined.Check,null)},modifier=Modifier.clickable{m.selectProfile(p.getString("id"));m.sheet=""})}}} }

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "entries": 1749,
+  "reviewedFiles": 38,
+  "checks": [
+    "Every ZIP entry matches the current workspace bytes",
+    "Every reviewed file is included",
+    "CRC check passes",
+    "README local links and preview assets exist",
+    "Signing data, caches, .tools build runtimes and user preferences are excluded",
+    "README attribution is preserved"
+  ]
+}

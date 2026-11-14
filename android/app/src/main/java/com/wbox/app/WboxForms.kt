@@ -62,7 +62,7 @@ import java.net.URI
 @Composable private fun SettingsPanel(title:String,content:@Composable ColumnScope.()->Unit) {Column(verticalArrangement=Arrangement.spacedBy(8.dp)){Text(title,Modifier.padding(start=12.dp),style=MaterialTheme.typography.labelLarge,color=MaterialTheme.colorScheme.onSurfaceVariant);Surface(shape=RoundedCornerShape(20.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(content=content)}}}
 @Composable internal fun Choice(label:String,value:String,options:List<Pair<String,String>>,changed:(String)->Unit) {
     var open by remember{mutableStateOf(false)}
-    Box{ListItem(headlineContent={Text(label)},supportingContent={Text(options.firstOrNull{it.first==value}?.second ?: value)},trailingContent={Icon(Icons.Outlined.ExpandMore,null)},modifier=Modifier.clickable{open=true},colors=ListItemDefaults.colors(containerColor=Color.Transparent));DropdownMenu(open,{open=false}){options.forEach{(key,title)->DropdownMenuItem(text={Text(title)},onClick={open=false;changed(key)},trailingIcon={if(value==key)Icon(Icons.Outlined.Check,null)})}}}
+    Box{ListItem(headlineContent={Text(label)},supportingContent={Text(options.firstOrNull{it.first==value}?.second ?: value)},trailingContent={Icon(Icons.Outlined.ExpandMore,null)},modifier=Modifier.clickable{open=true},colors=ListItemDefaults.colors(containerColor=Color.Transparent));DropdownMenu(open,{open=false}){PopupWindowBackHandler{open=false};options.forEach{(key,title)->DropdownMenuItem(text={Text(title)},onClick={open=false;changed(key)},trailingIcon={if(value==key)Icon(Icons.Outlined.Check,null)})}}}
 }
 
 @Composable internal fun Apps(m:MobileModel) {

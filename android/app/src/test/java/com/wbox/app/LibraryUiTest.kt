@@ -20,6 +20,7 @@ class LibraryUiTest {
     private val m get()=ui.activity.model
     private val content="""{"outbounds":[{"type":"direct","tag":"DIRECT"}]}"""
     @Before fun reset(){ui.runOnIdle{
+        enableNativePopupBack(ui.activity)
         WboxVpnService.running=false;WboxVpnService.starting=false;WboxVpnService.stopping=false;WboxVpnService.lastError=""
         val p=Profiles(ui.activity);p.data=JSONObject().put("mode","config").put("theme","light")
         p.importConfig(content,"https://example.org/z",null)
@@ -29,6 +30,23 @@ class LibraryUiTest {
         p.save();m.reload();m.page="library"
     }}
     @After fun clear(){WboxVpnService.running=false;WboxVpnService.starting=false;WboxVpnService.stopping=false}
+    @Test fun configurationPopupRegistersAndReleasesNativeBackCallback(){
+        val selected=m.profiles.data.optString("active_config")
+        ui.onAllNodesWithContentDescription("配置操作").onLast().performClick()
+        val registration=ui.runOnIdle{PopupBackRegistration(ui.activity)}
+        ui.onNodeWithText("预览",substring=false).performClick()
+        ui.onNodeWithText("预览",substring=false).assertDoesNotExist()
+        ui.runOnIdle{registration.assertReleased()}
+        assertEquals(selected,m.profiles.data.optString("active_config"));assertFalse(ui.activity.isFinishing)
+    }
+    @Test fun sortingPopupRegistersAndReleasesNativeBackCallback(){
+        ui.onNodeWithContentDescription("排序订阅").performClick()
+        val registration=ui.runOnIdle{PopupBackRegistration(ui.activity)}
+        ui.onNodeWithText("名称",substring=false).performClick()
+        ui.onNodeWithText("最近更新",substring=false).assertDoesNotExist()
+        ui.runOnIdle{registration.assertReleased()}
+        assertFalse(ui.activity.isFinishing)
+    }
     @Test fun configurationActionsOpenReadOnlyPreviewAndCodeEditor(){
         ui.onNodeWithContentDescription("更新订阅 · Zeta").assertExists().assertIsEnabled()
         ui.onAllNodesWithContentDescription("配置操作").onFirst().performClick()

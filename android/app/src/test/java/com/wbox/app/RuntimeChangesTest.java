@@ -33,6 +33,24 @@ public class RuntimeChangesTest {
         Connection connection=new Connection();Profiles next=profiles.copy();next.activeConfig().put("name","Renamed");next.data.put("config_sort","name");
         RuntimeChanges.commit(profiles,next.data,connection);assertEquals(0,connection.starts);assertEquals(0,connection.stops);assertEquals("Renamed",new Profiles(folder).activeConfig().getString("name"));
     }
+    private void nodeWorkspace()throws Exception{
+        profiles.setWorkspace("nodes");profiles.importNodes(ProfilesTest.SS+"\n"+ProfilesTest.SS.replace("#Test","#Next"),null);profiles.data.put("selected","Test");profiles.save();
+    }
+    @Test public void offlineNodeSelectionIsSavedWithoutStarting()throws Exception{
+        nodeWorkspace();Connection connection=new Connection();connection.active=false;
+        Profiles next=profiles.copy();next.data.put("selected","Next");RuntimeChanges.commit(profiles,next.data,connection);
+        assertEquals("Next",new Profiles(folder).data.getString("selected"));assertEquals(0,connection.starts);assertEquals(0,connection.stops);assertFalse(connection.active);
+    }
+    @Test public void connectedNodeSelectionSwitchesTheRunningTarget()throws Exception{
+        nodeWorkspace();Connection connection=new Connection();
+        Profiles next=profiles.copy();next.data.put("selected","Next");RuntimeChanges.commit(profiles,next.data,connection);
+        assertEquals("Next",new Profiles(folder).data.getString("selected"));assertEquals(1,connection.starts);assertEquals(1,connection.stops);assertTrue(connection.active);
+    }
+    @Test public void selectingCurrentNodeKeepsTheRunningConnection()throws Exception{
+        nodeWorkspace();Connection connection=new Connection();
+        Profiles next=profiles.copy();next.data.put("selected","Test");RuntimeChanges.commit(profiles,next.data,connection);
+        assertEquals("Test",new Profiles(folder).data.getString("selected"));assertEquals(0,connection.starts);assertEquals(0,connection.stops);assertTrue(connection.active);
+    }
     @Test public void appRoutingAppliesImmediatelyAndOrderingIsEquivalent()throws Exception{
         Connection connection=new Connection();Profiles next=profiles.copy();next.data.put("app_mode","exclude").put("apps",new JSONArray().put("b.app").put("a.app"));
         RuntimeChanges.commit(profiles,next.data,connection);assertEquals(1,connection.starts);

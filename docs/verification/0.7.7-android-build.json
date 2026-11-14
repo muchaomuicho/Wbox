@@ -1,0 +1,25 @@
+{
+  "tests": 153,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 4,
+  "suites": 29,
+  "lint": {
+    "Error": 0,
+    "Warning": 12
+  },
+  "menuBackVerification": {
+    "unit": "Popup-specific app callback registration, registration after reopening, and unregistration on dismissal. Robolectric manifest metadata is initialized to match enableOnBackInvokedCallback=true.",
+    "device": "Android 15 emulator: native Back key and both left/right edge Back gestures passed.",
+    "deviceScript": "tools/android-nodes-077.py",
+    "limitation": "System Back dismissal is verified on the emulator, not by Robolectric multi-window callback dispatch."
+  },
+  "retry": {
+    "initialFailure": "BundledRulesTest.latencyProbeSkipsRulesWithoutChangingTheNormalTemplate assertions passed, but its After cleanup raised DirectoryNotEmptyException for the temporary bundled-cache directory on Windows.",
+    "isolatedRecheck": {
+      "tests": 4,
+      "failures": 0
+    },
+    "finalFullRun": "All tests completed with zero failures/errors; release, lint and signed APK build succeeded without production changes for the transient cleanup failure."
+  }
+}

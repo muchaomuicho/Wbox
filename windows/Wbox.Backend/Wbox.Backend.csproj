@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>Wbox.Backend</AssemblyName><Version>0.7.6</Version></PropertyGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0-windows</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>Wbox.Backend</AssemblyName><Version>0.7.7</Version></PropertyGroup>
   <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''"><PublishTrimmed>true</PublishTrimmed><TrimMode>partial</TrimMode><JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault></PropertyGroup>
   <ItemGroup><TrimmerRootAssembly Include="Wbox.Backend" /><TrimmerRootAssembly Include="YamlDotNet" /></ItemGroup>
   <ItemGroup>

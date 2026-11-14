@@ -91,6 +91,7 @@ import org.json.JSONObject
     Box {
         IconButton(onClick={open=true}) { Icon(Icons.Outlined.AddCircleOutline,if(m.workspace=="config")"添加配置" else "添加节点或订阅",tint=MaterialTheme.colorScheme.primary) }
         DropdownMenu(expanded=open,onDismissRequest={open=false}) {
+            PopupWindowBackHandler{open=false}
             DropdownMenuItem(text={Text("从链接或文本导入")},leadingIcon={Icon(Icons.Outlined.Link,null)},onClick={open=false;edit(Editor("import"))})
             DropdownMenuItem(text={Text("从文件导入")},leadingIcon={Icon(Icons.Outlined.FileOpen,null)},onClick={open=false;m.activity.pickFile()})
             DropdownMenuItem(text={Text("从剪贴板导入")},leadingIcon={Icon(Icons.Outlined.ContentPaste,null)},onClick={open=false;m.paste()})

@@ -54,18 +54,48 @@ function NodeRow({node,current,selected,select,activate,edit,run}: {node:Node;cu
     <button role="menuitem" className="menu-item" onClick={()=>void run('cloneNode',{index:node.index})}><Icon name="content_copy" />克隆为手动节点</button>
     <button role="menuitem" className="menu-item" onClick={()=>void run('removeNode',{index:node.index})}><Icon name="delete" />移除节点</button>
   </>);
-  return <><tr title={node.name} {...menu.triggerProps} onContextMenu={e=>{select();e.currentTarget.focus();menu.triggerProps.onContextMenu(e);}} className={selected?'selected':''} tabIndex={0} aria-selected={selected} onClick={select} onDoubleClick={activate} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();activate();}if(e.ctrlKey&&e.key.toLowerCase()==='d'){e.preventDefault();edit();}}}>
+  return <><tr title={node.name} {...menu.triggerProps} onContextMenu={e=>{e.currentTarget.focus({preventScroll:true});menu.triggerProps.onContextMenu(e);}} className={selected?'selected':''} tabIndex={0} aria-selected={selected} onClick={select} onDoubleClick={activate} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();activate();}if(e.ctrlKey&&e.key.toLowerCase()==='d'){e.preventDefault();edit();}}}>
     <td className="wbox-node-current">{current&&<Icon name="check" />}</td><td title={node.name}>{node.name}</td><td>{node.protocol.toUpperCase()}</td><td title={node.server}>{node.server}</td><td>{node.port}</td><td><NodeDelay tag={node.name} index={node.index} value={node.delayText}/></td>
   </tr>{menu.element}</>;
+}
+
+type Configuration = WboxState['configs'][number];
+function ConfigurationCard({profile,current,dragProps,updating,onUpdate,onEdit,onPreview,onMore,onRemove}: {
+  profile:Configuration;current:boolean;dragProps:ReturnType<ReturnType<typeof useLibraryDrag>['cardProps']>;updating:boolean;
+  onUpdate:()=>void;onEdit:(anchor:HTMLElement|null)=>void;onPreview:(anchor:HTMLElement|null)=>void;onMore:()=>void;onRemove:()=>void;
+}) {
+  const card=useRef<HTMLElement>(null);
+  const actionAnchor=()=>document.activeElement?.closest('.menu-anchor')?.querySelector('button')??card.current;
+  const actions=<>
+    <MenuItem icon="edit" onSelect={()=>onEdit(actionAnchor())}>编辑配置</MenuItem>
+    <MenuItem icon="text_snippet" onSelect={()=>onPreview(actionAnchor())}>预览</MenuItem>
+    <MenuItem icon="settings" onSelect={onMore}>更多</MenuItem>
+    <MenuItem icon="save" onSelect={()=>void window.wbox.exportFile(profile.id).catch(showError)}>导出配置</MenuItem>
+    <MenuItem icon="delete" danger onSelect={onRemove}>删除</MenuItem>
+  </>;
+  const context=useContextMenu(actions);
+  return <><section ref={card} tabIndex={-1} className={`wbox-library-card wbox-config-card ${current?'current':''}`} {...dragProps}
+    onContextMenu={event=>{event.currentTarget.focus({preventScroll:true});context.triggerProps.onContextMenu(event);}}>
+    <div className="wbox-library-title">
+      <button className="wbox-row-main" onClick={()=>void call('selectProfile',{id:profile.id}).catch(showError)}><Icon name={current?'check':'folder'}/><strong>{profile.name}</strong></button>
+      <div className="wbox-library-actions">
+        {profile.url&&<SubscriptionUpdateButton label={`更新订阅 · ${profile.name}`} updating={updating} onUpdate={onUpdate}/>}
+        <OthersMenu title={`配置操作 · ${profile.name}`}>{actions}</OthersMenu>
+      </div>
+    </div>
+    {profile.url&&<SubscriptionTraffic usage={profile.subscription?.usage}/>}
+    <small className="wbox-library-meta">{profile.core} · {profile.url?'远程配置':'本地配置'} · <SubscriptionUpdatedTime updated={profile.updated}/></small>
+    {profile.subscription?.error&&<p className="wbox-error">{profile.subscription.error}</p>}
+  </section>{context.element}</>;
 }
 
 export function WorkspaceView() {
   const s=useWboxState();
   const configDrag=useLibraryDrag('config'),subscriptionDrag=useLibraryDrag('subscription');
   const updates=useSubscriptionUpdates(s);
-  const [importing,setImporting]=useState(false),[filter,setFilter]=useState(''),[source,setSource]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState(-1);
+  const [importing,setImporting]=useState(false),[filter,setFilter]=useState(''),[source,setSource]=useState(''),[busy,setBusy]=useState(false);
   const [preview,setPreview]=useState<{name:string;content:string}|null>(null);
-  const configDialogAnchor=useRef<HTMLButtonElement|null>(null);
+  const configDialogAnchor=useRef<HTMLElement|null>(null);
   const [editing,setEditing]=useState<{id:string;name:string;content:string}|null>(null);
   const [renaming,setRenaming]=useState<{id:string;name:string}|null>(null),[renameError,setRenameError]=useState('');
   const [nodeEditor,setNodeEditor]=useState<{index:number;initial:any}|null>(null);
@@ -78,10 +108,9 @@ export function WorkspaceView() {
   const sorting=<OthersMenu title={config?'配置排序':'订阅排序'} icon="filter_list">{[['default','手动顺序'],['name','按名称'],['updated','最近更新']].map(([value,label])=><MenuItem key={value} checked={order===value} onSelect={()=>void call('sortLibrary',{order:value}).catch(showError)}>{label}</MenuItem>)}</OthersMenu>;
   const updateAll=<SubscriptionUpdateButton label="全部更新" updating={updates.anyUpdating}
     disabled={!s.subscriptions.length&&!s.configs.some(c=>c.url)} onUpdate={()=>void updates.run('all','refreshSubscriptions')}/>;
-  const rememberConfigAction=()=>{configDialogAnchor.current=document.activeElement?.closest('.menu-anchor')?.querySelector('button')??null;};
   const closeConfigDialog=()=>{setPreview(null);setEditing(null);requestAnimationFrame(()=>configDialogAnchor.current?.focus({preventScroll:true}));};
-  const editProfile=(c:WboxState['configs'][number])=>{rememberConfigAction();void call('readProfile',{id:c.id}).then(content=>setEditing({id:c.id,name:c.name,content})).catch(showError);};
-  const previewProfile=(c:WboxState['configs'][number])=>{rememberConfigAction();void call('readProfile',{id:c.id}).then(content=>setPreview({name:c.name,content})).catch(showError);};
+  const editProfile=(c:Configuration,anchor:HTMLElement|null)=>{configDialogAnchor.current=anchor;void call('readProfile',{id:c.id}).then(content=>setEditing({id:c.id,name:c.name,content})).catch(showError);};
+  const previewProfile=(c:Configuration,anchor:HTMLElement|null)=>{configDialogAnchor.current=anchor;void call('readProfile',{id:c.id}).then(content=>setPreview({name:c.name,content})).catch(showError);};
 
   const nodes=s.nodes.filter(n=>(!source||source==='manual'&&!n.sourceSubscription||source===n.sourceSubscription)&&`${n.name} ${n.server} ${n.protocol}`.toLowerCase().includes(filter.toLowerCase()));
   const editNode=(index:number)=>{void call('readNode',{index}).then(initial=>setNodeEditor({index,initial})).catch(showError);};
@@ -90,29 +119,17 @@ export function WorkspaceView() {
     {config?<>
       <div className="wbox-library-heading"><span>{configs.length} 份配置</span><Button onClick={()=>setImporting(true)}><Icon name="add"/>添加配置</Button></div>
       {!configs.length&&<EmptyState icon="folder">添加远程配置地址，或导入本地 JSON / YAML。</EmptyState>}
-      <div className="wbox-library-grid" {...configDrag.gridProps}>{configs.map(c=><section className={`wbox-library-card ${s.configPath===c.path?'current':''}`} key={c.id} {...configDrag.cardProps(c.id)}>
-        <div className="wbox-library-title"><button className="wbox-row-main" onClick={()=>void call('selectProfile',{id:c.id}).catch(showError)}><Icon name={s.configPath===c.path?'check':'folder'}/><strong>{c.name}</strong></button>
-          <div className="wbox-library-actions">
-          {c.url&&<SubscriptionUpdateButton label={`更新订阅 · ${c.name}`} updating={updates.updating(configUpdateKey(c.id))} onUpdate={()=>void updates.run(configUpdateKey(c.id),'updateProfile',{id:c.id})}/>}
-          <OthersMenu title={`配置操作 · ${c.name}`}>
-            <MenuItem icon="edit" onSelect={()=>editProfile(c)}>编辑配置</MenuItem>
-            <MenuItem icon="text_snippet" onSelect={()=>previewProfile(c)}>预览</MenuItem>
-            <MenuItem icon="settings" onSelect={()=>{if(c.url)setSubscriptionEditor({id:c.id,name:c.name,url:c.url,options:c.subscription});else{setRenaming({id:c.id,name:c.name});setRenameError('');}}}>更多</MenuItem>
-            <MenuItem icon="save" onSelect={()=>void window.wbox.exportFile(c.id).catch(showError)}>导出配置</MenuItem>
-            <MenuItem icon="delete" danger onSelect={()=>void run('removeProfile',{id:c.id})}>删除</MenuItem>
-          </OthersMenu>
-          </div>
-        </div>
-        {c.url&&<SubscriptionTraffic usage={c.subscription?.usage}/>}
-        <small className="wbox-library-meta">{c.core} · {c.url?'远程配置':'本地配置'} · <SubscriptionUpdatedTime updated={c.updated}/></small>
-        {c.subscription?.error&&<p className="wbox-error">{c.subscription.error}</p>}
-      </section>)}</div>
+      <div className="wbox-library-grid wbox-config-grid" {...configDrag.gridProps}>{configs.map(c=><ConfigurationCard key={c.id} profile={c} current={s.configPath===c.path} dragProps={configDrag.cardProps(c.id)}
+        updating={updates.updating(configUpdateKey(c.id))} onUpdate={()=>void updates.run(configUpdateKey(c.id),'updateProfile',{id:c.id})}
+        onEdit={anchor=>editProfile(c,anchor)} onPreview={anchor=>previewProfile(c,anchor)}
+        onMore={()=>{if(c.url)setSubscriptionEditor({id:c.id,name:c.name,url:c.url,options:c.subscription});else{setRenaming({id:c.id,name:c.name});setRenameError('');}}}
+        onRemove={()=>void run('removeProfile',{id:c.id})}/>)}</div>
     </>:<>
 
       <Card title="节点" icon="language" actions={<><Badge>{s.nodes.length}</Badge><IconButton title="添加节点" onClick={()=>setImporting(true)}><Icon name="add" /></IconButton><IconButton title={s.delayTesting?'取消测速':'测试全部节点'} disabled={!s.nodes.length} onClick={()=>void run(s.delayTesting?'cancelTest':'delayNodes')}>{s.delayTesting?<Spinner />:<Icon name="speed" />}</IconButton></>}>
         <div className="wbox-controls"><input className="input" aria-label="搜索节点" placeholder="搜索名称、地址或协议" value={filter} onChange={e=>setFilter(e.target.value)} /><Select value={source} options={[{value:'',label:'全部节点'},{value:'manual',label:'手动节点'},...s.subscriptions.map(url=>({value:url,label:s.subscriptionSettings[url]?.name||new URL(url).hostname}))]} onChange={setSource} /><Select value={s.core} options={[{value:'mihomo',label:'mihomo'},{value:'sing-box',label:'sing-box'}]} onChange={core=>void run('settings',{core})} /></div>
-        <p className="wbox-hint">仅运行当前节点 · Ctrl+V 导入 · 双击或 Enter 连接此节点 · 右键编辑</p>
-        {!nodes.length?<EmptyState icon="language">没有符合条件的节点</EmptyState>:<div className="wbox-table-scroll"><table className="wbox-node-table" aria-label="节点列表"><thead><tr><th aria-label="当前节点" /><th>名称</th><th>协议</th><th>服务器</th><th>端口</th><th>延迟</th></tr></thead><tbody>{nodes.slice(0,500).map(n=><NodeRow key={n.index} node={n} current={s.selectedNode===n.index} selected={selected===n.index} select={()=>setSelected(n.index)} activate={()=>void activateNode(n.index)} edit={()=>editNode(n.index)} run={run} />)}</tbody></table></div>}
+        <p className="wbox-hint">单击选择，已连接时自动切换 · 双击或 Enter 连接 · 右键编辑 · Ctrl+V 导入</p>
+        {!nodes.length?<EmptyState icon="language">没有符合条件的节点</EmptyState>:<div className="wbox-table-scroll"><table className="wbox-node-table" aria-label="节点列表"><thead><tr><th aria-label="当前节点" /><th>名称</th><th>协议</th><th>服务器</th><th>端口</th><th>延迟</th></tr></thead><tbody>{nodes.slice(0,500).map(n=><NodeRow key={n.index} node={n} current={s.selectedNode===n.index} selected={s.selectedNode===n.index} select={()=>void call('selectNode',{index:n.index}).catch(showError)} activate={()=>void activateNode(n.index)} edit={()=>editNode(n.index)} run={run} />)}</tbody></table></div>}
         {nodes.length>500&&<p className="wbox-hint">显示前 500 个节点，请搜索或筛选订阅。</p>}
       </Card>
       {!!subscriptions.length&&<>
