@@ -26,23 +26,30 @@ final class NodeLatencyTester {
                 JSONObject groups=api.proxies();snapshot.accept(groups);
                 Set<String> targets=targets(groups,names,expandGroup);
                 for(String target:targets)api.requireUnambiguous(target);
-                for(String target:targets)pending.add(workers.submit(()->{
-                    if(Thread.currentThread().isInterrupted())return;
-                    result.accept(target,"测试中");String value;
-                    try{value=api.delay(target,url)+" ms";}catch(Exception e){value="Timeout";}
-                    if(!Thread.currentThread().isInterrupted())result.accept(target,value);
-                }));
+                pending.addAll(submitTargets(workers,targets,result,target->api.delay(target,url)+" ms"));
             } else {
-                for(String name:names)pending.add(workers.submit(()->{
-                    if(Thread.currentThread().isInterrupted())return;
-                    result.accept(name,"测试中");String value;
-                    try{Profiles single=source.copy();single.data.put("selected",name);try(LatencySession probe=new LatencySession(context,single)){value=probe.api.delay(BundledRules.nodeTag(name),url)+" ms";}}
-                    catch(InterruptedException e){Thread.currentThread().interrupt();return;}catch(Exception e){value="Timeout";}
-                    if(!Thread.currentThread().isInterrupted())result.accept(name,value);
+                pending.addAll(submitTargets(workers,names,result,name->{
+                    Profiles single=source.copy();single.data.put("selected",name);
+                    try(LatencySession probe=new LatencySession(context,single)){return probe.api.delay(BundledRules.nodeTag(name),url)+" ms";}
                 }));
             }
             for(Future<?> task:pending)task.get();
         } finally {workers.shutdownNow();try{workers.awaitTermination(9,TimeUnit.SECONDS);}finally{if(session!=null)session.close();}}
+    }
+    @FunctionalInterface interface Probe {String test(String name)throws Exception;}
+    static List<Future<?>> submitTargets(ExecutorService workers,Collection<String> targets,BiConsumer<String,String> result,Probe probe) {
+        // Pending covers the whole batch, including targets still waiting for a worker.
+        for(String target:targets)result.accept(target,"测试中");
+        List<Future<?>> pending=new ArrayList<>();
+        for(String target:targets)pending.add(workers.submit(()->{
+            if(Thread.currentThread().isInterrupted())return;
+            String value;
+            try{value=probe.test(target);}
+            catch(InterruptedException e){Thread.currentThread().interrupt();return;}
+            catch(Exception e){value="Timeout";}
+            if(!Thread.currentThread().isInterrupted())result.accept(target,value);
+        }));
+        return pending;
     }
     static Set<String> targets(JSONObject groups,List<String> names,boolean expandGroup)throws Exception {
         LinkedHashSet<String> targets=new LinkedHashSet<>();

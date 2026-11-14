@@ -9,6 +9,14 @@ internal sealed class LatencySnapshot
     public IReadOnlyDictionary<string,byte[]> Resources { get; }
     public string Context { get; }
     public List<GroupItem>? Catalog { get; }
+    readonly object pendingLock = new();
+    HashSet<string> pending = [];
+    bool pendingClosed;
+
+    public void SetPending(IEnumerable<string> names) { lock(pendingLock)if(!pendingClosed)pending = new(names,StringComparer.Ordinal); }
+    public bool IsPending(string name) { lock(pendingLock)return pending.Contains(name); }
+    public void Complete(string name) { lock(pendingLock)pending.Remove(name); }
+    public void ClearPending() { lock(pendingLock){pendingClosed=true;pending.Clear();} }
 
     public LatencySnapshot(Preferences preferences, List<GroupItem>? catalog = null)
     {

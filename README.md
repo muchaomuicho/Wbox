@@ -13,7 +13,7 @@ Windows · Android ｜ mihomo · sing-box
 [![Android](https://img.shields.io/badge/Android-8.0%2B-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 
-[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.7.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
+[下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.8.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
 
 </div>
 
@@ -27,13 +27,15 @@ Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性
 <br/><br/>
 <img src="docs/previews/0.7.5-android-profiles.png" alt="Android 配置排序与日期" width="32%" />
 <img src="docs/previews/0.7.5-android-connections.png" alt="Android 连接拉起界面" width="32%" />
-<img src="docs/previews/0.7.7-android-nodes-menu.png" alt="Android 节点悬浮菜单" width="32%" />
+<img src="docs/previews/0.7.8-android-nodes-menu.png" alt="Android 节点悬浮菜单" width="32%" />
 <br/><sub>Android：配置长按排序，节点单击选定，三点菜单就近展开。</sub>
 </div>
 
-## 0.7.7：节点选择与菜单交互
+## 0.7.8：精简菜单与批量测速反馈
 
-两端节点工作区单击即可选定并保存：未连接时只选择，已连接时自动切换。Android 不再要求双击，三点与长按打开按钮旁的悬浮菜单。Windows 配置卡片支持直接右键，菜单在光标旁展开并避让窗口边缘；卡片收紧留白，保留原有字号。代理页的延迟数字移到节点卡片右下，与左下的协议文字对齐。
+两端节点菜单只保留编辑、克隆与移除，移除操作统一标红。批量测速开始后，本次参与测试的所有节点立即转圈，包括仍在排队的节点；收到结果后逐个显示新延迟，未参与测试的节点保持原样。节点工作区和配置工作区的代理组采用同样的反馈。
+
+节点单击即可选定并保存：未连接时只选择，已连接时自动切换。Android 三点与长按打开按钮旁的悬浮菜单，支持系统返回。Windows 配置卡片支持直接右键和拖动排序；卡片保持紧凑留白与可读字号，代理页延迟数字与左下协议文字对齐。
 
 Windows 圆润手形光标缩小到接近原生默认手形的可见尺寸，点击热点随图形同步调整。Android 连接、分应用代理等拉起面板去除内容边缘拉伸，快速滚回顶部后不再推动整个面板回弹，直接快拖标题或拉手也停在允许的边界内；保留正常惯性滚动和手指拖动关闭。
 
@@ -56,10 +58,10 @@ Android 连接、分应用代理等底部面板补齐随窗口挂载的系统返
 
 在 [GitHub Releases](https://github.com/muchaomuicho/Wbox/releases/latest) 下载：
 
-- `Wbox-0.7.7-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
-- `Wbox-0.7.7-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
-- `Wbox-0.7.7-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
-- `SHA256SUMS-0.7.7.txt`：发布文件 SHA256 校验值。
+- `Wbox-0.7.8-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
+- `Wbox-0.7.8-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
+- `Wbox-0.7.8-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
+- `SHA256SUMS-0.7.8.txt`：发布文件 SHA256 校验值。
 
 Windows 关闭窗口后保留托盘，左键恢复主界面，右键打开菜单；支持开机自启、静默启动与自动连接。托盘可切换运行策略组、配置、测速及关闭连接。Android 首次连接授权系统 VPN，支持全部应用、只代理所选应用或绕过所选应用，IPv6 默认开启。
 
@@ -83,7 +85,7 @@ Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，�
 
 ## 验证与历史归档
 
-本轮检查双端节点单击选择、离线持久化、在线切换、测速并发和菜单交互，以及 Windows 配置卡片布局与延迟位置。Android 使用隔离 API35 模拟器，发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.7-` 开头；排序、日期、系统返回及边界滚动的历史检查仍保留。
+本轮检查双端精简后的节点菜单，以及节点与配置代理组的批量测速待测状态、逐项完成和取消清理。Android 使用隔离 API35 模拟器，发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.8-` 开头；节点选择、排序、日期、系统返回及边界滚动的历史检查仍保留。
 
 Android 返回验证要求启用系统边缘手势监听，使用真实左右边缘滑动，并分别检查键盘优先收起与关闭面板；模拟器结果仍不能代替所有厂商手机的实际行为。
 

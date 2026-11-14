@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "executable": "D:\\LL\\Wbox\\windows\\Wbox.Backend\\bin\\Release\\net8.0-windows\\Wbox.Backend.exe",
+  "checks": [
+    "mihomo completed measurements have no pending flags",
+    "mihomo group request marks all old results pending immediately",
+    "mihomo one result replaces its pending state while the other still waits",
+    "mihomo group completion clears all pending flags",
+    "mihomo single-node testing leaves the other cached result visible",
+    "mihomo single-node result clears its flag",
+    "mihomo explicit cancellation immediately clears every pending flag",
+    "mihomo cancellation retains earlier completed measurements",
+    "mihomo cancellation during core startup clears prepublished targets",
+    "mihomo a canceled startup cannot republish pending targets later",
+    "mihomo switching profiles isolates pending and cached results without canceling the snapshot",
+    "mihomo returning to the tested profile restores its own pending targets",
+    "mihomo choosing another node keeps the same pending batch",
+    "mihomo completed results preserve the new selection",
+    "mihomo pending tests do not restart the main connection",
+    "mihomo completed tests keep the same main connection",
+    "mihomo failed retries initially replace the old number with pending",
+    "mihomo a failed target clears pending and publishes its failure",
+    "mihomo cached provider leaves become pending before the new catalog loads",
+    "mihomo actual provider catalog adds newly discovered targets to pending",
+    "mihomo discovered provider targets finish without stale pending flags",
+    "sing-box completed measurements have no pending flags",
+    "sing-box group request marks all old results pending immediately",
+    "sing-box one result replaces its pending state while the other still waits",
+    "sing-box group completion clears all pending flags",
+    "sing-box single-node testing leaves the other cached result visible",
+    "sing-box single-node result clears its flag",
+    "sing-box explicit cancellation immediately clears every pending flag",
+    "sing-box cancellation retains earlier completed measurements",
+    "sing-box cancellation during core startup clears prepublished targets",
+    "sing-box a canceled startup cannot republish pending targets later",
+    "sing-box switching profiles isolates pending and cached results without canceling the snapshot",
+    "sing-box returning to the tested profile restores its own pending targets",
+    "sing-box choosing another node keeps the same pending batch",
+    "sing-box completed results preserve the new selection",
+    "sing-box pending tests do not restart the main connection",
+    "sing-box completed tests keep the same main connection",
+    "sing-box failed retries initially replace the old number with pending",
+    "sing-box a failed target clears pending and publishes its failure",
+    "Node workspace immediately marks all queued old results as testing",
+    "Node cancellation leaves no stale testing text",
+    "No backend protocol or stderr errors"
+  ],
+  "observations": {
+    "mihomo immediate_hits": [
+      0,
+      0
+    ],
+    "sing-box immediate_hits": [
+      0,
+      0
+    ]
+  },
+  "errors": [],
+  "failure": null,
+  "durationSeconds": 17.686,
+  "syntheticDataRemoved": true
+}

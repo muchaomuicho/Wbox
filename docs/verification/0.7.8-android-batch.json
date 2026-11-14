@@ -1,0 +1,159 @@
+{
+  "passed": true,
+  "checks": [
+    "setup Only the isolated emulator is targeted",
+    "setup Debug APK installs successfully",
+    "setup Version 0.7.8 is installed",
+    "mihomo nodes Menu contains exactly the three retained actions",
+    "mihomo nodes Menu does not alter the current node",
+    "mihomo nodes Native Back closes the compact menu",
+    "mihomo nodes All targets have old numeric delays before retesting",
+    "mihomo nodes Every batch target clears its old number while queued or running",
+    "mihomo nodes A completed target shows a new result while remaining targets stay pending",
+    "mihomo nodes Every target reaches a terminal result",
+    "mihomo nodes Cancel clears pending indicators without restoring stale delays",
+    "mihomo config All targets have old numeric delays before retesting",
+    "mihomo config Every batch target clears its old number while queued or running",
+    "mihomo config A completed target shows a new result while remaining targets stay pending",
+    "mihomo config Every target reaches a terminal result",
+    "mihomo config The other group is not included in the batch",
+    "mihomo config Cancel clears pending indicators without restoring stale delays",
+    "sing-box config All targets have old numeric delays before retesting",
+    "sing-box config Every batch target clears its old number while queued or running",
+    "sing-box config A completed target shows a new result while remaining targets stay pending",
+    "sing-box config Every target reaches a terminal result",
+    "sing-box config The other group is not included in the batch",
+    "sing-box config Cancel clears pending indicators without restoring stale delays"
+  ],
+  "observations": {
+    "apk_sha256": "fac7c76f7d5e260a84d9aa7cc194033d049ca8abb0cf04bbbe7efa7e5d31426d",
+    "fixture": "Local synthetic gated proxies via 10.0.2.2; no public requests, VPN start, or system trust changes.",
+    "mihomo nodes All targets have old numeric delays before retesting": {
+      "N0": "1019 ms",
+      "N1": "548 ms",
+      "N2": "682 ms"
+    },
+    "mihomo nodes Every batch target clears its old number while queued or running": {
+      "N0": null,
+      "N1": null,
+      "N2": null
+    },
+    "mihomo nodes A completed target shows a new result while remaining targets stay pending": {
+      "N0": "3596 ms",
+      "N1": null,
+      "N2": null
+    },
+    "mihomo nodes Every target reaches a terminal result": {
+      "N0": "3596 ms",
+      "N1": "2897 ms",
+      "N2": "665 ms"
+    },
+    "mihomo nodes Cancel clears pending indicators without restoring stale delays": {
+      "N0": null,
+      "N1": null,
+      "N2": null
+    },
+    "mihomo config All targets have old numeric delays before retesting": {
+      "N0": "553 ms",
+      "N1": "562 ms",
+      "N2": "551 ms",
+      "N3": "589 ms",
+      "N4": "999 ms"
+    },
+    "mihomo config Every batch target clears its old number while queued or running": {
+      "N0": null,
+      "N1": null,
+      "N2": null,
+      "N3": null,
+      "N4": null
+    },
+    "mihomo config A completed target shows a new result while remaining targets stay pending": {
+      "N0": "3458 ms",
+      "N1": null,
+      "N2": null,
+      "N3": null,
+      "N4": null
+    },
+    "mihomo config Every target reaches a terminal result": {
+      "N0": "3458 ms",
+      "N1": "Timeout",
+      "N2": "Timeout",
+      "N3": "Timeout",
+      "N4": "3187 ms"
+    },
+    "mihomo config The other group is not included in the batch": {
+      "N5": null
+    },
+    "mihomo config Cancel clears pending indicators without restoring stale delays": {
+      "N0": null,
+      "N1": null,
+      "N2": null,
+      "N3": null,
+      "N4": null
+    },
+    "sing-box config All targets have old numeric delays before retesting": {
+      "N0": "1032 ms",
+      "N1": "1063 ms",
+      "N2": "991 ms",
+      "N3": "1030 ms",
+      "N4": "78 ms"
+    },
+    "sing-box config Every batch target clears its old number while queued or running": {
+      "N0": null,
+      "N1": null,
+      "N2": null,
+      "N3": null,
+      "N4": null
+    },
+    "sing-box config A completed target shows a new result while remaining targets stay pending": {
+      "N0": "3701 ms",
+      "N1": "Timeout",
+      "N2": "Timeout",
+      "N3": "Timeout",
+      "N4": null
+    },
+    "sing-box config Every target reaches a terminal result": {
+      "N0": "3701 ms",
+      "N1": "Timeout",
+      "N2": "Timeout",
+      "N3": "Timeout",
+      "N4": "2969 ms"
+    },
+    "sing-box config The other group is not included in the batch": {
+      "N5": null
+    },
+    "sing-box config Cancel clears pending indicators without restoring stale delays": {
+      "N0": null,
+      "N1": null,
+      "N2": null,
+      "N3": null,
+      "N4": null
+    },
+    "runtime_unchanged": true,
+    "emulator_closed": true,
+    "temporary_host_files_removed": true,
+    "proxy_hits": [
+      9,
+      8,
+      8,
+      6,
+      4,
+      0
+    ],
+    "duration_seconds": 203.5
+  },
+  "screenshots": [
+    "docs/previews/0.7.8-android-nodes-menu.png",
+    "docs/previews/0.7.8-android-batch-mihomo-nodes-pending.png",
+    "docs/previews/0.7.8-android-batch-mihomo-nodes-partial.png",
+    "docs/previews/0.7.8-android-batch-mihomo-nodes-cancelled.png",
+    "docs/previews/0.7.8-android-batch-mihomo-config-pending.png",
+    "docs/previews/0.7.8-android-batch-mihomo-config-partial.png",
+    "docs/previews/0.7.8-android-batch-mihomo-config-cancelled.png",
+    "docs/previews/0.7.8-android-batch-sing-box-config-pending.png",
+    "docs/previews/0.7.8-android-batch-sing-box-config-partial.png",
+    "docs/previews/0.7.8-android-batch-sing-box-config-cancelled.png"
+  ],
+  "failure": null,
+  "preferences_restored": true
+}

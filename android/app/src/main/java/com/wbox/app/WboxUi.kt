@@ -247,9 +247,6 @@ internal fun uptime(seconds:Long):String = if(seconds>=3600)"%d:%02d:%02d".forma
                                     DropdownMenu(expanded=menu,onDismissRequest={menu=false},modifier=Modifier.widthIn(min=208.dp,max=280.dp).testTag("node-actions-${node.name}")){
                                         PopupWindowBackHandler{menu=false}
                                         val actions=listOf(
-                                            LibraryAction("连接此节点",Icons.Outlined.PlayArrow){m.selectNode(node.name,connect=true)},
-                                            LibraryAction("设为当前节点",Icons.Outlined.CheckCircle){m.selectedRow=node.name;m.selectNode(node.name)},
-                                            LibraryAction("测试延迟",Icons.Outlined.Speed){m.latency(listOf(node.name),expandGroup=false)},
                                             LibraryAction("编辑节点",Icons.Outlined.Edit){edit(Editor("node",index=m.nodes.indexOfFirst{it.name==node.name}))},
                                             LibraryAction("克隆为手动节点",Icons.Outlined.ContentCopy){m.cloneNode(m.nodes.indexOfFirst{it.name==node.name})},
                                             LibraryAction("移除节点",Icons.Outlined.Delete,destructive=true){m.removeNode(node.name)}

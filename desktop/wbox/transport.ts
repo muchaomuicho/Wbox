@@ -17,7 +17,7 @@ function connection(c: any) {
 }
 async function unary(name: string, input: any, tray: boolean): Promise<any> {
   switch (name) {
-    case 'GetVersion': return { version: '0.7.7', apiVersion: 1 };
+    case 'GetVersion': return { version: '0.7.8', apiVersion: 1 };
     case 'GetStartedAt': return { startedAt: (await call('service')).startedAt };
     case 'GetDefaultLogLevel': return { level: 4 };
     case 'GetDeprecatedWarnings': return { warnings: [] };
@@ -41,6 +41,14 @@ async function unary(name: string, input: any, tray: boolean): Promise<any> {
 async function* stream(name: string, signal: AbortSignal | undefined, tray: boolean): AsyncGenerator<any> {
   let logCursor = -1; let resetLogs = true;
   let previous = new Map<string, any>(); let firstConnections = true;
+  let groupsChanged=false,wakeGroups:(()=>void)|undefined;
+  const off=name==='SubscribeGroups'?window.wbox.onChanged(()=>{groupsChanged=true;wakeGroups?.();}):()=>{};
+  const waitForGroups=()=>new Promise<void>(resolve=>{
+    if(groupsChanged||signal?.aborted){groupsChanged=false;resolve();return;}
+    const done=()=>{clearTimeout(timer);signal?.removeEventListener('abort',done);wakeGroups=undefined;groupsChanged=false;resolve();};
+    const timer=setTimeout(done,1000);wakeGroups=done;signal?.addEventListener('abort',done,{once:true});
+  });
+  try {
   while (!signal?.aborted) {
     if (document.hidden) { await pause(500, signal); continue; }
     if(name==='SubscribeGroups'||name==='SubscribeConnections') {
@@ -50,7 +58,7 @@ async function* stream(name: string, signal: AbortSignal | undefined, tray: bool
     switch (name) {
       case 'SubscribeServiceStatus': { const s = await call('service'); yield { status: s.starting ? 1 : s.running ? 2 : 0 }; break; }
       case 'SubscribeStatus': { const s = await call('stats'); yield s ? { memory: s.coreMemory, connectionsIn: s.inbound, connectionsOut: s.outbound, trafficAvailable: true, uplink: s.uploadRate, downlink: s.downloadRate, uplinkTotal: s.uploaded, downlinkTotal: s.downloaded } : {}; break; }
-      case 'SubscribeGroups': { const groups = await call(tray?'trayGroups':'groups'); yield { group: groups.map((g: any,index:number) => ({ tag: g.name, type: g.type.toLowerCase(), selected: g.selected, selectable: g.selectable, isExpand: expanded.get(g.name) ?? index===0, items: g.details.map((n: any) => ({tag: n.name, type: n.type.toLowerCase(), urlTestDelay: n.delay ?? 0, urlTestTime: n.delay!=null?1:0})) })) }; break; }
+      case 'SubscribeGroups': { const groups = await call(tray?'trayGroups':'groups'); yield { group: groups.map((g: any,index:number) => ({ tag: g.name, type: g.type.toLowerCase(), selected: g.selected, selectable: g.selectable, isExpand: expanded.get(g.name) ?? index===0, items: g.details.map((n: any) => ({tag: n.name, type: n.type.toLowerCase(), urlTestDelay: n.delay ?? 0, urlTestTime: n.testing?-1:n.delay!=null?1:0})) })) }; break; }
       case 'SubscribeClashMode': { const s = await call('mode'); yield {mode: s?.mode || 'rule'}; break; }
       case 'SubscribeLog': { const logs = await call('logs'); if (!logs.length && logCursor >= 0) { resetLogs = true; logCursor = -1; } const fresh = logs.filter((l: any) => l.id > logCursor); if (fresh.length || resetLogs) { yield { reset: resetLogs, messages: fresh.map((l: any) => ({level: l.level, message: l.message})) }; resetLogs = false; if (fresh.length) logCursor = fresh[fresh.length-1].id; } break; }
       case 'SubscribeConnections': {
@@ -66,8 +74,10 @@ async function* stream(name: string, signal: AbortSignal | undefined, tray: bool
       case 'SubscribeOutbounds': { const groups = await call('groups'); yield { outbounds: groups.flatMap((g: any) => g.details.map((n: any) => ({ tag: n.name, type: n.type }))) }; break; }
       default: throw new ConnectError('此扩展接口不可用。', Code.Unimplemented);
     }
-    await pause(name === 'SubscribeClashMode' ? 3000 : 1000, signal);
+    if(name==='SubscribeGroups')await waitForGroups();
+    else await pause(name === 'SubscribeClashMode' ? 3000 : 1000, signal);
   }
+  } finally { off();wakeGroups?.(); }
 }
 export function createTransport(tray = false): Transport { return {
   async unary(method, signal, _timeout, _header, input) {

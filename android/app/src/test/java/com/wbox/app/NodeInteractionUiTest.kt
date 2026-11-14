@@ -78,9 +78,10 @@ class NodeInteractionUiTest {
         ui.onNodeWithTag("node-actions-Next").assertIsDisplayed()
         // Popup content has a separate coordinate origin; WindowManager owns its screen position.
         val window=popupWindow().layoutParams as WindowManager.LayoutParams
-        listOf("连接此节点","设为当前节点","测试延迟","编辑节点","克隆为手动节点","移除节点").forEach {
+        listOf("编辑节点","克隆为手动节点","移除节点").forEach {
             ui.onNodeWithText(it,substring=false).assertIsDisplayed()
         }
+        listOf("连接此节点","设为当前节点","测试延迟").forEach{ui.onNodeWithText(it,substring=false).assertDoesNotExist()}
         assertTrue("The node menu should be narrower than its card",window.width<card.width)
         assertTrue("The menu should open next to its button",window.y>=button.top&&window.y<=button.bottom+8)
         assertTrue("The menu should end next to its button",kotlin.math.abs(window.x+window.width-button.right)<=8)
@@ -93,9 +94,10 @@ class NodeInteractionUiTest {
         repeat(2) {
             ui.onNodeWithTag("node-menu-Test").performClick()
             val registration=ui.runOnIdle{PopupBackRegistration(ui.activity)}
-            ui.onNodeWithText("设为当前节点",substring=false).performClick()
+            ui.onNodeWithText("编辑节点",substring=false).performClick()
             ui.onNodeWithTag("node-actions-Test").assertDoesNotExist()
             ui.runOnIdle{registration.assertReleased()}
+            ui.onNodeWithText("取消",substring=false).performClick()
             awaitSelection("Test")
             ui.onNodeWithTag("node-Test").assertIsSelected()
             assertFalse(ui.activity.isFinishing)
@@ -103,11 +105,12 @@ class NodeInteractionUiTest {
         }
     }
 
-    @Test fun selectActionPersistsWithoutStarting() {
+    @Test fun cloneActionClosesMenuWithoutSelectingOrStarting() {
         ui.onNodeWithTag("node-menu-Next").performClick()
-        ui.onNodeWithText("设为当前节点",substring=false).performClick()
+        ui.onNodeWithText("克隆为手动节点",substring=false).performClick()
         ui.onNodeWithTag("node-actions-Next").assertDoesNotExist()
-        awaitSelection("Next")
+        ui.waitUntil(10000){model.nodes.size==3&&!model.busy}
+        awaitSelection("Test")
         assertOffline()
     }
 
@@ -120,14 +123,12 @@ class NodeInteractionUiTest {
         assertOffline()
     }
 
-    @Test fun explicitConnectActionStillStartsTheSelectedNode() {
+    @Test fun removeActionKeepsOtherSelectionAndStaysOffline() {
         ui.onNodeWithTag("node-menu-Next").performClick()
-        ui.onNodeWithText("连接此节点",substring=false).performClick()
-        awaitSelection("Next")
-        ui.waitUntil(10000){model.connectionRequested}
-        val intent=shadowOf(ui.activity.application).nextStartedService
-        assertNotNull("The explicit connect action must start the VPN service",intent)
-        assertEquals(WboxVpnService::class.java.name,intent!!.component!!.className)
+        ui.onNodeWithText("移除节点",substring=false).performClick()
+        ui.waitUntil(10000){model.nodes.size==1&&!model.busy}
+        awaitSelection("Test")
+        assertOffline()
         ui.onNodeWithTag("node-actions-Next").assertDoesNotExist()
     }
 }

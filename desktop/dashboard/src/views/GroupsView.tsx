@@ -47,6 +47,8 @@ function GroupCard(props: { group: Group }) {
   const { t } = useI18n();
   const group = props.group;
   const [testing, setTesting] = useState(false);
+  const [startingBatch, setStartingBatch] = useState(false);
+  useEffect(()=>{if(group.items.some(item=>item.urlTestTime<0))setStartingBatch(false);},[group]);
   const state=useWboxState();
   const [expanded, setExpandOverride] = usePendingValue(group.isExpand);
   const [selected, setPendingSelection] = usePendingValue(group.selected);
@@ -58,12 +60,13 @@ function GroupCard(props: { group: Group }) {
   };
 
   const runURLTest = () => {
-    if(testing){void call("cancelTest").catch(showError);return;}
+    if(testing){void call("cancelTest").catch(showError);setStartingBatch(false);return;}
     setTesting(true);
+    setStartingBatch(true);
     api
       .urlTest(group.tag)
       .catch(showError)
-      .finally(() => setTesting(false));
+      .finally(() => {setTesting(false);setStartingBatch(false);});
   };
 
   const selectItem = (item: GroupItem) => {
@@ -104,13 +107,14 @@ function GroupCard(props: { group: Group }) {
         }
       >
         {expanded ? (
-          group.items.length>200?<LargeGroupGrid items={group.items} selected={selected} onSelect={selectItem}/>:<div className={styles.groupItems}>
+          group.items.length>200?<LargeGroupGrid items={group.items} selected={selected} onSelect={selectItem} testing={startingBatch}/>:<div className={styles.groupItems}>
             {group.items.map((item) => (
               <GroupItemCard
                 key={item.tag}
                 item={item}
                 selected={item.tag === selected}
                 onSelect={() => selectItem(item)}
+                testing={startingBatch}
               />
             ))}
           </div>
@@ -133,7 +137,7 @@ function GroupCard(props: { group: Group }) {
   );
 }
 
-function LargeGroupGrid({items,selected,onSelect}:{items:GroupItem[];selected:string;onSelect:(item:GroupItem)=>void}) {
+function LargeGroupGrid({items,selected,onSelect,testing}:{items:GroupItem[];selected:string;onSelect:(item:GroupItem)=>void;testing:boolean}) {
   const container=useRef<HTMLDivElement>(null);
   const [view,setView]=useState({columns:1,first:0,rows:12});
   useEffect(()=>{
@@ -153,12 +157,12 @@ function LargeGroupGrid({items,selected,onSelect}:{items:GroupItem[];selected:st
   const start=Math.min(items.length,first*view.columns),end=Math.min(items.length,start+view.rows*view.columns);
   return <div ref={container} className={styles.largeGrid} style={{height:Math.ceil(items.length/view.columns)*88}}>
     <div className={styles.groupItems} style={{position:'absolute',top:first*88,left:0,right:0,gridTemplateColumns:`repeat(${view.columns},minmax(0,1fr))`,gridAutoRows:78}}>
-      {items.slice(start,end).map((item,index)=><GroupItemCard key={`${item.tag}:${start+index}`} item={item} selected={item.tag===selected} onSelect={()=>onSelect(item)}/>)}
+      {items.slice(start,end).map((item,index)=><GroupItemCard key={`${item.tag}:${start+index}`} item={item} selected={item.tag===selected} onSelect={()=>onSelect(item)} testing={testing}/>)}
     </div>
   </div>;
 }
 
-function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: () => void }) {
+function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: () => void;testing:boolean }) {
   const api = useApi();
   const { t } = useI18n();
   const item = props.item;
@@ -175,7 +179,7 @@ function GroupItemCard(props: { item: GroupItem; selected: boolean; onSelect: ()
           <span className={styles.itemTag}>{item.tag}</span>
           <span className={styles.itemMeta}>{proxyDisplayType(item.type)}</span>
         </button>
-        <NodeDelay tag={item.tag} value={item.urlTestDelay>0?`${item.urlTestDelay} ms`:item.urlTestTime>0?'timeout':undefined}/>
+        <NodeDelay tag={item.tag} value={item.urlTestDelay>0?`${item.urlTestDelay} ms`:item.urlTestTime>0?'timeout':undefined} testing={props.testing||item.urlTestTime<0}/>
       </div>
       {menu.element}
     </>

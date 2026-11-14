@@ -1,0 +1,137 @@
+{
+  "passed": true,
+  "checks": [
+    "Node context menu retains edit and clone, removes connect",
+    "Remove node uses the existing red danger menu style",
+    "Opening another node menu does not select or connect it",
+    "Nodes obtains all baseline results",
+    "Nodes shows every target spinner on the first painted frame, including queued targets",
+    "Nodes replaces the old single result while unfinished targets keep spinning",
+    "Nodes publishes the first value before the batch finishes",
+    "Nodes leaves every completed target on its fresh value",
+    "Nodes preserves node selection and connection state",
+    "Nodes cancellation clears pending indicators and shows only retained results",
+    "Groups obtains all baseline results",
+    "Groups shows every target spinner on the first painted frame, including queued targets",
+    "Groups replaces the old single result while unfinished targets keep spinning",
+    "Groups publishes the first value before the batch finishes",
+    "Groups leaves every completed target on its fresh value",
+    "Groups preserves node selection and connection state",
+    "Groups cancellation clears pending indicators and shows only retained results",
+    "Switching to another profile does not display or cancel the first profile batch",
+    "Batch and profile navigation preserve the selected proxy and offline connection",
+    "No renderer errors"
+  ],
+  "errors": [],
+  "measurements": {
+    "NodesImmediate": {
+      "elapsedMs": 30.600000023841858,
+      "items": [
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        }
+      ]
+    },
+    "NodesPartial": {
+      "elapsedMs": 398,
+      "items": [
+        {
+          "text": "172 ms",
+          "spinner": false
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        }
+      ]
+    },
+    "NodesCancelMs": 84,
+    "GroupsImmediate": {
+      "elapsedMs": 35.10000002384186,
+      "items": [
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        }
+      ]
+    },
+    "GroupsPartial": {
+      "elapsedMs": 396,
+      "items": [
+        {
+          "text": "171 ms",
+          "spinner": false
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        },
+        {
+          "text": "",
+          "spinner": true
+        }
+      ]
+    },
+    "GroupsCancelMs": 53
+  },
+  "failure": null,
+  "build": "packaged",
+  "screenshots": [
+    "docs/previews/0.7.8-windows-batch.png",
+    "docs/previews/0.7.8-windows-node-menu.png"
+  ],
+  "isolatedDataRemoved": true
+}

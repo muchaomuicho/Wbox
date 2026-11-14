@@ -47,15 +47,14 @@ export function ImportDialog({config,onClose}: {config:boolean;onClose:()=>void}
 }
 
 type Node = WboxState['nodes'][number];
-function NodeRow({node,current,selected,select,activate,edit,run}: {node:Node;current:boolean;selected:boolean;select:()=>void;activate:()=>void;edit:()=>void;run:(method:string,args?:unknown)=>Promise<void>}) {
+function NodeRow({node,current,selected,select,activate,edit,run,testing}: {node:Node;current:boolean;selected:boolean;select:()=>void;activate:()=>void;edit:()=>void;run:(method:string,args?:unknown)=>Promise<void>;testing:boolean}) {
   const menu=useContextMenu(<>
-    <button role="menuitem" className="menu-item" onClick={activate}><Icon name="check" />连接此节点<kbd>Enter</kbd></button>
     <button role="menuitem" className="menu-item" onClick={edit}><Icon name="edit" />编辑节点<kbd>Ctrl+D</kbd></button>
     <button role="menuitem" className="menu-item" onClick={()=>void run('cloneNode',{index:node.index})}><Icon name="content_copy" />克隆为手动节点</button>
-    <button role="menuitem" className="menu-item" onClick={()=>void run('removeNode',{index:node.index})}><Icon name="delete" />移除节点</button>
+    <button role="menuitem" className="menu-item danger" onClick={()=>void run('removeNode',{index:node.index})}><Icon name="delete" />移除节点</button>
   </>);
   return <><tr title={node.name} {...menu.triggerProps} onContextMenu={e=>{e.currentTarget.focus({preventScroll:true});menu.triggerProps.onContextMenu(e);}} className={selected?'selected':''} tabIndex={0} aria-selected={selected} onClick={select} onDoubleClick={activate} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();activate();}if(e.ctrlKey&&e.key.toLowerCase()==='d'){e.preventDefault();edit();}}}>
-    <td className="wbox-node-current">{current&&<Icon name="check" />}</td><td title={node.name}>{node.name}</td><td>{node.protocol.toUpperCase()}</td><td title={node.server}>{node.server}</td><td>{node.port}</td><td><NodeDelay tag={node.name} index={node.index} value={node.delayText}/></td>
+    <td className="wbox-node-current">{current&&<Icon name="check" />}</td><td title={node.name}>{node.name}</td><td>{node.protocol.toUpperCase()}</td><td title={node.server}>{node.server}</td><td>{node.port}</td><td><NodeDelay tag={node.name} index={node.index} value={node.delayText} testing={testing}/></td>
   </tr>{menu.element}</>;
 }
 
@@ -94,6 +93,9 @@ export function WorkspaceView() {
   const configDrag=useLibraryDrag('config'),subscriptionDrag=useLibraryDrag('subscription');
   const updates=useSubscriptionUpdates(s);
   const [importing,setImporting]=useState(false),[filter,setFilter]=useState(''),[source,setSource]=useState(''),[busy,setBusy]=useState(false);
+  const [startingNodeBatch,setStartingNodeBatch]=useState(false);
+  useEffect(()=>{if(s?.delayTesting)setStartingNodeBatch(false);},[s?.delayTesting]);
+  useEffect(()=>setStartingNodeBatch(false),[s?.mode,s?.core]);
   const [preview,setPreview]=useState<{name:string;content:string}|null>(null);
   const configDialogAnchor=useRef<HTMLElement|null>(null);
   const [editing,setEditing]=useState<{id:string;name:string;content:string}|null>(null);
@@ -115,6 +117,12 @@ export function WorkspaceView() {
   const nodes=s.nodes.filter(n=>(!source||source==='manual'&&!n.sourceSubscription||source===n.sourceSubscription)&&`${n.name} ${n.server} ${n.protocol}`.toLowerCase().includes(filter.toLowerCase()));
   const editNode=(index:number)=>{void call('readNode',{index}).then(initial=>setNodeEditor({index,initial})).catch(showError);};
   const activateNode=async(index:number)=>{setBusy(true);try{await call('selectNode',{index});if(!(await call('state')).running)await call('start');}catch(e){showError(e);}finally{setBusy(false);}};
+  const testNodes=async()=>{
+    if(s.delayTesting||startingNodeBatch){await run('cancelTest');setStartingNodeBatch(false);return;}
+    setStartingNodeBatch(true);
+    try{await call('delayNodes');if(!(await call('state')).delayTesting)setStartingNodeBatch(false);}
+    catch(e){setStartingNodeBatch(false);showError(e);}
+  };
   return <div className="page wbox-page"><PageHeader title={config?'配置':'节点与订阅'} actions={<>{updateAll}{sorting}</>} />
     {config?<>
       <div className="wbox-library-heading"><span>{configs.length} 份配置</span><Button onClick={()=>setImporting(true)}><Icon name="add"/>添加配置</Button></div>
@@ -126,10 +134,10 @@ export function WorkspaceView() {
         onRemove={()=>void run('removeProfile',{id:c.id})}/>)}</div>
     </>:<>
 
-      <Card title="节点" icon="language" actions={<><Badge>{s.nodes.length}</Badge><IconButton title="添加节点" onClick={()=>setImporting(true)}><Icon name="add" /></IconButton><IconButton title={s.delayTesting?'取消测速':'测试全部节点'} disabled={!s.nodes.length} onClick={()=>void run(s.delayTesting?'cancelTest':'delayNodes')}>{s.delayTesting?<Spinner />:<Icon name="speed" />}</IconButton></>}>
+      <Card title="节点" icon="language" actions={<><Badge>{s.nodes.length}</Badge><IconButton title="添加节点" onClick={()=>setImporting(true)}><Icon name="add" /></IconButton><IconButton title={s.delayTesting||startingNodeBatch?'取消测速':'测试全部节点'} disabled={!s.nodes.length} onClick={()=>void testNodes()}>{s.delayTesting||startingNodeBatch?<Spinner />:<Icon name="speed" />}</IconButton></>}>
         <div className="wbox-controls"><input className="input" aria-label="搜索节点" placeholder="搜索名称、地址或协议" value={filter} onChange={e=>setFilter(e.target.value)} /><Select value={source} options={[{value:'',label:'全部节点'},{value:'manual',label:'手动节点'},...s.subscriptions.map(url=>({value:url,label:s.subscriptionSettings[url]?.name||new URL(url).hostname}))]} onChange={setSource} /><Select value={s.core} options={[{value:'mihomo',label:'mihomo'},{value:'sing-box',label:'sing-box'}]} onChange={core=>void run('settings',{core})} /></div>
         <p className="wbox-hint">单击选择，已连接时自动切换 · 双击或 Enter 连接 · 右键编辑 · Ctrl+V 导入</p>
-        {!nodes.length?<EmptyState icon="language">没有符合条件的节点</EmptyState>:<div className="wbox-table-scroll"><table className="wbox-node-table" aria-label="节点列表"><thead><tr><th aria-label="当前节点" /><th>名称</th><th>协议</th><th>服务器</th><th>端口</th><th>延迟</th></tr></thead><tbody>{nodes.slice(0,500).map(n=><NodeRow key={n.index} node={n} current={s.selectedNode===n.index} selected={s.selectedNode===n.index} select={()=>void call('selectNode',{index:n.index}).catch(showError)} activate={()=>void activateNode(n.index)} edit={()=>editNode(n.index)} run={run} />)}</tbody></table></div>}
+        {!nodes.length?<EmptyState icon="language">没有符合条件的节点</EmptyState>:<div className="wbox-table-scroll"><table className="wbox-node-table" aria-label="节点列表"><thead><tr><th aria-label="当前节点" /><th>名称</th><th>协议</th><th>服务器</th><th>端口</th><th>延迟</th></tr></thead><tbody>{nodes.slice(0,500).map(n=><NodeRow key={n.index} node={n} current={s.selectedNode===n.index} selected={s.selectedNode===n.index} select={()=>void call('selectNode',{index:n.index}).catch(showError)} activate={()=>void activateNode(n.index)} edit={()=>editNode(n.index)} run={run} testing={startingNodeBatch} />)}</tbody></table></div>}
         {nodes.length>500&&<p className="wbox-hint">显示前 500 个节点，请搜索或筛选订阅。</p>}
       </Card>
       {!!subscriptions.length&&<>

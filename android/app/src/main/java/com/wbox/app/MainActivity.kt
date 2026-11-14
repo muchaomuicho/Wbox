@@ -302,11 +302,18 @@ internal data class RuntimeState(
         latencyJob=activity.lifecycleScope.launch {
             var results:MutableMap<String,String>?=null
             var context=""
-            try {val snapshot=profiles.copy();withContext(Dispatchers.IO){LatencyResources.capture(snapshot)};latencySource=snapshot;context=LatencyContext.key(snapshot)
-                val saved=latencyResults.getOrPut(context){mutableMapOf()};results=saved
+            try {val snapshot=profiles.copy();latencySource=snapshot;context=LatencyContext.key(snapshot)
+                var saved=latencyResults.getOrPut(context){mutableMapOf()};results=saved
                 while(latencyResults.size>8)latencyResults.remove(latencyResults.keys.first())
                 val initial=if(snapshot.mode()=="config")NodeLatencyTester.targets(groups,names,expandGroup)else names
                 initial.forEach{saved[it]="测试中"};if(context==proxyContext())showLatencyResults(context)
+                withContext(Dispatchers.IO){LatencyResources.capture(snapshot)}
+                val capturedContext=LatencyContext.key(snapshot)
+                if(capturedContext!=context){
+                    saved.entries.removeAll{it.value=="测试中"};context=capturedContext
+                    saved=latencyResults.getOrPut(context){mutableMapOf()};results=saved
+                    initial.forEach{saved[it]="测试中"};if(context==proxyContext())showLatencyResults(context)
+                }
                 val updates=kotlinx.coroutines.channels.Channel<Pair<String,String>>(kotlinx.coroutines.channels.Channel.UNLIMITED)
                 val snapshots=kotlinx.coroutines.channels.Channel<JSONObject>(kotlinx.coroutines.channels.Channel.CONFLATED)
                 coroutineScope {

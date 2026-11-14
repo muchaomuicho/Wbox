@@ -10,7 +10,9 @@ public sealed record ConnectionItem(string Network, string Source, string Destin
     public string UpText => "↑ " + DisplayFormat.Bytes(UploadRate) + "/s       ↑ " + DisplayFormat.Bytes(Upload);
     public string DownText => "↓ " + DisplayFormat.Bytes(DownloadRate) + "/s       ↓ " + DisplayFormat.Bytes(Download);
 }
-public sealed record ProxyNode(string Name, string Type, int? Delay);
+public sealed record ProxyNode(string Name, string Type, int? Delay) {
+    public bool Testing { get; init; }
+}
 public sealed record GroupItem(string Name, string Selected, List<string> Nodes, bool Selectable) {
     public string Type { get; init; } = "Selector";
     public List<ProxyNode> Details { get; init; } = [];
