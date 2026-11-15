@@ -1,18 +1,19 @@
 {
   "passed": true,
-  "checkedAt": "2026-11-14T06:22:56.572Z",
+  "checkedAt": "2026-11-15T03:02:17.437Z",
   "sourceHashes": {
-    "index.html": "7584f955f1d0f4e681e963913c96557a7b846019a1054487a5cbd659c4b99cb1",
-    "styles.css": "d0cea88a9f3662a905fde489b444d6e6ab82c8e3938f409d30f88bacb8120292",
-    "app.js": "c60574e2bd446f4c50d6462f1dd88068ee8d3d3c51d5ecdff24f1a3f0f69f7d7"
+    "index.html": "a36d501262d47a970a6330f73cd03eb3baed1941c3e63602259eaaaa431772a8",
+    "styles.css": "065a86e93bb20330409d21d2deb00fc11b3012457060b610af7d32b91cac7038",
+    "app.js": "0e290eccc0a29a1aad72e16990bf0b6193a52252ae684ef9b896a5c827356d0e"
   },
   "engine": "installed Chrome headless via Playwright",
-  "localPort": 52458,
+  "localPort": 19394,
   "network": "All assets and latest/fallback release responses are local; third-party requests are blocked. Host antivirus may inject Kaspersky URLs into HTTP responses; those blocked requests are retained separately from site dependencies.",
   "checks": [
     "Windows card points to the current x64 EXE",
     "Android card points to the current ARM64 APK",
     "Checksum links point to the matching release",
+    "Source download points to the matching release archive",
     "Platform switching updates the hero Android download",
     "Switching back updates the hero Windows download",
     "Dark appearance changes page colors and selected menu state",
@@ -40,6 +41,8 @@
     "Mobile 390px Escape closes navigation",
     "Mobile 390px dark pink has no horizontal overflow or clipped controls",
     "Mobile 390px open FAQ has no horizontal overflow or clipped controls",
+    "Mobile 390px explains the Windows UI update and Android version sync",
+    "Mobile 390px Windows UI FAQ has no horizontal overflow or clipped controls",
     "Mobile 390px has readable body, action and supporting text",
     "Mobile 320px light has no horizontal overflow or clipped controls",
     "Mobile 320px exposes its navigation button",
@@ -49,6 +52,8 @@
     "Mobile 320px Escape closes navigation",
     "Mobile 320px dark pink has no horizontal overflow or clipped controls",
     "Mobile 320px open FAQ has no horizontal overflow or clipped controls",
+    "Mobile 320px explains the Windows UI update and Android version sync",
+    "Mobile 320px Windows UI FAQ has no horizontal overflow or clipped controls",
     "Mobile 320px has readable body, action and supporting text",
     "Reduced-motion preference disables smooth scrolling and active animations",
     "Reduced-motion content remains fully visible",
@@ -113,7 +118,7 @@
     {
       "text": "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
       "location": {
-        "url": "http://127.0.0.1:52458/api/release",
+        "url": "http://127.0.0.1:19394/api/release",
         "line": 0,
         "column": 0,
         "lineNumber": 0,
@@ -170,6 +175,14 @@
       "overflowElements": []
     },
     {
+      "label": "Mobile 390px Windows UI FAQ",
+      "width": 390,
+      "scrollWidth": 390,
+      "bodyScrollWidth": 390,
+      "outside": [],
+      "overflowElements": []
+    },
+    {
       "label": "Mobile 320px light",
       "width": 320,
       "scrollWidth": 320,
@@ -200,6 +213,14 @@
       "bodyScrollWidth": 320,
       "outside": [],
       "overflowElements": []
+    },
+    {
+      "label": "Mobile 320px Windows UI FAQ",
+      "width": 320,
+      "scrollWidth": 320,
+      "bodyScrollWidth": 320,
+      "outside": [],
+      "overflowElements": []
     }
   ],
   "readability": [
@@ -209,19 +230,19 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "从桌面到掌心，熟悉的界面，顺手的操作。Wbox，让 Windows 与 Android 的连接体验简单一点。",
+          "text": "Android 的圆角卡片，Windows 的桌面习惯。紧凑的布局、清楚的状态，让每一次连接更顺手。",
           "fontSize": 14
         },
         {
           "kind": "body",
           "minimum": 14,
-          "text": "集中管理完整配置与订阅。流量、到期时间和更新状态，都在一张清晰的卡片里。",
+          "text": "集中管理完整配置与订阅。流量、到期时间和更新状态，都在一张清晰的圆角卡片里。",
           "fontSize": 14
         },
         {
           "kind": "body",
           "minimum": 14,
-          "text": "拖动排出自己的顺序，打开预览查看细节。常用的配置，放在最顺手的位置。",
+          "text": "侧栏切换工作区，拖动调整顺序，右键打开常用操作。紧凑的留白，让更多信息留在眼前。",
           "fontSize": 14
         },
         {
@@ -239,7 +260,7 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "双内核与内置规则随安装包提供，减少额外准备，让注意力留给自己的配置。",
+          "text": "Windows 换上 Android 风格的卡片与层级。启动图标回到标题栏左侧，保留侧栏、右键菜单、双击与键盘操作；缩减",
           "fontSize": 14
         },
         {
@@ -251,7 +272,7 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "黑白的干净，雾蓝的安静，柔粉的温和。Wbox 的两端，都有你喜欢的那一种。",
+          "text": "Windows 以黑白灰呈现信息，雾蓝与柔粉轻轻点缀。两端都可切换浅色、深色和自己喜欢的配色。",
           "fontSize": 14
         },
         {
@@ -329,7 +350,25 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "未连接时，单击节点只保存选择，点击启动后才开始连接。已经连接时，选择另一个节点会应用切换。这样，选择和连接始终各自清楚。",
+          "text": "未连接时，单击节点只保存选择，点击启动图标后才开始连接。Windows 还可双击节点或按 Enter 直接连接。已经连接",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "0.8.0 的界面有哪些变化？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Windows 采用 Android 风格的圆角卡片和视觉层级，以黑白灰为主，雾蓝与柔粉只在按钮、图标、选中项和流量曲线",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "侧栏导航、右键菜单、双击／Enter 连接和配置拖拽继续保留。Android 此次仅同步版本号至 0.8.0，界面与功能",
           "fontSize": 14
         },
         {
@@ -473,7 +512,7 @@
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "v0.7.8 · 2026.11.14查看版本详情",
+          "text": "v0.8.0 · 2026.11.14查看版本详情",
           "fontSize": 12
         },
         {
@@ -485,7 +524,7 @@
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "v0.7.8 · EXE · 151.8 MB",
+          "text": "v0.8.0 · EXE · 151.8 MB",
           "fontSize": 12
         },
         {
@@ -497,13 +536,13 @@
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "v0.7.8 · APK · 53.7 MB",
+          "text": "v0.8.0 · APK · 53.7 MB",
           "fontSize": 12
         },
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "开放的代码，清楚的发布。SHA256 校验 历史版本 获取源码",
+          "text": "开放的代码，清楚的发布。SHA256 校验 历史版本 下载源码",
           "fontSize": 12
         },
         {
@@ -520,19 +559,19 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "从桌面到掌心，熟悉的界面，顺手的操作。Wbox，让 Windows 与 Android 的连接体验简单一点。",
+          "text": "Android 的圆角卡片，Windows 的桌面习惯。紧凑的布局、清楚的状态，让每一次连接更顺手。",
           "fontSize": 14
         },
         {
           "kind": "body",
           "minimum": 14,
-          "text": "集中管理完整配置与订阅。流量、到期时间和更新状态，都在一张清晰的卡片里。",
+          "text": "集中管理完整配置与订阅。流量、到期时间和更新状态，都在一张清晰的圆角卡片里。",
           "fontSize": 14
         },
         {
           "kind": "body",
           "minimum": 14,
-          "text": "拖动排出自己的顺序，打开预览查看细节。常用的配置，放在最顺手的位置。",
+          "text": "侧栏切换工作区，拖动调整顺序，右键打开常用操作。紧凑的留白，让更多信息留在眼前。",
           "fontSize": 14
         },
         {
@@ -550,7 +589,7 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "双内核与内置规则随安装包提供，减少额外准备，让注意力留给自己的配置。",
+          "text": "Windows 换上 Android 风格的卡片与层级。启动图标回到标题栏左侧，保留侧栏、右键菜单、双击与键盘操作；缩减",
           "fontSize": 14
         },
         {
@@ -562,7 +601,7 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "黑白的干净，雾蓝的安静，柔粉的温和。Wbox 的两端，都有你喜欢的那一种。",
+          "text": "Windows 以黑白灰呈现信息，雾蓝与柔粉轻轻点缀。两端都可切换浅色、深色和自己喜欢的配色。",
           "fontSize": 14
         },
         {
@@ -640,7 +679,25 @@
         {
           "kind": "body",
           "minimum": 14,
-          "text": "未连接时，单击节点只保存选择，点击启动后才开始连接。已经连接时，选择另一个节点会应用切换。这样，选择和连接始终各自清楚。",
+          "text": "未连接时，单击节点只保存选择，点击启动图标后才开始连接。Windows 还可双击节点或按 Enter 直接连接。已经连接",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "0.8.0 的界面有哪些变化？",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "Windows 采用 Android 风格的圆角卡片和视觉层级，以黑白灰为主，雾蓝与柔粉只在按钮、图标、选中项和流量曲线",
+          "fontSize": 14
+        },
+        {
+          "kind": "body",
+          "minimum": 14,
+          "text": "侧栏导航、右键菜单、双击／Enter 连接和配置拖拽继续保留。Android 此次仅同步版本号至 0.8.0，界面与功能",
           "fontSize": 14
         },
         {
@@ -784,7 +841,7 @@
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "v0.7.8 · 2026.11.14查看版本详情",
+          "text": "v0.8.0 · 2026.11.14查看版本详情",
           "fontSize": 12
         },
         {
@@ -796,7 +853,7 @@
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "v0.7.8 · EXE · 151.8 MB",
+          "text": "v0.8.0 · EXE · 151.8 MB",
           "fontSize": 12
         },
         {
@@ -808,13 +865,13 @@
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "v0.7.8 · APK · 53.7 MB",
+          "text": "v0.8.0 · APK · 53.7 MB",
           "fontSize": 12
         },
         {
           "kind": "secondary",
           "minimum": 12,
-          "text": "开放的代码，清楚的发布。SHA256 校验 历史版本 获取源码",
+          "text": "开放的代码，清楚的发布。SHA256 校验 历史版本 下载源码",
           "fontSize": 12
         },
         {
@@ -839,9 +896,11 @@
     "website/verification/mobile-390-hero.png",
     "website/verification/mobile-390-download.png",
     "website/verification/mobile-390-faq.png",
+    "website/verification/mobile-390-windows-ui-faq.png",
     "website/verification/mobile-320.png",
     "website/verification/mobile-320-hero.png",
     "website/verification/mobile-320-download.png",
-    "website/verification/mobile-320-faq.png"
+    "website/verification/mobile-320-faq.png",
+    "website/verification/mobile-320-windows-ui-faq.png"
   ]
 }

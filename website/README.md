@@ -39,7 +39,7 @@ Wrangler 版本固定在 `package.json` / `package-lock.json`。部署域名和 
 
 前端读取 `GET /api/release`，接受 GitHub release 结构：`tag_name`、`published_at`、`html_url`、`assets`。每个 asset 使用 `name`、`size`、`browser_download_url`。
 
-Worker 对发布信息缓存 5 分钟，上游请求 6 秒超时后使用内置回退。浏览器的请求超时为 6.5 秒，失败时保持 GitHub 最新发布页链接，并显示说明。前端不固定客户端版本号：下载链接、版本、日期、文件大小和 SHA256 文件跟随接口更新。Windows 安装包按名称中的 `windows` / `x64` / `.exe` 识别，Android 按 `android` / `arm64`（或 `aarch64`）/ `.apk` 识别。
+Worker 对发布信息缓存 5 分钟，上游请求 6 秒超时后使用内置回退。浏览器的请求超时为 6.5 秒，失败时保持 GitHub 最新发布页链接，并显示说明。前端不固定客户端版本号：下载链接、版本、日期、文件大小和 SHA256 文件跟随接口更新。Windows 安装包按名称中的 `windows` / `x64` / `.exe` 识别，Android 按 `android` / `arm64`（或 `aarch64`）/ `.apk` 识别，源码按 `-source.zip` 识别。
 
 客户端发布新版后，运行 `npm run release:refresh` 更新 Worker 的离线发布回退，再重新部署官网。正常情况下，在线接口会自动获取最新发布。
 
@@ -50,9 +50,9 @@ Worker 对发布信息缓存 5 分钟，上游请求 6 秒超时后使用内置�
 网站只使用项目资源与已经发布的合成界面预览：
 
 - `assets/wbox.svg`：来自 `resources/wbox.svg`。
-- `assets/windows-configurations.webp`：来自 `docs/previews/0.7.7-windows-configurations.png`，裁去窗口底部多余空白。
-- `assets/windows-nodes.webp`：来自 `docs/previews/0.7.8-windows-node-menu.png`，裁去窗口底部多余空白。
+- `assets/windows-configurations.webp`：来自正式版合成预览 `docs/previews/0.8.0/profiles-light.png`，保留顶部 1179 × 620 像素，裁去底部多余空白。
+- `assets/windows-nodes.webp`：来自正式版合成预览 `docs/previews/0.8.0/nodes-light.png`，采用相同裁剪尺寸。
 - `assets/android-nodes.webp`：来自 `docs/previews/0.7.7-android-nodes-connected.png`。
-- `assets/social-preview.png`：以上合成预览与品牌文字的分享图组合。
+- `assets/social-preview.png`：以上合成预览与品牌文字的分享图组合，Windows 图片已同步至 0.8.0。
 
-这些预览不包含用户提供的截图、真实订阅地址或真实使用流量。图片保留真实客户端内容，页面上的设备边框为展示用装饰。
+这些预览不包含用户提供的截图、真实订阅地址或真实使用流量。图片保留真实客户端内容，页面上的设备边框为展示用装饰。当前 Windows 图片展示本地演示配置与节点；订阅流量等能力由正文介绍。裁剪尺寸和图片哈希记录在 `verification/assets-0.8.0.json`。

@@ -1,28 +1,33 @@
 {
-  "tag_name": "v0.7.9",
-  "published_at": "2026-11-14T06:26:15Z",
-  "html_url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.7.9",
-  "body": "# Wbox 0.7.9\n\n在设置中检查 GitHub 正式版更新，确认后下载并显示进度与速率。下载界面可以收起，再从设置中打开。\n\n- Windows 在主进程下载，隐藏窗口不影响下载；校验安装包后启动安装器，安装结束后清理本次下载文件。\n- Android 使用系统下载与安装服务，校验包名、版本、SHA256 和原签名后交给系统安装；安装文件不长期留在下载目录。\n- 更新失败、取消或权限未授予时保留清楚的恢复入口。\n- Windows 合并重复状态请求，移除未使用的打包依赖；Android 低内存时清空图标缓存引用。下载采用流式写盘，避免整包占用内存。\n\nAndroid versionCode 29，继续使用原签名；双端版本均为 0.7.9。内核保持 mihomo 1.19.33 与 sing-box 1.14.4-wbox.1，保留 26 份离线规则。\n\n验证记录位于 `verification/0.7.9-*`。\n",
+  "tag_name": "v0.8.0",
+  "published_at": "2026-11-15T03:02:50Z",
+  "html_url": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.8.0",
+  "body": "# Wbox 0.8.0\n\nWindows 界面采用与 Android 一致的圆角卡片与中性色调，同时保留桌面操作习惯。本版本为正式版。\n\n- 黑白灰作为主色，雾蓝与柔粉只用于图标、按钮、选中项等点缀；背景保留轻微色调。\n- 启动／停止改用标题栏左侧的图标，保留悬停提示、运行时长和键盘可达性。\n- 概述去掉独立服务状态框，各栏目去掉标题栏中重复的小标题。\n- 缩减标题栏高度与正文顶部间距，左侧 Wbox、版本和工作区保留适当顶部留白。\n- 工作区选择放入侧栏；保留右键菜单、配置拖拽、节点单击选择及双击／Enter 连接。\n\nAndroid 仅同步版本号至 0.8.0（versionCode 30），UI 与功能不变，继续使用原签名。双端内核保持 mihomo 1.19.33 与 sing-box 1.14.4-wbox.1，保留 26 份离线规则。\n\n验证记录位于 `verification/0.8.0-*`。\n",
   "assets": [
     {
-      "name": "SHA256SUMS-0.7.9.txt",
+      "name": "SHA256SUMS-0.8.0.txt",
       "size": 289,
-      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/SHA256SUMS-0.7.9.txt"
+      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.8.0/SHA256SUMS-0.8.0.txt"
     },
     {
-      "name": "Wbox-0.7.9-android-arm64-v8a.apk",
+      "name": "SHA256SUMS.txt",
+      "size": 289,
+      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.8.0/SHA256SUMS.txt"
+    },
+    {
+      "name": "Wbox-0.8.0-android-arm64-v8a.apk",
       "size": 56297777,
-      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/Wbox-0.7.9-android-arm64-v8a.apk"
+      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.8.0/Wbox-0.8.0-android-arm64-v8a.apk"
     },
     {
-      "name": "Wbox-0.7.9-source.zip",
-      "size": 39171666,
-      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/Wbox-0.7.9-source.zip"
+      "name": "Wbox-0.8.0-source.zip",
+      "size": 41461789,
+      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.8.0/Wbox-0.8.0-source.zip"
     },
     {
-      "name": "Wbox-0.7.9-windows-x64-setup.exe",
-      "size": 159029670,
-      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.7.9/Wbox-0.7.9-windows-x64-setup.exe"
+      "name": "Wbox-0.8.0-windows-x64-setup.exe",
+      "size": 159034379,
+      "browser_download_url": "https://github.com/muchaomuicho/Wbox/releases/download/v0.8.0/Wbox-0.8.0-windows-x64-setup.exe"
     }
   ]
 }

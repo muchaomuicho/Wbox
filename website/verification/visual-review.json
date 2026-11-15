@@ -1,31 +1,24 @@
 {
   "passed": true,
-  "reviewedAt": "2026-11-14T06:24:52.6330404Z",
+  "reviewedAt": "2026-11-15T03:02:51.420993+00:00",
   "sourceHashes": {
-    "index.html": "7584f955f1d0f4e681e963913c96557a7b846019a1054487a5cbd659c4b99cb1",
-    "styles.css": "d0cea88a9f3662a905fde489b444d6e6ab82c8e3938f409d30f88bacb8120292",
-    "app.js": "c60574e2bd446f4c50d6462f1dd88068ee8d3d3c51d5ecdff24f1a3f0f69f7d7"
+    "index.html": "a36d501262d47a970a6330f73cd03eb3baed1941c3e63602259eaaaa431772a8",
+    "styles.css": "065a86e93bb20330409d21d2deb00fc11b3012457060b610af7d32b91cac7038",
+    "app.js": "0e290eccc0a29a1aad72e16990bf0b6193a52252ae684ef9b896a5c827356d0e"
   },
-  "scope": "0.7.9 website update copy, using isolated local browser verification. Release metadata in the existing regression fixture remains synthetic v0.7.8; production deployment and release data are verified separately.",
+  "scope": "0.8.0 final Windows UI FAQ wording follow-up: compact title bar and content, with intentional top spacing in the sidebar. Re-ran isolated UI verification and reviewed both updated mobile FAQ captures.",
   "reviewedImages": [
-    "desktop-1440.png",
-    "mobile-320-update-check.png",
-    "mobile-320-update-install.png"
+    "mobile-320-windows-ui-faq.png",
+    "mobile-390-windows-ui-faq.png"
   ],
   "findings": [
-    "The experience section describes checking updates, confirmation before download, progress, size, speed and continued downloads after hiding the panel.",
-    "The two new FAQ answers open at 320px with body text at least 14px and no horizontal clipping.",
-    "Windows installer completion cleanup and Android system installation confirmation and download-copy cleanup match the 0.7.9 client flow.",
-    "Current workspace screenshots remain representative. Update fixture screenshots were not added to the homepage because they contain synthetic release versions or the test-package identity.",
-    "The reviewed desktop and expanded mobile FAQ screenshots have readable text and no clipped controls."
-  ],
-  "focusedChecks": [
-    "320px check-update FAQ opens, remains readable and fits the viewport.",
-    "320px installation-and-cleanup FAQ opens, remains readable and fits the viewport."
+    "The FAQ now says 标题栏与正文更紧凑，侧栏保留适当顶部留白, matching the final desktop layout.",
+    "The complete FAQ remains readable at 320px and 390px, with no horizontal overflow or clipped controls.",
+    "All 51 isolated UI checks passed and the source hashes match the current website files."
   ],
   "environmentNotes": [
-    "The 46 existing website UI checks passed. Host antivirus injected Kaspersky URLs into local HTTP responses; external requests were blocked and retained in the automated report.",
-    "Focused FAQ screenshots use page coordinates after resetting scroll position; the temporary skip-link capture artifact is absent from final images."
+    "All 51 isolated website UI checks passed. Host antivirus injection requests are blocked and separately recorded.",
+    "No production browser profile, deployment, or user screenshot was used."
   ],
   "temporaryFilesCleaned": true
 }

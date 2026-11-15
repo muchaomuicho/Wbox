@@ -1,0 +1,48 @@
+{
+  "version": "0.8.0",
+  "windowsPreviews": [
+    {
+      "source": "docs/previews/0.8.0/profiles-light.png",
+      "sourceSHA256": "bfb8b21f5bb298c91661196a709d502c676a6c767095cc9337085e3444b0f566",
+      "output": "website/public/assets/windows-configurations.webp",
+      "outputSHA256": "c751615431b6a0e6d89d1a945bae2c857c5d461669a9b19aa65b45c56acdfb2a",
+      "sourceSize": [
+        1179,
+        840
+      ],
+      "crop": [
+        0,
+        0,
+        1179,
+        620
+      ],
+      "size": [
+        1179,
+        620
+      ]
+    },
+    {
+      "source": "docs/previews/0.8.0/nodes-light.png",
+      "sourceSHA256": "22e1820579e29f55f587158f988f2566006b8c300e47a66fd167de2a1e92e97e",
+      "output": "website/public/assets/windows-nodes.webp",
+      "outputSHA256": "af922d9e93caa8e7ce309df2d550806d5cb01ebdc7c115e8c7ebbaf064199237",
+      "sourceSize": [
+        1179,
+        840
+      ],
+      "crop": [
+        0,
+        0,
+        1179,
+        620
+      ],
+      "size": [
+        1179,
+        620
+      ]
+    }
+  ],
+  "androidPreview": "docs/previews/0.7.7-android-nodes-connected.png",
+  "socialPreview": "website/public/assets/social-preview.png",
+  "userImagesUsed": false
+}

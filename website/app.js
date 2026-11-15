@@ -110,8 +110,8 @@
   const workspaceTabs = selectAll('[data-workspace]');
   const workspaceImage = select('#workspace-image');
   const workspaceData = {
-    config: { image: '/assets/windows-configurations.webp', alt: 'Windows 配置工作区的配置卡片和订阅信息', caption: 'CONFIGURATION WORKSPACE' },
-    nodes: { image: '/assets/windows-nodes.webp', alt: 'Windows 节点工作区的节点列表与右键操作菜单', caption: 'NODE WORKSPACE' },
+    config: { image: '/assets/windows-configurations.webp', alt: 'Wbox 0.8.0 Windows 配置工作区的圆角卡片与当前配置', caption: 'CONFIGURATION WORKSPACE' },
+    nodes: { image: '/assets/windows-nodes.webp', alt: 'Wbox 0.8.0 Windows 节点工作区的搜索、节点列表与当前选择', caption: 'NODE WORKSPACE' },
   };
   function applyWorkspace(value, focus = false) {
     workspaceTabs.forEach((button) => {
@@ -200,6 +200,8 @@
       }
       const checksum = findAsset(/^SHA256.*\.txt$/i);
       selectAll('[data-checksum-link]').forEach((link) => { link.href = checksum ? githubURL(checksum.browser_download_url, true) : releaseURL; });
+      const source = findAsset(/-source\.zip$/i);
+      selectAll('[data-source-link]').forEach((link) => { link.href = source ? githubURL(source.browser_download_url, true) : releaseURL; });
       applyPlatform(platform);
       if (!binaries.windows || !binaries.android) {
         select('#release-fallback').textContent = '部分安装包信息暂不可用；对应下载按钮会打开 GitHub 发布页，可在那里选择安装包。';

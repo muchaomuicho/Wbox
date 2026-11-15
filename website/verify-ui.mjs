@@ -9,11 +9,12 @@ import {createHash} from 'node:crypto';
 const require=createRequire(new URL('../tools/desktop-tests/package.json',import.meta.url));
 const {chromium}=require('playwright');
 const root=resolve(import.meta.dirname),output=join(root,'verification');
-const version='0.7.8',releaseBase='https://github.com/muchaomuicho/Wbox/releases/';
+const version='0.8.0',releaseBase='https://github.com/muchaomuicho/Wbox/releases/';
 const release={tag_name:'v'+version,published_at:'2026-11-14T04:00:00Z',html_url:releaseBase+'tag/v'+version,body:'Synthetic release for isolated website verification.',assets:[
   {name:`Wbox-${version}-windows-x64-setup.exe`,size:159127374},
   {name:`Wbox-${version}-android-arm64-v8a.apk`,size:56280000},
   {name:`SHA256SUMS-${version}.txt`,size:286},
+  {name:`Wbox-${version}-source.zip`,size:40300000},
 ].map(asset=>({...asset,browser_download_url:releaseBase+'download/v'+version+'/'+asset.name}))};
 let responseMode='latest',browser;
 const checks=[],failures=[],pageErrors=[],consoleErrors=[],blockedRequests=[],layouts=[],readability=[],screenshots=[],motionResults=[];
@@ -86,6 +87,7 @@ try{
     check((await page.locator('[data-download="windows"]').getAttribute('href'))===release.assets[0].browser_download_url,'Windows card points to the current x64 EXE');
     check((await page.locator('[data-download="android"]').getAttribute('href'))===release.assets[1].browser_download_url,'Android card points to the current ARM64 APK');
     check((await page.locator('[data-checksum-link]').first().getAttribute('href'))===release.assets[2].browser_download_url,'Checksum links point to the matching release');
+    check((await page.locator('[data-source-link]').getAttribute('href'))===release.assets[3].browser_download_url,'Source download points to the matching release archive');
     await page.locator('button[data-platform="android"]').click();
     check((await page.locator('#hero-download').getAttribute('href'))===release.assets[1].browser_download_url&&(await page.locator('button[data-platform="android"]').getAttribute('aria-pressed'))==='true','Platform switching updates the hero Android download');
     await page.locator('button[data-platform="windows"]').click();
@@ -135,8 +137,14 @@ try{
       const clip=await page.locator(selector).evaluate(element=>{const r=element.getBoundingClientRect();return {x:r.x+scrollX,y:r.y+scrollY,width:r.width,height:r.height};});
       await page.screenshot({path:join(output,name),fullPage:true,clip,animations:'disabled'});screenshots.push('website/verification/'+name);
     }
+    const uiFAQ=page.locator('.faq-list details').filter({hasText:'0.8.0 的界面有哪些变化？'});
+    await uiFAQ.locator('summary').click();
+    check((await uiFAQ.locator('.faq-answer').innerText()).includes('Android 此次仅同步版本号至 0.8.0'),'Mobile '+width+'px explains the Windows UI update and Android version sync');
+    await layout(page,'Mobile '+width+'px Windows UI FAQ');
+    const uiFAQShot='mobile-'+width+'-windows-ui-faq.png';
+    await uiFAQ.screenshot({path:join(output,uiFAQShot),animations:'disabled'});screenshots.push('website/verification/'+uiFAQShot);
     await readable(page,width);
-    await page.locator('.faq-list details').first().locator('summary').click();
+    await uiFAQ.locator('summary').click();
   });
   await scenario('reduced-motion',async()=>{
     await page.emulateMedia({reducedMotion:'reduce'});await page.locator('button[data-accent="pink"]').click();

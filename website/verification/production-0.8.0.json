@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "checkedAt": "2026-11-15T03:04:27.392Z",
+  "url": "https://wbox.wucnebssss.hidns.co",
+  "release": "https://github.com/muchaomuicho/Wbox/releases/tag/v0.8.0",
+  "workerVersion": "ead41e8e-190b-4216-b178-74528fa12c1a",
+  "checks": [
+    "GitHub latest is the public 0.8.0 stable release",
+    "Public website API reports 0.8.0",
+    "Wbox-0.8.0-windows-x64-setup.exe: public asset matches local size and SHA256",
+    "Wbox-0.8.0-android-arm64-v8a.apk: public asset matches local size and SHA256",
+    "Wbox-0.8.0-source.zip: public asset matches local size and SHA256",
+    "SHA256SUMS-0.8.0.txt: public asset matches local size and SHA256",
+    "SHA256SUMS.txt: public asset matches local size and SHA256",
+    "Public checksum file matches the release artifacts",
+    "SHA256SUMS-0.8.0.txt: download is reachable with the expected size",
+    "SHA256SUMS.txt: download is reachable with the expected size",
+    "Wbox-0.8.0-windows-x64-setup.exe: download is reachable with the expected size",
+    "Wbox-0.8.0-android-arm64-v8a.apk: download is reachable with the expected size",
+    "Wbox-0.8.0-source.zip: download is reachable with the expected size",
+    "windows-configurations.webp: deployed image matches the reviewed asset",
+    "windows-nodes.webp: deployed image matches the reviewed asset",
+    "social-preview.png: deployed image matches the reviewed asset",
+    "[data-download=\"windows\"]: public page links to the 0.8.0 asset",
+    "[data-download=\"android\"]: public page links to the 0.8.0 asset",
+    "[data-source-link]: public page links to the 0.8.0 asset",
+    "[data-checksum-link]: public page links to the 0.8.0 asset",
+    "Public FAQ contains the new Windows UI release",
+    "Public desktop page has no horizontal overflow",
+    "Public page has no JavaScript errors"
+  ],
+  "errors": []
+}

@@ -165,7 +165,7 @@ h2 { font-size: clamp(34px, 4vw, 51px); line-height: 1.35; letter-spacing: -.045
 .feature-note i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .workspace-visual { min-width: 0; padding-top: 4px; }
 .workspace-image-shell { padding: 22px 0 22px 25px; border-radius: 7px; overflow: hidden; background: var(--accent-soft); transition: background .35s; }
-.workspace-image-shell img { width: calc(100% + 10px); height: auto; max-width: none; display: block; border-radius: 5px 0 0 5px; border: 1px solid #00000008; box-shadow: 0 12px 30px #15231d17; aspect-ratio: 2158 / 1130; object-fit: cover; object-position: top; }
+.workspace-image-shell img { width: calc(100% + 10px); height: auto; max-width: none; display: block; border-radius: 5px 0 0 5px; border: 1px solid #00000008; box-shadow: 0 12px 30px #15231d17; aspect-ratio: 1179 / 620; object-fit: cover; object-position: top; }
 .workspace-image-shell img.changing { animation: image-in .45s var(--ease); }
 .workspace-visual figcaption { display: flex; justify-content: space-between; margin-top: 15px; color: var(--muted); font-size: 9px; letter-spacing: .12em; }
 .visual-cross { font-size: 17px; line-height: 1; }
