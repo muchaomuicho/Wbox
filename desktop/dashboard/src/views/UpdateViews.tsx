@@ -112,7 +112,7 @@ export function WboxUpdateSettings({ host }: { host: DesktopHost }) {
   if (!state.supported) return state.error ? <Card title="应用更新" icon="sync"><p className={styles.updateError}>{state.error}</p></Card> : null;
   const check = () => {
     setMessage('');
-    void host.updates.check().then(info => { if (info) openUpdateDialog(); else setMessage('当前已是最新稳定版。'); }).catch(showError);
+    void host.updates.check().then(info => { if (info) openUpdateDialog(); else setMessage('没有可用的稳定版更新。'); }).catch(showError);
   };
   return <Card title="应用更新" icon="sync">
     <DataLine label="当前版本" value={state.currentVersion ?? '…'} />

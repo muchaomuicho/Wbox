@@ -1,6 +1,8 @@
 param([string]$InnoCompiler = "$PSScriptRoot/../.tools/inno/ISCC.exe")
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$version = (Get-Content -Raw (Join-Path $repo 'desktop/package.json') | ConvertFrom-Json).version
+$fileVersion = ($version -split '-')[0]
 Push-Location $repo
 try {
     & python tools/optimize-rules.py
@@ -20,6 +22,6 @@ try {
         & node node_modules/electron-builder/cli.js --dir --win --x64 --config wbox-builder.yml
         if ($LASTEXITCODE -ne 0) { throw 'Electron packaging failed' }
     } finally { Pop-Location }
-    & $InnoCompiler tools/Wbox.Desktop.iss
+    & $InnoCompiler "/DWboxVersion=$version" "/DWboxFileVersion=$fileVersion" tools/Wbox.Desktop.iss
     if ($LASTEXITCODE -ne 0) { throw 'Installer compilation failed' }
 } finally { Pop-Location }

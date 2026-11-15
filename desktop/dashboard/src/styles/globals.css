@@ -12,8 +12,8 @@
      toolbars) from this plus the canvas background, not from theme-color. */
   color-scheme: light;
 
-  --font-sans: "Schibsted Grotesk Variable", "Apple Color Emoji", "Noto Color Emoji", -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
-  --font-serif: "Source Serif 4 Variable", "Apple Color Emoji", "Noto Color Emoji", ui-serif, georgia, serif;
+  --font-sans: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", "Apple Color Emoji", "Noto Color Emoji", -apple-system, blinkmacsystemfont, sans-serif;
+  --font-serif: var(--font-sans);
   --font-mono: "IBM Plex Mono", "Apple Color Emoji", "Noto Color Emoji", ui-monospace, "SF Mono", menlo, consolas, monospace;
 
   --bg: #fafafa;
@@ -60,18 +60,18 @@
 
   --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6e6e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 3%);
-  --shadow-control: 0 1px 2px rgb(0 0 0 / 4%);
-  --shadow-overlay: 0 12px 48px rgb(0 0 0 / 22%);
+  --shadow-card: none;
+  --shadow-control: none;
+  --shadow-overlay: 0 8px 28px rgb(0 0 0 / 14%);
   --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-control: 10px;
-  --radius-lg: 12px;
-  --radius-card: 16px;
-  --radius-xl: 20px;
+  --radius-md: 10px;
+  --radius-control: 12px;
+  --radius-lg: 16px;
+  --radius-card: 20px;
+  --radius-xl: 24px;
   --radius-pill: 999px;
-  --control-height: 30px;
+  --control-height: 36px;
   --sidebar-width: 232px;
   --transition-fast: 0.12s ease;
   --transition-medium: 0.15s ease;
@@ -88,8 +88,8 @@
 
   --weight-normal: 400;
   --weight-medium: 500;
-  --weight-semibold: 560;
-  --weight-bold: 600;
+  --weight-semibold: 600;
+  --weight-bold: 650;
 
   --space-px: 1px;
   --space-2: 2px;
@@ -156,9 +156,9 @@
 
   --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a8a8a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 16%);
-  --shadow-control: 0 1px 2px rgb(0 0 0 / 12%);
-  --shadow-overlay: 0 12px 48px rgb(0 0 0 / 55%);
+  --shadow-card: none;
+  --shadow-control: none;
+  --shadow-overlay: 0 8px 28px rgb(0 0 0 / 35%);
 
   --scrollbar-thumb: var(--scrollbar-thumb-on-dark);
   --scrollbar-thumb-hover: var(--scrollbar-thumb-hover-on-dark);
@@ -380,6 +380,11 @@ body {
 button {
   font: inherit;
   color: inherit;
+}
+
+:where(button, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 input, select, textarea {

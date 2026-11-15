@@ -7,15 +7,16 @@
   display: none;
 }
 
+.desktop-app .sidebar { overflow-y: auto; }
+
 .sidebar {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  gap: var(--space-px);
+  gap: var(--space-4);
   width: var(--sidebar-width);
-  padding: var(--space-20) var(--space-12) var(--space-14);
+  padding: var(--space-24) var(--space-12) var(--space-16);
   background: var(--surface);
-  border-inline-end: 1px solid var(--border);
 }
 
 .sidebar-brand {
@@ -24,7 +25,24 @@
   flex-direction: column;
   gap: var(--space-px);
   padding: 0 var(--space-10) var(--space-14);
+  font-family: var(--font-sans);
+  font-size: 26px;
+  font-weight: 650;
 }
+
+.workspace-picker { padding: 0 var(--space-4) var(--space-20); }
+.workspace-picker :global(.select) { width: 100%; background-color: var(--card); }
+.workspace-picker :global(.select-value) { flex: 1; }
+.sidebar-footer {
+  display: flex;
+  gap: var(--space-10);
+  align-items: center;
+  padding: var(--space-20) var(--space-12) 0;
+  margin-top: auto;
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+.sidebar-footer small { display: block; margin-top: 4px; font-size: 11px; }
 
 .sidebar-brand-version {
   composes: text-mono-caption from global;
@@ -37,7 +55,8 @@
   gap: var(--space-10);
   align-items: center;
   width: 100%;
-  padding: var(--space-8) var(--space-10);
+  min-height: 44px;
+  padding: var(--space-10) var(--space-16);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   color: var(--text-secondary);
@@ -45,7 +64,7 @@
   cursor: pointer;
   background: transparent;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-pill);
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
@@ -219,6 +238,9 @@
   min-height: 0;
 }
 
+.desktop-app .content :global(.page) { padding-top: var(--space-16); }
+.desktop-app .content :global(.page-header) { margin-bottom: var(--space-16); }
+
 .sidebar-titlebar {
   display: none;
   flex-shrink: 0;
@@ -332,4 +354,13 @@
   .content {
       min-height: 0;
     }
+
+  .desktop-app { flex-direction: row; }
+  .desktop-app .sidebar {
+    position: static;
+    width: 176px;
+    padding: 16px 8px;
+    transform: none;
+  }
+  .desktop-app .sidebar-brand { font-size: 22px; }
 }

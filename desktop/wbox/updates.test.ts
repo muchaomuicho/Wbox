@@ -21,6 +21,8 @@ test('stable version comparison and release trust boundaries', () => {
   assert.equal(parseRelease(release(), '0.7.9')?.info.versionName, 'v0.7.10');
   assert.equal(parseRelease(release(), '0.7.10'), null);
   assert.equal(parseRelease(release(), '0.8.0'), null);
+  assert.equal(parseRelease(release(), '0.8.0-alpha.1'), null);
+  assert.equal(parseRelease(release(), '0.7.10-alpha.1')?.info.versionName, 'v0.7.10');
   for (const mutation of [
     (r: any) => { r.draft = true; }, (r: any) => { r.prerelease = true; },
     (r: any) => { r.tag_name = 'v0.7.11-beta.1'; }, (r: any) => { r.html_url = 'https://example.com'; },

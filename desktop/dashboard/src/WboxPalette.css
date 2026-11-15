@@ -1,34 +1,115 @@
-@import './WboxCursors.css';
+@import url('./WboxCursors.css');
 
+/* Neutral surfaces with Android-inspired accents, shared by the main window and tray. */
+/* stylelint-disable color-no-hex */
 :root {
-  --wbox-pink: #a75882;
-  --wbox-pink-soft: rgb(167 88 130 / 10%);
+  --wbox-pink: #a05278;
+  --wbox-pink-soft: #ece8ea;
 }
+
 [data-theme="dark"] {
-  --wbox-pink: #d9a0bf;
-  --wbox-pink-soft: rgb(217 160 191 / 13%);
+  --wbox-pink: #efb4d2;
+  --wbox-pink-soft: #363335;
 }
+
+:root[data-accent="default"] {
+  --bg: #fafafa;
+  --surface: #fafafa;
+  --card: #f0f0f0;
+  --inset: #e8e8e8;
+  --text: #1a1a1a;
+  --text-secondary: #646464;
+  --text-faint: #707070;
+  --border: #e0e0e0;
+  --border-strong: #b7b7b7;
+  --hover: rgb(38 38 38 / 6%);
+  --accent: #262626;
+  --accent-strong: #191919;
+  --accent-soft: #e8e8e8;
+  --on-accent: #fff;
+}
+
+:root[data-theme="dark"][data-accent="default"] {
+  --bg: #1f1f1f;
+  --surface: #1f1f1f;
+  --card: #292929;
+  --inset: #333;
+  --text: #e5e5e5;
+  --text-secondary: #b5b5b5;
+  --text-faint: #a3a3a3;
+  --border: #3b3b3b;
+  --border-strong: #666;
+  --hover: rgb(229 229 229 / 8%);
+  --accent: #e5e5e5;
+  --accent-strong: #fff;
+  --accent-soft: #393939;
+  --on-accent: #202020;
+}
+
 :root[data-accent="blue"] {
-  --accent: #416e9c;
-  --accent-strong: #325b86;
-  --accent-soft: rgb(65 110 156 / 10%);
+  --bg: #f4f5f6;
+  --surface: #f4f5f6;
+  --card: #fdfdfe;
+  --inset: #ededee;
+  --text: #242424;
+  --text-secondary: #686868;
+  --text-faint: #737373;
+  --border: #e2e2e2;
+  --border-strong: #b7b7b7;
+  --hover: rgb(38 38 38 / 6%);
+  --accent: #3564bd;
+  --accent-strong: #294f99;
+  --accent-soft: #e8eaec;
   --on-accent: #fff;
 }
+
 :root[data-theme="dark"][data-accent="blue"] {
-  --accent: #9cbbda;
-  --accent-strong: #bdd4e9;
-  --accent-soft: rgb(156 187 218 / 13%);
-  --on-accent: #182c40;
+  --bg: #1c1d1e;
+  --surface: #1c1d1e;
+  --card: #272829;
+  --inset: #303132;
+  --text: #e5e5e5;
+  --text-secondary: #b5b5b5;
+  --text-faint: #a3a3a3;
+  --border: #3d3d3d;
+  --border-strong: #666;
+  --hover: rgb(229 229 229 / 8%);
+  --accent: #a4c3ff;
+  --accent-strong: #c3d7ff;
+  --accent-soft: #333536;
+  --on-accent: #12315e;
 }
+
 :root[data-accent="pink"] {
-  --accent: #a75882;
-  --accent-strong: #894167;
+  --bg: #f6f4f5;
+  --surface: #f6f4f5;
+  --card: #fefdfd;
+  --inset: #eeeded;
+  --text: #242424;
+  --text-secondary: #686868;
+  --text-faint: #737373;
+  --border: #e2e2e2;
+  --border-strong: #b7b7b7;
+  --hover: rgb(38 38 38 / 6%);
+  --accent: var(--wbox-pink);
+  --accent-strong: #854061;
   --accent-soft: var(--wbox-pink-soft);
   --on-accent: #fff;
 }
+
 :root[data-theme="dark"][data-accent="pink"] {
-  --accent: #d9a0bf;
-  --accent-strong: #e8bdd5;
+  --bg: #1e1c1d;
+  --surface: #1e1c1d;
+  --card: #292728;
+  --inset: #323031;
+  --text: #e5e5e5;
+  --text-secondary: #b5b5b5;
+  --text-faint: #a3a3a3;
+  --border: #3d3d3d;
+  --border-strong: #666;
+  --hover: rgb(229 229 229 / 8%);
+  --accent: var(--wbox-pink);
+  --accent-strong: #fbd9e9;
   --accent-soft: var(--wbox-pink-soft);
-  --on-accent: #38202d;
+  --on-accent: #502138;
 }

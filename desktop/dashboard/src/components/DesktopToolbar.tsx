@@ -34,7 +34,9 @@ export function DesktopToolbar(props: {
         {props.title !== undefined && <div className={styles.toolbarTitle}>{props.title}</div>}
         {props.titleControls}
       </div>
-      <div className={cx(styles.toolbarSection, styles.toolbarEnd)} ref={props.endRef} />
+      <div className={cx(styles.toolbarSection, styles.toolbarEnd)}>
+        <div className={styles.toolbarSection} ref={props.endRef} />
+      </div>
     </header>
   );
 }
@@ -112,7 +114,9 @@ export function DesktopServiceControls(props: { host: DesktopHost }) {
         </IconButton>
       ) : (
         <IconButton
-          title={t("Start")}
+          className={styles.toolbarConnectButton}
+          title="启动"
+          aria-label="启动"
           disabled={busy || profiles.length === 0}
           onClick={() => run(() => host.service.start())}
         >

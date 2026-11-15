@@ -70,7 +70,7 @@ try {
   await page.getByRole('button', { name: '设置', exact: true }).click();
   await page.getByRole('button', { name: '检查更新', exact: true }).scrollIntoViewIfNeeded();
   await page.getByRole('button', { name: '检查更新', exact: true }).click();
-  await page.getByText('当前已是最新稳定版。', { exact: true }).waitFor({ timeout: 35000 });
+  await page.getByText('没有可用的稳定版更新。', { exact: true }).waitFor({ timeout: 35000 });
   const actual = await page.evaluate(() => window.wbox.updates('state'));
   check(actual.info === null && !actual.checking && !actual.downloading && !actual.error, 'Real GitHub stable check finds no upgrade over installed 0.7.9');
   await page.screenshot({ path: join(root, 'docs/previews/0.7.9-windows-update-settings.png'), animations: 'disabled' });

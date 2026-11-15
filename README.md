@@ -13,7 +13,7 @@ Windows · Android ｜ mihomo · sing-box
 [![Android](https://img.shields.io/badge/Android-8.0%2B-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-555555?style=flat-square)](https://github.com/muchaomuicho/Wbox/releases/latest)
 
-[官网](https://wbox.wucnebssss.hidns.co/) · [下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.7.9.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
+[官网](https://wbox.wucnebssss.hidns.co/) · [下载最新版本](https://github.com/muchaomuicho/Wbox/releases/latest) · [本次更新](docs/RELEASE-0.8.0.md) · [全部历史版本](https://github.com/muchaomuicho/Wbox/releases)
 
 </div>
 
@@ -22,8 +22,8 @@ Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性
 ## 界面一览
 
 <div align="center">
-<img src="docs/previews/0.7.7-windows-configurations.png" alt="Windows 紧凑配置卡片" width="96%" />
-<br/><sub>Windows：紧凑配置卡片支持拖动排序与直接右键，时间信息可独立切换显示。</sub>
+<img src="docs/previews/0.8.0/profiles-light.png" alt="Windows 圆角配置卡片" width="96%" />
+<br/><sub>Windows：中性色调、圆角卡片与左侧启动图标，保留拖动排序和右键操作。</sub>
 <br/><br/>
 <img src="docs/previews/0.7.5-android-profiles.png" alt="Android 配置排序与日期" width="32%" />
 <img src="docs/previews/0.7.5-android-connections.png" alt="Android 连接拉起界面" width="32%" />
@@ -31,13 +31,13 @@ Wbox 是一款面向 Windows 与 Android 的双内核代理客户端。以中性
 <br/><sub>Android：配置长按排序，节点单击选定，三点菜单就近展开。</sub>
 </div>
 
-## 0.7.9：应用更新与资源占用
+## 0.8.0：Windows 界面更新
 
-两端在「设置」中检查 GitHub 最新正式版；发现更新后先询问，确认才下载。下载显示进度、已下载大小与速率，界面可以收起，再从设置中查看进度。安装前校验文件大小与 SHA256；Android 另核对包名、版本和原签名。
+Windows 采用与 Android 一致的圆角卡片和中性色调。黑白灰为主，雾蓝与柔粉只作点缀，背景保留轻微色调。启动／停止图标放在标题栏左侧；概述去掉独立状态框，各栏目去掉重复的小标题，正文与标题栏更紧凑。
 
-Windows 在主进程下载，隐藏主窗口不影响下载；安装时安全停止内核，交由独立安装助手等待安装器结束并清理本次安装文件。Android 使用系统下载和安装服务，系统接收完整安装内容后清理下载副本，安装仍需按系统提示确认。
+工作区选择移入侧栏，Wbox 与版本信息保留适当顶部留白。右键菜单、配置拖拽、节点单击选择及双击／Enter 连接继续保留。Android 仅同步到 0.8.0（versionCode 30），UI 与功能不变。
 
-下载过程流式写盘，不把整个安装包读入内存。完整配置、双内核、内置规则与个人数据继续保留。
+双端继续支持应用内检查正式版、下载进度与 SHA256 校验。Android 使用原签名，可覆盖安装旧版。
 
 ## 操作体验
 
@@ -66,10 +66,10 @@ Android 连接、分应用代理等底部面板补齐随窗口挂载的系统返
 
 在 [GitHub Releases](https://github.com/muchaomuicho/Wbox/releases/latest) 下载：
 
-- `Wbox-0.7.9-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
-- `Wbox-0.7.9-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
-- `Wbox-0.7.9-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
-- `SHA256SUMS-0.7.9.txt`：发布文件 SHA256 校验值。
+- `Wbox-0.8.0-windows-x64-setup.exe`：Windows 10 / 11 x64 安装程序，自带 Electron、.NET 运行库与双内核。
+- `Wbox-0.8.0-android-arm64-v8a.apk`：Android 8.0+ ARM64 安装包，延续原签名，可覆盖同签名旧版。
+- `Wbox-0.8.0-source.zip`：完整源码、上游来源、原生隧道、固定版本内核源码与构建脚本。
+- `SHA256SUMS-0.8.0.txt`：发布文件 SHA256 校验值。
 
 Windows 关闭窗口后保留托盘，左键恢复主界面，右键打开菜单；支持开机自启、静默启动与自动连接。托盘可切换运行策略组、配置、测速及关闭连接。Android 首次连接授权系统 VPN，支持全部应用、只代理所选应用或绕过所选应用，IPv6 默认开启。
 
@@ -93,7 +93,7 @@ Windows 安装目录使用 LZX 透明压缩，主窗口隐藏后释放界面，�
 
 ## 验证与历史归档
 
-本轮检查应用更新的版本判断、安装包校验、下载进度、收起恢复、安装交接与清理，并验证共享状态读取。Android 使用隔离 API35 模拟器；发布 APK 另核对 ARM64 ABI、原签名、内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.7.9-` 开头；此前菜单、批量测速、节点选择、排序、日期、系统返回及边界滚动检查仍保留。
+本轮检查 Windows 浅色／深色主题、三种强调色、启动图标、紧凑布局、配置预览与键盘操作，并覆盖 800×560 窗口及 125%／150% 缩放。发布包核对版本、Android ARM64 ABI 与原签名、双端内核和离线资源。记录位于 [验证目录](docs/verification)，本轮以 `0.8.0-` 开头；此前功能回归记录仍保留。
 
 Android 返回验证要求启用系统边缘手势监听，使用真实左右边缘滑动，并分别检查键盘优先收起与关闭面板；模拟器结果仍不能代替所有厂商手机的实际行为。
 
@@ -113,6 +113,8 @@ Android 返回验证要求启用系统边缘手势监听，使用真实左右边
 ./tools/build-android.ps1 -JavaHome '<JDK 21>' -SdkPath '<Android SDK>' -Test
 ./tools/package-source.ps1
 ```
+
+生成源码包前先提交发布版本；打包脚本从 Git 的当前提交读取源码，并附带固定版本的上游源码与规则输入。
 
 Android 签名密钥与密码位于本地 `signing/`，不包含在 GitHub 或源码包中。**请单独保留这个目录**：后续 APK 使用同一密钥才能覆盖已有安装。历史安装包归档不能替代签名密钥备份。
 

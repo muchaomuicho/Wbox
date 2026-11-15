@@ -310,7 +310,7 @@ function routeTitle(route: Route, t: Translate, language: string): string {
   switch (route.page) {
     case "workspace": return "配置与节点";
     case "overview":
-      return t("Dashboard");
+      return t("Overview");
     case "groups":
       return "代理";
     case "connections":
@@ -844,6 +844,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
       type="button"
       key={page}
       className={cx(styles.navItem, active && styles.active)}
+      aria-current={active ? "page" : undefined}
       onClick={() => {
         setMenuOpen(false);
         navigate(page);
@@ -940,7 +941,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
   return (
     <CapabilitiesContext.Provider value={capabilities}>
       <NodeClipboard />
-      <div className={styles.app}>
+      <div className={cx(styles.app, host !== null && styles.desktopApp)}>
         {host === null && (
           <header className={styles.mobileTopbar}>
             <IconButton
@@ -965,19 +966,24 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
           <nav className={styles.sidebar}>
             <div className={styles.sidebarTitlebar} />
             <div className={styles.sidebarBrand}>
-              Wbox
+              <span>Wbox</span>
               {serverInfo && <span className={styles.sidebarBrandVersion}>{serverInfo.version}</span>}
             </div>
+            <div className={styles.workspacePicker}>{props.desktopPicker}</div>
             {started ? (
               <>
                 {navItem("overview", t("Overview"), "dashboard", route.page === "overview")}
                 {navItem("connections", t("Connections"), "swap_vert", route.page === "connections")}
               </>
             ) : (
-              navItem("overview", t("Dashboard"), "dashboard", route.page === "overview")
+              navItem("overview", t("Overview"), "dashboard", route.page === "overview")
             )}
             {workspaceState?.mode!=="nodes" && navItem("groups", "代理", "folder", route.page === "groups")}
             {mainPages}
+            <div className={styles.sidebarFooter}>
+              <Icon name="language" size={18} />
+              <span>{workspaceState?.core || "双内核"}<small>Windows</small></span>
+            </div>
           </nav>
         ) : (
           <nav className={cx(styles.sidebar, menuOpen && styles.open)}>
@@ -1001,7 +1007,7 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
           <div className={styles.contentColumn}>
             <DesktopToolbar
               title={
-                route.page === "tools/tailscale" ? (
+                props.desktopLocal === true ? undefined : route.page === "tools/tailscale" ? (
                   <EndpointToolbarTitle
                     stream={api.tailscale}
                     count={(data) => data.endpoints.length}
@@ -1037,7 +1043,6 @@ function ShellContent(props: ShellProps & { onRetry: () => void }) {
                   route.page === "workspace" ? (workspaceState?.mode==="nodes"?"节点与订阅":"配置") : routeTitle(route, t, language)
                 )
               }
-              picker={props.desktopPicker}
               controls={
                 props.desktopLocal === true ? (
                   <DesktopServiceControls host={host} />

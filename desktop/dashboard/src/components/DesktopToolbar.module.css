@@ -4,10 +4,9 @@
   gap: var(--space-10);
   align-items: center;
   justify-content: space-between;
-  height: 52px;
-  padding: 0 var(--space-12);
+  height: 48px;
+  padding: 0 var(--space-36);
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
   -webkit-app-region: drag;
 }
 
@@ -81,7 +80,7 @@
   text-overflow: ellipsis;
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
-  color: var(--text);
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -110,11 +109,13 @@
   width: auto;
   min-width: var(--control-height);
   padding: 0 var(--space-10);
-  background: #cce8dc;
-  color: #163e30;
+  background: var(--good-soft);
+  color: var(--good);
 }
 
-:global([data-theme="dark"]) .toolbar .toolbar-service .toolbar-service-button { background: #355147; color: #ecf8f2; }
+.toolbar .toolbar-service .toolbar-connect-button { color: var(--accent-strong); background: var(--accent-soft); }
+.toolbar .toolbar-service .toolbar-connect-button:hover { background: color-mix(in srgb, var(--accent-soft), var(--accent) 12%); }
+.toolbar-end { flex-shrink: 0; }
 .toolbar .toolbar-service .toolbar-service-button:hover { filter: brightness(.96); }
 
 .toolbar-spinner {

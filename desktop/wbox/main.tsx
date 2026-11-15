@@ -89,7 +89,7 @@ function watchTitleBarOverlay() {
   };
   new MutationObserver(followTransition).observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ["data-theme", "data-scrim", "dir"],
+    attributeFilter: ["data-theme", "data-accent", "data-scrim", "dir"],
   });
   report();
 }

@@ -31,12 +31,12 @@ export const DASHBOARD_CARDS: Record<
 };
 
 const DEFAULT_CARD_ORDER: DashboardCardId[] = [
+  "profile",
+  "clashMode",
   "uploadTraffic",
   "downloadTraffic",
   "status",
   "connections",
-  "clashMode",
-  "profile",
 ];
 
 export interface DashboardCardsConfig {

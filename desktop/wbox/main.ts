@@ -8,6 +8,8 @@ import { createTrayController } from './tray-window';
 import { WboxUpdates, atomicJSON, verifyPackage } from './updates';
 import { launchInstaller } from './update-installer';
 
+declare const __APP_VERSION__: string;
+
 app.setName('Wbox');
 // This UI is 2D. Avoid a persistent hardware texture cache while in the tray.
 if (process.env.WBOX_SOFTWARE_RENDERING !== '0') app.disableHardwareAcceleration();
@@ -26,7 +28,7 @@ const root = app.isPackaged ? process.resourcesPath : resolve(import.meta.dirnam
 const iconPath = app.isPackaged ? join(root, 'wbox.ico') : join(root, 'resources/wbox.ico');
 const updateDirectory = join(app.getPath('userData'), 'Updates');
 const updates = new WboxUpdates({
-  directory: updateDirectory, version: app.getVersion(), fetch: (url, init) => net.fetch(url instanceof URL ? url.href : url, init),
+  directory: updateDirectory, version: __APP_VERSION__, fetch: (url, init) => net.fetch(url instanceof URL ? url.href : url, init),
   changed: state => { if (window && !window.isDestroyed() && !window.webContents.isDestroyed()) window.webContents.send('wbox:update-state', state); },
   install: async session => {
     if (!app.isPackaged) throw new Error('开发环境不执行安装，请使用已安装的 Wbox。');
@@ -84,7 +86,7 @@ async function quit() {
 }
 ipcMain.handle('wbox:version', event => {
   if (event.sender !== window?.webContents && event.sender !== trayMenu.window?.webContents) throw new Error('无效窗口');
-  return app.getVersion();
+  return __APP_VERSION__;
 });
 ipcMain.handle('wbox:updates', async (event, action: string, value: unknown) => {
   if (closing || quitting || event.sender !== window?.webContents) throw new Error('无效窗口');

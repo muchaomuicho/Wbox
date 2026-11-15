@@ -1,36 +1,26 @@
-param([string]$Version = '0.7.9', [string]$AndroidVersion = '0.7.9')
+param([string]$Version, [string]$AndroidVersion)
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$output = Join-Path $repo "dist/Wbox-$Version-source.zip"
 Add-Type -AssemblyName System.IO.Compression
 Push-Location $repo
 try {
-    # Explicit roots exclude user data, signing keys, caches and published binaries.
-    $paths = @('README.md','LICENSE','THIRD-PARTY-NOTICES.md','.gitignore')
-    $paths += 'desktop/dashboard/vendor/iterm2-color-schemes/LICENSE'
-    $paths += & rg --files --hidden --no-ignore android windows native resources tools docs desktop `
-        -g '!**/bin/**' -g '!**/obj/**' -g '!**/build/**' -g '!**/.gradle/**' `
-        -g '!**/node_modules/**' -g '!desktop/out/**' -g '!desktop/dashboard/vendor/**' `
-        -g '!windows/backend-publish/**' -g '!windows/desktop-publish/**' -g '!windows/desktop-test-runtime/**' `
-        -g '!**/__pycache__/**' -g '!**/*.tsbuildinfo' -g '!**/.pnpm-store/**' -g '!**/test-results/**' `
-        -g '!**/.git/**' -g '!**/.git' -g '!**/publish/**' -g '!windows/test-runtime/**' `
-        -g '!windows/memory-test-*/**' -g '!windows/ui-*.png' -g '!android/local.properties' `
-        -g '!windows/performance-*/**' -g '!windows/startup-ui-runtime/**' -g '!windows/reliability-runtime/**' `
-        -g '!resources/cores/windows/**' -g '!resources/cores/android/**' -g '!*.log' -g '!docs/previews/**'
-    # Publish reviewed synthetic previews, not the working folder's entire screenshot history.
-    $paths += & rg --files docs/previews -g '0.6.11-*.png' -g '0.7.0-*.png' -g '0.7.1-*.png' -g '0.7.2-*.png' -g '0.7.3-*.png' -g '0.7.4-*.png' -g '0.7.5-*.png' -g '0.7.6-*.png' -g '0.7.7-*.png' -g '0.7.8-*.png' -g '0.7.9-*.png' -g '!*-failure.png'
-    $paths += @('docs/previews/windows-overview.png','docs/previews/android-overview.png',
-        'docs/previews/0.3-windows-overview.png','docs/previews/0.3-windows-config.png',
-        'docs/previews/0.3-android-overview.png','docs/previews/0.3-android-config.png',
-        'docs/previews/0.4-windows-groups.png','docs/previews/0.4-windows-connections.png',
-        'docs/previews/0.4-windows-overview.png','docs/previews/0.4-android-groups.png','docs/previews/0.4-android-connections.png')
-    # Build-time installer assets are source inputs, not generated build output.
-    $paths += & rg --files desktop/build
-    if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate source files' }
-    $file = [IO.File]::Open($output,[IO.FileMode]::Create)
-    $archive = [IO.Compression.ZipArchive]::new($file,[IO.Compression.ZipArchiveMode]::Create)
+    $package = & git show HEAD:desktop/package.json
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot read committed application version' }
+    $committedVersion = ($package | Out-String | ConvertFrom-Json).version
+    if (!$Version) { $Version = $committedVersion }
+    if ($Version -ne $committedVersion) { throw 'Commit the release version before packaging source' }
+    if (!$AndroidVersion) { $AndroidVersion = $Version }
+    $output = Join-Path $repo "dist/Wbox-$Version-source.zip"
+    # Archive the release commit, excluding unrelated local changes and untracked files.
+    & git archive --format=zip "--output=$output" HEAD
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot archive release commit' }
+    # Pinned upstream source archives and decoded rule inputs are distributed with the source.
+    $paths = & rg --files --hidden --no-ignore resources/source
+    if ($LASTEXITCODE -ne 0) { throw 'Cannot enumerate upstream source files' }
+    $file = [IO.File]::Open($output,[IO.FileMode]::Open)
+    $archive = [IO.Compression.ZipArchive]::new($file,[IO.Compression.ZipArchiveMode]::Update)
     try {
-        foreach ($path in ($paths | Sort-Object -Unique)) {
+        foreach ($path in ($paths | Sort-Object)) {
             $entry = $archive.CreateEntry($path.Replace('\','/'),[IO.Compression.CompressionLevel]::Optimal)
             $input = [IO.File]::OpenRead((Join-Path $repo $path))
             $stream = $entry.Open()

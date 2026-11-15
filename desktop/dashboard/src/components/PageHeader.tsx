@@ -40,6 +40,7 @@ export function PageHeader(props: {
       <>
         {back !== null && slots.lead !== null && createPortal(back, slots.lead)}
         {props.actions !== undefined && slots.end !== null && createPortal(props.actions, slots.end)}
+        <div className="page-header"><h1 className="page-title">{props.title}</h1></div>
       </>
     );
   }

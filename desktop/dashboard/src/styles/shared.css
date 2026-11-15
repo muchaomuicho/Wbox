@@ -3,7 +3,7 @@
   font-family: var(--font-serif);
   font-size: var(--text-3xl);
   font-weight: var(--weight-semibold);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
 }
 
 .text-title {
@@ -280,7 +280,7 @@ a.menu-item {
 }
 
 .card-header > .icon {
-  color: var(--text-faint);
+  color: var(--text-secondary);
 }
 
 .card-header .actions {
@@ -468,8 +468,9 @@ a.nav-line {
   transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
 }
 
-.button:hover {
-  background: var(--inset);
+.button:hover:not(:disabled) {
+  background: var(--hover);
+  border-color: var(--border-strong);
 }
 
 .button:disabled {
@@ -483,15 +484,16 @@ a.nav-line {
   border-color: transparent;
 }
 
-.button.primary:hover {
+.button.primary:hover:not(:disabled) {
   background: var(--accent-strong);
+  border-color: transparent;
 }
 
 .button.danger {
   color: var(--danger);
 }
 
-.button.danger:hover {
+.button.danger:hover:not(:disabled) {
   background: var(--danger-soft);
   border-color: transparent;
 }
@@ -500,20 +502,20 @@ a.nav-line {
   background: var(--accent-soft);
 }
 
-.button:active {
+.button:active:not(:disabled) {
   background: var(--inset);
 }
 
-.button.primary:active {
+.button.primary:active:not(:disabled) {
   background: var(--accent-strong);
 }
 
-.button.danger:active {
+.button.danger:active:not(:disabled) {
   background: var(--danger-soft);
 }
 
 .button.small {
-  height: 24px;
+  height: 28px;
   padding: 0 var(--space-10);
   font-size: var(--text-sm);
 }
@@ -533,7 +535,7 @@ a.nav-line {
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-.icon-button:hover {
+.icon-button:hover:not(:disabled) {
   color: var(--text);
   background: var(--hover);
 }
@@ -552,7 +554,7 @@ a.nav-line {
   color: var(--danger);
 }
 
-.icon-button.danger:hover {
+.icon-button.danger:hover:not(:disabled) {
   color: var(--danger);
   background: var(--danger-soft);
 }
@@ -581,9 +583,13 @@ a.nav-line {
 }
 
 .segmented button.active {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.segmented button:hover:not(.active, :disabled) {
   color: var(--text);
-  background: var(--card);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+  background: var(--hover);
 }
 
 .segmented.full {
@@ -695,6 +701,10 @@ a.nav-line {
 
 .input::placeholder {
   color: var(--text-faint);
+}
+
+.input:hover:not(:disabled, :focus-visible), .select:hover:not(:disabled, :focus-visible) {
+  border-color: var(--border-strong);
 }
 
 .input:focus, .select:focus {
@@ -922,7 +932,7 @@ button.settings-row:focus-visible {
   align-items: center;
   justify-content: center;
   width: 34px;
-  height: 26px;
+  height: 32px;
   color: var(--text-secondary);
   cursor: pointer;
   background: transparent;
